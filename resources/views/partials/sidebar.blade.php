@@ -47,7 +47,8 @@
                 </a>
             </li>
             <li>
-                <a href="#" class="flex items-center px-6 py-2.5 text-sm font-medium text-gray-700 rounded-r-lg hover:bg-gray-100 transition-colors">
+                <a href="{{ route('tickets.create') }}"
+                   class="flex items-center px-6 py-2.5 text-sm font-medium text-gray-700 rounded-r-lg hover:bg-gray-100 transition-colors">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>

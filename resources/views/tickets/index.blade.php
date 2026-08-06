@@ -74,7 +74,7 @@
                                     {{ $ticket->created_at->format('M d, Y') }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <a href="#" class="text-blue-600 hover:text-blue-900">View</a>
+                                    <span class="text-gray-400 cursor-not-allowed">View</span>
                                 </td>
                             </tr>
                         @endforeach
