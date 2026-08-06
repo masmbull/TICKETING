@@ -17,6 +17,8 @@ class Ticket extends Model
         'status',
         'priority',
         'user_id',
+        'category_id',
+        'sub_category_id',
     ];
 
     protected $casts = [
@@ -30,5 +32,21 @@ class Ticket extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the category for the ticket.
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Get the sub category for the ticket.
+     */
+    public function subCategory(): BelongsTo
+    {
+        return $this->belongsTo(SubCategory::class);
     }
 }

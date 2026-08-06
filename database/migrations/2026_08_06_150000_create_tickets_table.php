@@ -15,11 +15,14 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('status')->default('open');
             $table->string('priority')->default('medium');
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->timestamps();
-            
-            $table->index(['user_id', 'status']);
-            $table->index('ticket_number');
+        $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+        $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
+        $table->foreignId('sub_category_id')->nullable()->constrained()->nullOnDelete();
+        $table->timestamps();
+        
+        $table->index(['user_id', 'status']);
+        $table->index('ticket_number');
+        $table->index(['category_id', 'sub_category_id']);
         });
     }
 

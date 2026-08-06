@@ -46,6 +46,43 @@
         <form method="POST" action="{{ route('tickets.store') }}" class="space-y-6">
             @csrf
 
+            <!-- Category -->
+            <div>
+                <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+                <select
+                    id="category_id"
+                    name="category_id"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('category_id') border-red-500 @enderror"
+                >
+                    <option value="">Select category</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('category_id')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Sub Category -->
+            <div>
+                <label for="sub_category_id" class="block text-sm font-medium text-gray-700 mb-1">Sub Category <span class="text-red-500">*</span></label>
+                <select
+                    id="sub_category_id"
+                    name="sub_category_id"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('sub_category_id') border-red-500 @enderror"
+                >
+                    <option value="">Select sub category</option>
+                </select>
+                @error('sub_category_id')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
             <!-- Subject -->
             <div>
                 <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">Subject <span class="text-red-500">*</span></label>
@@ -119,3 +156,34 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    const subCategoriesData = @json(\App\Models\SubCategory::where('is_active', true)->get()->groupBy('category_id'));
+
+    document.getElementById('category_id').addEventListener('change', function() {
+        const categoryId = this.value;
+        const subCategorySelect = document.getElementById('sub_category_id');
+        
+        // Clear existing options
+        subCategorySelect.innerHTML = '<option value="">Select sub category</option>';
+        
+        if (categoryId && subCategoriesData[categoryId]) {
+            subCategoriesData[categoryId].forEach(function(subCategory) {
+                const option = document.createElement('option');
+                option.value = subCategory.id;
+                option.textContent = subCategory.name;
+                subCategorySelect.appendChild(option);
+            });
+        }
+    });
+
+    // Trigger change event on page load if category is selected (for form validation errors)
+    document.addEventListener('DOMContentLoaded', function() {
+        const categorySelect = document.getElementById('category_id');
+        if (categorySelect.value) {
+            categorySelect.dispatchEvent(new Event('change'));
+        }
+    });
+</script>
+@endpush

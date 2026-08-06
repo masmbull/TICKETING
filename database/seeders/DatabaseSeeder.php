@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Seed users
         User::updateOrCreate(
             ['email' => 'admin@mito.local'],
             [
@@ -22,5 +23,8 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+
+        // Seed categories and sub-categories
+        $this->call(CategorySeeder::class);
     }
 }
