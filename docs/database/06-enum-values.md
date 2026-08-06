@@ -1,75 +1,56 @@
-# MITO IT Helpdesk — Enum Values
+# MITO IT Helpdesk — Enum Values (MVP)
 
 ## 1. Enum Overview
 
-This document defines all enum values used in the database design. Enums are implemented as PostgreSQL `ENUM` types or `VARCHAR` with `CHECK` constraints depending on the use case.
+This document defines all configurable values used in the database design.
 
 ### 1.1 Implementation Strategy
 
 | Approach | When to Use | Example |
 |----------|-------------|---------|
-| PostgreSQL `ENUM` type | Fixed, rarely changing values | `users.role` |
-| `VARCHAR` + `CHECK` constraint | Values that may evolve | `assets.status` |
-| Lookup table | Values that need metadata (color, sort order) | `priorities`, `statuses` |
+| **Master table** | Configurable business data that may change | `roles`, `statuses`, `priorities`, `categories`, `ticket_types` |
+| `VARCHAR` + `CHECK` constraint | Values that may evolve but aren't master-data tables | Future: `assets.status`, `knowledge_base.status` |
+
+### 1.2 Key Decision: No ENUM for Configurable Business Data
+
+PostgreSQL `ENUM` types are **NOT used** for configurable business data. This decision was made because:
+
+1. **Flexibility** — Master tables allow adding/removing values without schema changes.
+2. **Metadata** — Master tables can store additional attributes (color, sort_order, description).
+3. **Referential integrity** — Foreign keys enforce valid values.
+4. **Audit** — Changes to value definitions are tracked in `audit_logs`.
 
 ---
 
-## 2. Enum Definitions
+## 2. Master Table Seed Data
 
-### 2.1 `users.role`
+### 2.1 `roles` — Seed Data
 
-**Type:** PostgreSQL ENUM
+**Description:** User roles for RBAC.
 
-**Description:** User role for role-based access control (RBAC).
-
-| Value | Description | Permissions |
-|-------|-------------|-------------|
-| `employee` | Regular employee | Create tickets, view own tickets, rate resolved tickets |
-| `it_staff` | IT support staff | Manage assigned tickets, comment, resolve, escalate |
-| `it_manager` | IT department manager | Manage all tickets, view reports, manage SLA policies |
-| `admin` | System administrator | Full system access, user management, configuration |
-
-**Default:** `employee`
+| name | description |
+|------|-------------|
+| `employee` | Regular employee — create tickets, view own tickets |
+| `it_staff` | IT support staff — manage assigned tickets, comment, resolve, escalate |
+| `it_manager` | IT department manager — manage all tickets, view reports, manage SLA policies |
+| `admin` | System administrator — full system access, user management, configuration |
 
 ---
 
-### 2.2 `assets.status`
+### 2.2 `ticket_types` — Seed Data
 
-**Type:** VARCHAR + CHECK constraint
+**Description:** Ticket types.
 
-**Description:** Lifecycle status of an IT asset.
-
-| Value | Description |
-|-------|-------------|
-| `available` | Asset is available for assignment |
-| `assigned` | Asset is currently assigned to a user |
-| `in_repair` | Asset is being repaired |
-| `retired` | Asset has been decommissioned |
-| `lost` | Asset is lost or missing |
-
-**Default:** `available`
+| code | name | description |
+|------|------|-------------|
+| `INCIDENT` | Incident | Unplanned interruption or reduction in quality of IT service |
+| `SERVICE_REQUEST` | Service Request | Request for new service or information |
+| `PROBLEM` | Problem | Root cause of one or more incidents |
+| `CHANGE_REQUEST` | Change Request | Request for a change to IT infrastructure |
 
 ---
 
-### 2.3 `knowledge_base.status`
-
-**Type:** VARCHAR + CHECK constraint
-
-**Description:** Publication status of knowledge base articles.
-
-| Value | Description |
-|-------|-------------|
-| `draft` | Article is in draft, not visible to users |
-| `published` | Article is published and visible to users |
-| `archived` | Article is archived, no longer visible |
-
-**Default:** `draft`
-
----
-
-## 3. Lookup Table Values
-
-### 3.1 `priorities` — Seed Data
+### 2.3 `priorities` — Seed Data
 
 **Description:** Ticket priority levels with SLA targets.
 
@@ -82,7 +63,7 @@ This document defines all enum values used in the database design. Enums are imp
 
 ---
 
-### 3.2 `statuses` — Seed Data
+### 2.4 `statuses` — Seed Data
 
 **Description:** Ticket status workflow states.
 
@@ -98,7 +79,7 @@ This document defines all enum values used in the database design. Enums are imp
 
 ---
 
-### 3.3 `categories` — Seed Data
+### 2.5 `categories` — Seed Data
 
 **Description:** Top-level ticket categories.
 
@@ -114,7 +95,7 @@ This document defines all enum values used in the database design. Enums are imp
 
 ---
 
-### 3.4 `sub_categories` — Seed Data
+### 2.6 `sub_categories` — Seed Data
 
 **Description:** Sub-categories under top-level categories.
 
@@ -140,7 +121,58 @@ This document defines all enum values used in the database design. Enums are imp
 
 ---
 
-### 3.5 `asset_types` — Seed Data
+### 2.7 `sla_policies` — Seed Data
+
+**Description:** SLA policy definitions per category and priority.
+
+| name | category_id | priority_id | response_time_minutes | resolution_time_minutes | escalation_level_1_minutes | escalation_level_2_minutes | escalation_level_3_minutes |
+|------|-------------|-------------|----------------------|------------------------|---------------------------|---------------------------|---------------------------|
+| Default Critical | NULL | critical | 15 | 240 | 30 | 60 | 120 |
+| Default High | NULL | high | 60 | 480 | 120 | 240 | 480 |
+| Default Medium | NULL | medium | 240 | 1440 | 480 | 960 | 1440 |
+| Default Low | NULL | low | 480 | 4320 | 960 | 1920 | 2880 |
+
+---
+
+## 3. Future Module Values (Deferred from MVP)
+
+These values are used by future modules and are documented for completeness. They will NOT be implemented in the MVP.
+
+### 3.1 `assets.status` (Future)
+
+**Type:** VARCHAR + CHECK constraint
+
+**Description:** Lifecycle status of an IT asset.
+
+| Value | Description |
+|-------|-------------|
+| `available` | Asset is available for assignment |
+| `assigned` | Asset is currently assigned to a user |
+| `in_repair` | Asset is being repaired |
+| `retired` | Asset has been decommissioned |
+| `lost` | Asset is lost or missing |
+
+**Default:** `available`
+
+---
+
+### 3.2 `knowledge_base.status` (Future)
+
+**Type:** VARCHAR + CHECK constraint
+
+**Description:** Publication status of knowledge base articles.
+
+| Value | Description |
+|-------|-------------|
+| `draft` | Article is in draft, not visible to users |
+| `published` | Article is published and visible to users |
+| `archived` | Article is archived, no longer visible |
+
+**Default:** `draft`
+
+---
+
+### 3.3 `asset_types` — Seed Data (Future)
 
 **Description:** Types of IT assets.
 
@@ -159,56 +191,38 @@ This document defines all enum values used in the database design. Enums are imp
 
 ---
 
-### 3.6 `sla_policies` — Seed Data
-
-**Description:** SLA policy definitions per category and priority.
-
-| name | category_id | priority_id | response_time_minutes | resolution_time_minutes | escalation_level_1_minutes | escalation_level_2_minutes | escalation_level_3_minutes |
-|------|-------------|-------------|----------------------|------------------------|---------------------------|---------------------------|---------------------------|
-| Default Critical | NULL | critical | 15 | 240 | 30 | 60 | 120 |
-| Default High | NULL | high | 60 | 480 | 120 | 240 | 480 |
-| Default Medium | NULL | medium | 240 | 1440 | 480 | 960 | 1440 |
-| Default Low | NULL | low | 480 | 4320 | 960 | 1920 | 2880 |
-
----
-
-## 4. Enum Usage Summary
+## 4. Configurable Values Summary
 
 | Table | Column | Type | Values |
 |-------|--------|------|--------|
-| `users` | `role` | ENUM | `employee`, `it_staff`, `it_manager`, `admin` |
-| `assets` | `status` | VARCHAR + CHECK | `available`, `assigned`, `in_repair`, `retired`, `lost` |
-| `knowledge_base` | `status` | VARCHAR + CHECK | `draft`, `published`, `archived` |
-| `priorities` | `code` | Lookup table | `critical`, `high`, `medium`, `low` |
-| `statuses` | `code` | Lookup table | `new`, `assigned`, `in_progress`, `on_hold`, `resolved`, `closed`, `reopened` |
-| `categories` | `code` | Lookup table | `HARDWARE`, `SOFTWARE`, `NETWORK`, `ACCESS`, `EMAIL`, `PHONE`, `OTHER` |
-| `asset_types` | `code` | Lookup table | `LAPTOP`, `DESKTOP`, `MONITOR`, `PRINTER`, `SCANNER`, `PHONE`, `MOBILE`, `SERVER`, `NETWORK_DEVICE`, `PERIPHERAL` |
+| `roles` | `name` | Master table | `employee`, `it_staff`, `it_manager`, `admin` |
+| `ticket_types` | `code` | Master table | `INCIDENT`, `SERVICE_REQUEST`, `PROBLEM`, `CHANGE_REQUEST` |
+| `priorities` | `code` | Master table | `critical`, `high`, `medium`, `low` |
+| `statuses` | `code` | Master table | `new`, `assigned`, `in_progress`, `on_hold`, `resolved`, `closed`, `reopened` |
+| `categories` | `code` | Master table | `HARDWARE`, `SOFTWARE`, `NETWORK`, `ACCESS`, `EMAIL`, `PHONE`, `OTHER` |
 
 ---
 
-## 5. Enum Management Guidelines
+## 5. Value Management Guidelines
 
 ### 5.1 Adding New Values
 
-- For PostgreSQL `ENUM` types, use `ALTER TYPE ... ADD VALUE`.
+- For **master tables**, insert a new row.
 - For `VARCHAR + CHECK`, update the CHECK constraint.
-- For lookup tables, insert a new row.
 
 ### 5.2 Removing Values
 
-- **Never delete** enum values that are referenced by existing records.
+- **Never delete** values that are referenced by existing records.
 - Mark values as inactive (`is_active = false`) instead of deleting.
-- For PostgreSQL `ENUM`, removal requires recreating the type.
 
 ### 5.3 Renaming Values
 
-- For PostgreSQL `ENUM`, use `ALTER TYPE ... RENAME VALUE`.
-- For lookup tables, update the row and cascade changes.
+- For **master tables**, update the row and cascade changes to referencing records.
+- Document all changes in this file.
 
 ### 5.4 Best Practices
 
-1. Use **lookup tables** for values that need UI metadata (color, sort order).
-2. Use **PostgreSQL ENUM** for values that are truly fixed.
-3. Use **VARCHAR + CHECK** for values that may evolve over time.
-4. Always provide a **default value** for enum columns.
-5. Document all enum values in this file.
+1. Use **master tables** for all configurable business data.
+2. Do **NOT use PostgreSQL ENUM** for configurable values.
+3. Always provide a **default value** for new columns.
+4. Document all configurable values in this file.

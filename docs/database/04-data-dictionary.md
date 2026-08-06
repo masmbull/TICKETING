@@ -1,4 +1,4 @@
-# MITO IT Helpdesk — Data Dictionary
+# MITO IT Helpdesk — Data Dictionary (MVP)
 
 ## 1. Conventions
 
@@ -13,7 +13,6 @@
 | Boolean flags | `is_` prefix | `is_active` |
 | Timestamps | `created_at`, `updated_at` | `created_at` |
 | Soft delete | `deleted_at` | `deleted_at` |
-| Enum columns | `snake_case` | `role` |
 
 ### 1.2 Data Types (PostgreSQL)
 
@@ -26,25 +25,37 @@
 | `BOOLEAN` | True/false flags |
 | `SMALLINT` | Small integers (0-32767) |
 | `INTEGER` | Standard integers |
-| `DECIMAL(p,s)` | Precise decimal numbers |
-| `DATE` | Date only (no time) |
 | `TIMESTAMP` | Date and time |
 | `JSON` | JSON data |
-| `ENUM` | PostgreSQL enum type |
 
 ---
 
 ## 2. Master Data Tables
 
-### 2.1 `departments`
+### 2.1 `roles`
 
-**Purpose:** Stores organizational departments.
+**Purpose:** Stores user roles for RBAC.
 
 | Column | Type | Nullable | Default | Constraints | Description |
 |--------|------|----------|---------|-------------|-------------|
 | `id` | BIGSERIAL | NO | — | PRIMARY KEY | Auto-increment ID |
-| `code` | VARCHAR(10) | NO | — | UNIQUE, NOT NULL | Department code (e.g., `IT`, `HR`, `FIN`) |
+| `name` | VARCHAR(50) | NO | — | UNIQUE, NOT NULL | Role name |
+| `description` | TEXT | YES | NULL | — | Role description |
+| `created_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Creation time |
+| `updated_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Update time |
+
+---
+
+### 2.2 `departments`
+
+**Purpose:** Stores organizational departments with hierarchy.
+
+| Column | Type | Nullable | Default | Constraints | Description |
+|--------|------|----------|---------|-------------|-------------|
+| `id` | BIGSERIAL | NO | — | PRIMARY KEY | Auto-increment ID |
+| `code` | VARCHAR(10) | NO | — | UNIQUE, NOT NULL | Department code |
 | `name` | VARCHAR(100) | NO | — | NOT NULL | Department name |
+| `parent_department_id` | BIGINT | YES | NULL | FK → `departments.id` | Parent department |
 | `description` | TEXT | YES | NULL | — | Department description |
 | `manager_id` | BIGINT | YES | NULL | FK → `users.id` | Department manager |
 | `is_active` | BOOLEAN | NO | `true` | NOT NULL | Active status |
@@ -54,98 +65,7 @@
 
 ---
 
-### 2.2 `locations`
-
-**Purpose:** Stores physical locations (offices, floors, rooms).
-
-| Column | Type | Nullable | Default | Constraints | Description |
-|--------|------|----------|---------|-------------|-------------|
-| `id` | BIGSERIAL | NO | — | PRIMARY KEY | Auto-increment ID |
-| `code` | VARCHAR(20) | NO | — | UNIQUE, NOT NULL | Location code (e.g., `JKT-01`) |
-| `name` | VARCHAR(100) | NO | — | NOT NULL | Location name |
-| `address` | TEXT | YES | NULL | — | Physical address |
-| `city` | VARCHAR(50) | YES | NULL | — | City |
-| `country` | VARCHAR(50) | NO | `Indonesia` | NOT NULL | Country |
-| `is_active` | BOOLEAN | NO | `true` | NOT NULL | Active status |
-| `created_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Creation time |
-| `updated_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Update time |
-| `deleted_at` | TIMESTAMP | YES | NULL | — | Soft delete timestamp |
-
----
-
-### 2.3 `users`
-
-**Purpose:** Stores all system users.
-
-| Column | Type | Nullable | Default | Constraints | Description |
-|--------|------|----------|---------|-------------|-------------|
-| `id` | BIGSERIAL | NO | — | PRIMARY KEY | Auto-increment ID |
-| `employee_id` | VARCHAR(20) | NO | — | UNIQUE, NOT NULL | Employee number |
-| `name` | VARCHAR(100) | NO | — | NOT NULL | Full name |
-| `email` | VARCHAR(100) | NO | — | UNIQUE, NOT NULL | Email address |
-| `password` | VARCHAR(255) | NO | — | NOT NULL | Bcrypt hashed password |
-| `phone` | VARCHAR(20) | YES | NULL | — | Contact phone |
-| `department_id` | BIGINT | YES | NULL | FK → `departments.id` | Department |
-| `location_id` | BIGINT | YES | NULL | FK → `locations.id` | Location |
-| `role` | ENUM | NO | `employee` | NOT NULL | User role |
-| `is_active` | BOOLEAN | NO | `true` | NOT NULL | Account active |
-| `email_verified_at` | TIMESTAMP | YES | NULL | — | Email verification |
-| `last_login_at` | TIMESTAMP | YES | NULL | — | Last login |
-| `remember_token` | VARCHAR(100) | YES | NULL | — | Laravel remember token |
-| `created_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Creation time |
-| `updated_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Update time |
-| `deleted_at` | TIMESTAMP | YES | NULL | — | Soft delete timestamp |
-
-**Enum Values (`role`):** `employee`, `it_staff`, `it_manager`, `admin`
-
----
-
-### 2.4 `asset_types`
-
-**Purpose:** Stores types of IT assets.
-
-| Column | Type | Nullable | Default | Constraints | Description |
-|--------|------|----------|---------|-------------|-------------|
-| `id` | BIGSERIAL | NO | — | PRIMARY KEY | Auto-increment ID |
-| `code` | VARCHAR(20) | NO | — | UNIQUE, NOT NULL | Asset type code |
-| `name` | VARCHAR(100) | NO | — | NOT NULL | Asset type name |
-| `description` | TEXT | YES | NULL | — | Description |
-| `is_active` | BOOLEAN | NO | `true` | NOT NULL | Active status |
-| `created_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Creation time |
-| `updated_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Update time |
-| `deleted_at` | TIMESTAMP | YES | NULL | — | Soft delete timestamp |
-
----
-
-### 2.5 `assets`
-
-**Purpose:** Stores IT assets inventory.
-
-| Column | Type | Nullable | Default | Constraints | Description |
-|--------|------|----------|---------|-------------|-------------|
-| `id` | BIGSERIAL | NO | — | PRIMARY KEY | Auto-increment ID |
-| `asset_tag` | VARCHAR(50) | NO | — | UNIQUE, NOT NULL | Asset tag number |
-| `asset_type_id` | BIGINT | NO | — | FK → `asset_types.id`, NOT NULL | Asset type |
-| `name` | VARCHAR(100) | NO | — | NOT NULL | Asset name |
-| `brand` | VARCHAR(50) | YES | NULL | — | Brand |
-| `model` | VARCHAR(50) | YES | NULL | — | Model |
-| `serial_number` | VARCHAR(50) | YES | NULL | UNIQUE | Serial number |
-| `purchase_date` | DATE | YES | NULL | — | Purchase date |
-| `purchase_cost` | DECIMAL(12,2) | YES | NULL | CHECK ≥ 0 | Purchase cost |
-| `warranty_expiry` | DATE | YES | NULL | — | Warranty expiry |
-| `status` | ENUM | NO | `available` | NOT NULL | Asset status |
-| `assigned_to` | BIGINT | YES | NULL | FK → `users.id` | Current assignee |
-| `location_id` | BIGINT | YES | NULL | FK → `locations.id` | Location |
-| `notes` | TEXT | YES | NULL | — | Additional notes |
-| `created_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Creation time |
-| `updated_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Update time |
-| `deleted_at` | TIMESTAMP | YES | NULL | — | Soft delete timestamp |
-
-**Enum Values (`status`):** `available`, `assigned`, `in_repair`, `retired`, `lost`
-
----
-
-### 2.6 `categories`
+### 2.3 `categories`
 
 **Purpose:** Stores top-level ticket categories.
 
@@ -164,7 +84,7 @@
 
 ---
 
-### 2.7 `sub_categories`
+### 2.4 `sub_categories`
 
 **Purpose:** Stores sub-categories under top-level categories.
 
@@ -184,7 +104,24 @@
 
 ---
 
-### 2.8 `priorities`
+### 2.5 `ticket_types`
+
+**Purpose:** Stores ticket types.
+
+| Column | Type | Nullable | Default | Constraints | Description |
+|--------|------|----------|---------|-------------|-------------|
+| `id` | BIGSERIAL | NO | — | PRIMARY KEY | Auto-increment ID |
+| `code` | VARCHAR(20) | NO | — | UNIQUE, NOT NULL | Ticket type code |
+| `name` | VARCHAR(50) | NO | — | NOT NULL | Ticket type name |
+| `description` | TEXT | YES | NULL | — | Description |
+| `is_active` | BOOLEAN | NO | `true` | NOT NULL | Active status |
+| `created_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Creation time |
+| `updated_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Update time |
+| `deleted_at` | TIMESTAMP | YES | NULL | — | Soft delete timestamp |
+
+---
+
+### 2.6 `priorities`
 
 **Purpose:** Stores ticket priority levels with SLA targets.
 
@@ -204,7 +141,7 @@
 
 ---
 
-### 2.9 `statuses`
+### 2.7 `statuses`
 
 **Purpose:** Stores ticket status workflow states.
 
@@ -225,7 +162,7 @@
 
 ---
 
-### 2.10 `sla_policies`
+### 2.8 `sla_policies`
 
 **Purpose:** Stores SLA definitions per category and priority.
 
@@ -250,51 +187,37 @@
 
 ---
 
-### 2.11 `holidays`
-
-**Purpose:** Stores company holidays for SLA calculation.
-
-| Column | Type | Nullable | Default | Constraints | Description |
-|--------|------|----------|---------|-------------|-------------|
-| `id` | BIGSERIAL | NO | — | PRIMARY KEY | Auto-increment ID |
-| `name` | VARCHAR(100) | NO | — | NOT NULL | Holiday name |
-| `holiday_date` | DATE | NO | — | UNIQUE, NOT NULL | Holiday date |
-| `is_recurring` | BOOLEAN | NO | `false` | NOT NULL | Recurring annually |
-| `description` | TEXT | YES | NULL | — | Description |
-| `created_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Creation time |
-| `updated_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Update time |
-| `deleted_at` | TIMESTAMP | YES | NULL | — | Soft delete timestamp |
-
----
-
-### 2.12 `knowledge_base`
-
-**Purpose:** Stores knowledge base articles.
-
-| Column | Type | Nullable | Default | Constraints | Description |
-|--------|------|----------|---------|-------------|-------------|
-| `id` | BIGSERIAL | NO | — | PRIMARY KEY | Auto-increment ID |
-| `title` | VARCHAR(200) | NO | — | NOT NULL | Article title |
-| `slug` | VARCHAR(220) | NO | — | UNIQUE, NOT NULL | URL slug |
-| `content` | TEXT | NO | — | NOT NULL | Article content (Markdown) |
-| `category_id` | BIGINT | YES | NULL | FK → `categories.id` | Category |
-| `author_id` | BIGINT | NO | — | FK → `users.id`, NOT NULL | Author |
-| `status` | ENUM | NO | `draft` | NOT NULL | Article status |
-| `views_count` | BIGINT | NO | `0` | NOT NULL, CHECK ≥ 0 | View counter |
-| `helpful_count` | BIGINT | NO | `0` | NOT NULL, CHECK ≥ 0 | Helpful count |
-| `not_helpful_count` | BIGINT | NO | `0` | NOT NULL, CHECK ≥ 0 | Not helpful count |
-| `published_at` | TIMESTAMP | YES | NULL | — | Publish time |
-| `created_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Creation time |
-| `updated_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Update time |
-| `deleted_at` | TIMESTAMP | YES | NULL | — | Soft delete timestamp |
-
-**Enum Values (`status`):** `draft`, `published`, `archived`
-
----
-
 ## 3. Transaction Data Tables
 
-### 3.1 `tickets`
+### 3.1 `users`
+
+**Purpose:** Stores all system users.
+
+| Column | Type | Nullable | Default | Constraints | Description |
+|--------|------|----------|---------|-------------|-------------|
+| `id` | BIGSERIAL | NO | — | PRIMARY KEY | Auto-increment ID |
+| `employee_number` | VARCHAR(20) | NO | — | UNIQUE, NOT NULL | Employee number |
+| `name` | VARCHAR(100) | NO | — | NOT NULL | Full name |
+| `email` | VARCHAR(100) | NO | — | UNIQUE, NOT NULL | Email address |
+| `password` | VARCHAR(255) | NO | — | NOT NULL | Bcrypt hashed password |
+| `job_title` | VARCHAR(100) | YES | NULL | — | Job title |
+| `phone` | VARCHAR(20) | YES | NULL | — | Contact phone |
+| `extension` | VARCHAR(10) | YES | NULL | — | Phone extension |
+| `mobile` | VARCHAR(20) | YES | NULL | — | Mobile phone |
+| `department_id` | BIGINT | YES | NULL | FK → `departments.id` | Department |
+| `role_id` | BIGINT | NO | — | FK → `roles.id`, NOT NULL | Role |
+| `is_active` | BOOLEAN | NO | `true` | NOT NULL | Account active |
+| `email_verified_at` | TIMESTAMP | YES | NULL | — | Email verification |
+| `last_login_at` | TIMESTAMP | YES | NULL | — | Last login |
+| `last_password_change_at` | TIMESTAMP | YES | NULL | — | Last password change |
+| `remember_token` | VARCHAR(100) | YES | NULL | — | Laravel remember token |
+| `created_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Creation time |
+| `updated_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Update time |
+| `deleted_at` | TIMESTAMP | YES | NULL | — | Soft delete timestamp |
+
+---
+
+### 3.2 `tickets`
 
 **Purpose:** Stores main ticket records.
 
@@ -302,19 +225,18 @@
 |--------|------|----------|---------|-------------|-------------|
 | `id` | BIGSERIAL | NO | — | PRIMARY KEY | Auto-increment ID |
 | `ticket_number` | VARCHAR(20) | NO | — | UNIQUE, NOT NULL | Human-readable ticket number |
-| `subject` | VARCHAR(200) | NO | — | NOT NULL | Ticket subject |
-| `description` | TEXT | NO | — | NOT NULL | Issue description |
-| `requester_id` | BIGINT | NO | — | FK → `users.id`, NOT NULL | Ticket creator |
-| `assignee_id` | BIGINT | YES | NULL | FK → `users.id` | Current assignee |
+| `ticket_type_id` | BIGINT | NO | — | FK → `ticket_types.id`, NOT NULL | Ticket type |
 | `category_id` | BIGINT | NO | — | FK → `categories.id`, NOT NULL | Category |
 | `sub_category_id` | BIGINT | YES | NULL | FK → `sub_categories.id` | Sub-category |
 | `priority_id` | BIGINT | NO | — | FK → `priorities.id`, NOT NULL | Priority |
 | `status_id` | BIGINT | NO | — | FK → `statuses.id`, NOT NULL | Status |
-| `asset_id` | BIGINT | YES | NULL | FK → `assets.id` | Related asset |
-| `location_id` | BIGINT | YES | NULL | FK → `locations.id` | Location |
+| `subject` | VARCHAR(200) | NO | — | NOT NULL | Ticket subject |
+| `description` | TEXT | NO | — | NOT NULL | Issue description |
+| `requester_id` | BIGINT | NO | — | FK → `users.id`, NOT NULL | Ticket creator |
+| `assigned_to` | BIGINT | YES | NULL | FK → `users.id` | Current assignee |
 | `sla_policy_id` | BIGINT | YES | NULL | FK → `sla_policies.id` | SLA policy |
-| `sla_due_at` | TIMESTAMP | YES | NULL | — | SLA response due |
-| `resolution_due_at` | TIMESTAMP | YES | NULL | — | SLA resolution due |
+| `due_response_at` | TIMESTAMP | YES | NULL | — | SLA response due |
+| `due_resolve_at` | TIMESTAMP | YES | NULL | — | SLA resolution due |
 | `first_response_at` | TIMESTAMP | YES | NULL | — | First response time |
 | `resolved_at` | TIMESTAMP | YES | NULL | — | Resolution time |
 | `closed_at` | TIMESTAMP | YES | NULL | — | Closure time |
@@ -328,7 +250,7 @@
 
 ---
 
-### 3.2 `ticket_comments`
+### 3.3 `ticket_comments`
 
 **Purpose:** Stores comments and updates on tickets.
 
@@ -346,28 +268,30 @@
 
 ---
 
-### 3.3 `ticket_attachments`
+### 3.4 `attachments`
 
-**Purpose:** Stores files attached to tickets.
+**Purpose:** Stores reusable file attachments supporting multiple modules.
 
 | Column | Type | Nullable | Default | Constraints | Description |
 |--------|------|----------|---------|-------------|-------------|
 | `id` | BIGSERIAL | NO | — | PRIMARY KEY | Auto-increment ID |
-| `ticket_id` | BIGINT | NO | — | FK → `tickets.id`, NOT NULL | Ticket |
-| `comment_id` | BIGINT | YES | NULL | FK → `ticket_comments.id` | Comment |
-| `uploaded_by` | BIGINT | NO | — | FK → `users.id`, NOT NULL | Uploader |
-| `original_name` | VARCHAR(255) | NO | — | NOT NULL | Original filename |
-| `stored_name` | VARCHAR(255) | NO | — | NOT NULL | Stored filename |
-| `path` | VARCHAR(500) | NO | — | NOT NULL | Storage path |
+| `module` | VARCHAR(50) | NO | — | NOT NULL | Module name |
+| `module_id` | BIGINT | NO | — | NOT NULL | Record ID in module |
+| `filename` | VARCHAR(255) | NO | — | NOT NULL | Stored filename |
+| `original_filename` | VARCHAR(255) | NO | — | NOT NULL | Original filename |
 | `mime_type` | VARCHAR(100) | NO | — | NOT NULL | MIME type |
-| `size_bytes` | BIGINT | NO | — | NOT NULL, CHECK > 0 | File size |
+| `file_size` | BIGINT | NO | — | NOT NULL, CHECK > 0 | File size |
+| `storage_path` | VARCHAR(500) | NO | — | NOT NULL | Storage path |
+| `uploaded_by` | BIGINT | NO | — | FK → `users.id`, NOT NULL | Uploader |
 | `created_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Creation time |
 | `updated_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Update time |
 | `deleted_at` | TIMESTAMP | YES | NULL | — | Soft delete timestamp |
 
+**Composite Index:** `(module, module_id)`
+
 ---
 
-### 3.4 `ticket_assignments`
+### 3.5 `ticket_assignments`
 
 **Purpose:** Stores ticket assignment history.
 
@@ -385,7 +309,7 @@
 
 ---
 
-### 3.5 `ticket_status_history`
+### 3.6 `ticket_status_history`
 
 **Purpose:** Stores ticket status change history.
 
@@ -403,7 +327,7 @@
 
 ---
 
-### 3.6 `ticket_escalations`
+### 3.7 `ticket_escalations`
 
 **Purpose:** Stores ticket escalation records.
 
@@ -417,23 +341,6 @@
 | `reason` | TEXT | NO | — | NOT NULL | Escalation reason |
 | `escalated_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Escalation time |
 | `resolved_at` | TIMESTAMP | YES | NULL | — | Resolution time |
-| `created_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Creation time |
-| `updated_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Update time |
-
----
-
-### 3.7 `ticket_ratings`
-
-**Purpose:** Stores customer satisfaction ratings.
-
-| Column | Type | Nullable | Default | Constraints | Description |
-|--------|------|----------|---------|-------------|-------------|
-| `id` | BIGSERIAL | NO | — | PRIMARY KEY | Auto-increment ID |
-| `ticket_id` | BIGINT | NO | — | FK → `tickets.id`, UNIQUE, NOT NULL | Ticket |
-| `rating` | SMALLINT | NO | — | NOT NULL, CHECK 1-5 | Rating (1-5) |
-| `comment` | TEXT | YES | NULL | — | Feedback comment |
-| `rated_by` | BIGINT | NO | — | FK → `users.id`, NOT NULL | Rater |
-| `rated_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Rating time |
 | `created_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Creation time |
 | `updated_at` | TIMESTAMP | NO | `CURRENT_TIMESTAMP` | NOT NULL | Update time |
 
@@ -462,25 +369,34 @@
 
 | # | Table | Type | Columns | Description |
 |---|-------|------|---------|-------------|
-| 1 | `departments` | Master | 9 | Organizational departments |
-| 2 | `locations` | Master | 10 | Physical locations |
-| 3 | `users` | Master | 16 | System users |
-| 4 | `asset_types` | Master | 7 | Asset types |
-| 5 | `assets` | Master | 17 | IT assets inventory |
-| 6 | `categories` | Master | 10 | Ticket categories |
-| 7 | `sub_categories` | Master | 9 | Ticket sub-categories |
-| 8 | `priorities` | Master | 11 | Priority levels |
-| 9 | `statuses` | Master | 12 | Status workflow states |
-| 10 | `sla_policies` | Master | 14 | SLA definitions |
-| 11 | `holidays` | Master | 8 | Company holidays |
-| 12 | `knowledge_base` | Master | 15 | KB articles |
-| 13 | `tickets` | Transaction | 25 | Main ticket records |
-| 14 | `ticket_comments` | Transaction | 9 | Ticket comments |
-| 15 | `ticket_attachments` | Transaction | 12 | Ticket attachments |
-| 16 | `ticket_assignments` | Transaction | 9 | Assignment history |
-| 17 | `ticket_status_history` | Transaction | 9 | Status change history |
-| 18 | `ticket_escalations` | Transaction | 10 | Escalation records |
-| 19 | `ticket_ratings` | Transaction | 8 | Satisfaction ratings |
-| 20 | `audit_logs` | Transaction | 10 | System audit trail |
+| 1 | `roles` | Master | 5 | User roles |
+| 2 | `departments` | Master | 10 | Organizational departments with hierarchy |
+| 3 | `categories` | Master | 10 | Ticket categories |
+| 4 | `sub_categories` | Master | 9 | Ticket sub-categories |
+| 5 | `ticket_types` | Master | 8 | Ticket types |
+| 6 | `priorities` | Master | 11 | Priority levels |
+| 7 | `statuses` | Master | 12 | Status workflow states |
+| 8 | `sla_policies` | Master | 14 | SLA definitions |
+| 9 | `users` | Transaction | 19 | System users |
+| 10 | `tickets` | Transaction | 25 | Main ticket records |
+| 11 | `ticket_comments` | Transaction | 9 | Ticket comments |
+| 12 | `attachments` | Transaction | 12 | Reusable file attachments |
+| 13 | `ticket_assignments` | Transaction | 9 | Assignment history |
+| 14 | `ticket_status_history` | Transaction | 9 | Status change history |
+| 15 | `ticket_escalations` | Transaction | 10 | Escalation records |
+| 16 | `audit_logs` | Transaction | 10 | System audit trail |
 
-**Total: 20 tables, 230 columns**
+**Total: 16 MVP tables, 182 columns**
+
+---
+
+## 5. Future Module Tables (Deferred)
+
+| # | Table | Type | Columns | Description |
+|---|-------|------|---------|-------------|
+| 17 | `asset_types` | Master | 7 | Asset types |
+| 18 | `assets` | Master | 17 | IT assets inventory |
+| 19 | `locations` | Master | 10 | Physical locations |
+| 20 | `holidays` | Master | 8 | Company holidays |
+| 21 | `knowledge_base` | Master | 15 | KB articles |
+| 22 | `ticket_ratings` | Transaction | 8 | Satisfaction ratings |

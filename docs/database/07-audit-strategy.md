@@ -1,4 +1,4 @@
-# MITO IT Helpdesk — Audit Strategy
+# MITO IT Helpdesk — Audit Strategy (MVP)
 
 ## 1. Audit Objectives
 
@@ -75,36 +75,32 @@ User Action
 | `unassigned` | Ticket unassigned | Assignment event |
 | `status_changed` | Ticket status changed | Workflow event |
 | `escalated` | Ticket escalated | Escalation event |
-| `rated` | Ticket rated | Feedback event |
 | `exported` | Data exported | Compliance event |
 
 ---
 
 ## 4. Audit Scope
 
-### 4.1 Entities to Audit
+### 4.1 Entities to Audit (MVP)
 
 | Entity | Create | Update | Delete | Notes |
 |--------|--------|--------|--------|-------|
-| `users` | ✅ | ✅ | ✅ | Exclude password field from values |
+| `roles` | ✅ | ✅ | ✅ | |
 | `departments` | ✅ | ✅ | ✅ | |
-| `locations` | ✅ | ✅ | ✅ | |
 | `categories` | ✅ | ✅ | ✅ | |
 | `sub_categories` | ✅ | ✅ | ✅ | |
+| `ticket_types` | ✅ | ✅ | ✅ | |
 | `priorities` | ✅ | ✅ | ✅ | |
 | `statuses` | ✅ | ✅ | ✅ | |
-| `asset_types` | ✅ | ✅ | ✅ | |
-| `assets` | ✅ | ✅ | ✅ | |
 | `sla_policies` | ✅ | ✅ | ✅ | |
-| `holidays` | ✅ | ✅ | ✅ | |
-| `knowledge_base` | ✅ | ✅ | ✅ | |
+| `users` | ✅ | ✅ | ✅ | Exclude password field from values |
 | `tickets` | ✅ | ✅ | ✅ | High priority audit |
 | `ticket_comments` | ✅ | ✅ | ✅ | |
-| `ticket_attachments` | ✅ | ✅ | ✅ | |
+| `attachments` | ✅ | ✅ | ✅ | |
 | `ticket_assignments` | ✅ | ✅ | ✅ | |
 | `ticket_status_history` | ✅ | ✅ | ✅ | |
 | `ticket_escalations` | ✅ | ✅ | ✅ | |
-| `ticket_ratings` | ✅ | ✅ | ✅ | |
+| `audit_logs` | — | — | — | Append-only, no audit of audit |
 
 ### 4.2 Fields to Exclude from Audit
 
