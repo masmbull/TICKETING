@@ -1,0 +1,14 @@
+BUGFIX-003: Fix empty SubCategory dropdown on ticket creation
+
+Root cause: JavaScript in create.blade.php referenced category.sub_categories
+(snake_case) but the @json() serialized relationship key was sub_categories
+(snake_case) — the JS was actually using the correct key. The real issue was
+that the TicketController create() method was not eager-loading the
+subCategories relationship, so the JSON data contained no subcategory data.
+
+Fix: Added Category::with('subCategories') in TicketController@create to
+eager-load subcategories, ensuring the JSON payload includes sub_categories
+data for the frontend dropdown population.
+
+Verified via Puppeteer test: selecting 'CCTV' category now populates
+subcategory dropdown with 'Camera' and 'Recording' options.

@@ -46,7 +46,7 @@ class TicketController extends Controller
         }
 
         $tickets = $query->latest()->paginate(15)->withQueryString();
-        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        $categories = Category::with('subCategories')->where('is_active', true)->orderBy('name')->get();
 
         return view('tickets.index', compact('tickets', 'categories'));
     }
@@ -56,7 +56,7 @@ class TicketController extends Controller
      */
     public function create(): View
     {
-        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        $categories = Category::with('subCategories')->where('is_active', true)->orderBy('name')->get();
 
         return view('tickets.create', compact('categories'));
     }
