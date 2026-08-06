@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Ticket extends Model
@@ -48,5 +49,13 @@ class Ticket extends Model
     public function subCategory(): BelongsTo
     {
         return $this->belongsTo(SubCategory::class);
+    }
+
+    /**
+     * Get the comments for the ticket.
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(TicketComment::class)->orderBy('created_at', 'asc');
     }
 }

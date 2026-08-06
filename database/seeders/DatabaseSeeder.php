@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Administrator',
                 'email' => 'admin@mito.local',
-                'password' => Hash::make('Admin@123'),
+                'password' => 'Admin@123',
                 'email_verified_at' => now(),
             ]
         );

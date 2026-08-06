@@ -39,7 +39,7 @@
             </li>
             <li>
                 <a href="{{ route('tickets.index') }}"
-                   class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ $currentRoute === 'tickets.index' ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
+                   class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ in_array($currentRoute, ['tickets.index', 'tickets.show']) ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 2l2-2-2-2"/>
                     </svg>
@@ -48,19 +48,11 @@
             </li>
             <li>
                 <a href="{{ route('tickets.create') }}"
-                   class="flex items-center px-6 py-2.5 text-sm font-medium text-gray-700 rounded-r-lg hover:bg-gray-100 transition-colors">
+                   class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ $currentRoute === 'tickets.create' ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
                     Create Ticket
-                </a>
-            </li>
-            <li>
-                <a href="#" class="flex items-center px-6 py-2.5 text-sm font-medium text-gray-700 rounded-r-lg hover:bg-gray-100 transition-colors">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0v10a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2h9.5a2.5 2.5 0 012.5 2.5v2.5"/>
-                    </svg>
-                    All Tickets
                 </a>
             </li>
 
@@ -74,35 +66,12 @@
                 Administration
             </li>
             <li>
-                <a href="#" class="flex items-center px-6 py-2.5 text-sm font-medium text-gray-700 rounded-r-lg hover:bg-gray-100 transition-colors">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354A9.93 9.93 0 002.5 12c0 1.87.46 3.64 1.28 5.18l-.01-.02L8 17l3 3 4-3 4 3 4-3 4 3 4-3"/>
-                    </svg>
-                    Users
-                </a>
-            </li>
-            <li>
-                <a href="#" class="flex items-center px-6 py-2.5 text-sm font-medium text-gray-700 rounded-r-lg hover:bg-gray-100 transition-colors">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14l4-2 4 2 4-2 4 2"/>
-                    </svg>
-                    Departments
-                </a>
-            </li>
-            <li>
-                <a href="#" class="flex items-center px-6 py-2.5 text-sm font-medium text-gray-700 rounded-r-lg hover:bg-gray-100 transition-colors">
+                <a href="{{ route('categories.index') }}"
+                   class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ $currentRoute === 'categories.index' ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 11h.01M7 15h.01M7 19h.01M4 7h.01M4 11h.01M4 15h.01M4 19h.01"/>
                     </svg>
                     Categories
-                </a>
-            </li>
-            <li>
-                <a href="#" class="flex items-center px-6 py-2.5 text-sm font-medium text-gray-700 rounded-r-lg hover:bg-gray-100 transition-colors">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    SLA
                 </a>
             </li>
 
@@ -111,19 +80,19 @@
                 <div class="border-t border-gray-200"></div>
             </li>
 
-            <!-- Reports -->
+            <!-- Settings & Account -->
             <li>
-                <a href="#" class="flex items-center px-6 py-2.5 text-sm font-medium text-gray-700 rounded-r-lg hover:bg-gray-100 transition-colors">
+                <a href="{{ route('profile.edit') }}"
+                   class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ $currentRoute === 'profile.edit' ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.1.9 2 2 2v0h10c1.1 0 2-.9 2-2V6l-2-1"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
-                    Reports
+                    Profile
                 </a>
             </li>
-
-            <!-- Settings -->
             <li>
-                <a href="#" class="flex items-center px-6 py-2.5 text-sm font-medium text-gray-700 rounded-r-lg hover:bg-gray-100 transition-colors">
+                <a href="{{ route('settings.index') }}"
+                   class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ $currentRoute === 'settings.index' ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.133 12 6.027l1.675-1.894a2.5 2.5 0 013.85 2.122v4.242a2.5 2.5 0 01-.735 1.767l-1.94 1.94a2.5 2.5 0 01-1.767.735h-2.242a2.5 2.5 0 01-1.767-.735l-1.94-1.94a2.5 2.5 0 01-.735-1.767V6.257a2.5 2.5 0 013.85-2.122z"/>
                     </svg>
