@@ -86,5 +86,63 @@ class DatabaseSeeder extends Seeder
                 'force_password_change' => false,
             ]
         );
+
+        // ========== Additional Realistic Users ==========
+
+        $netDept = Department::where('slug', 'network')->first();
+        $swDept = Department::where('slug', 'software')->first();
+        $hwDept = Department::where('slug', 'hardware')->first();
+
+        // Additional Staff (IT agents)
+        $staffUsers = [
+            ['name' => 'Ahmad Rizky',       'email' => 'ahmad@mito.local',  'dept' => $itDept,   'force_change' => false],
+            ['name' => 'Siti Nurhaliza',     'email' => 'siti@mito.local',   'dept' => $itDept,   'force_change' => false],
+            ['name' => 'Budi Santoso',       'email' => 'budi@mito.local',   'dept' => $netDept,  'force_change' => false],
+            ['name' => 'Dewi Lestari',       'email' => 'dewi@mito.local',   'dept' => $swDept,   'force_change' => false],
+            ['name' => 'Eko Prasetyo',       'email' => 'eko@mito.local',    'dept' => $hwDept,   'force_change' => false],
+        ];
+
+        foreach ($staffUsers as $su) {
+            User::updateOrCreate(
+                ['email' => $su['email']],
+                [
+                    'name' => $su['name'],
+                    'password' => Hash::make('Staff@123'),
+                    'email_verified_at' => now(),
+                    'role_id' => $staffRole->id,
+                    'department_id' => $su['dept']?->id,
+                    'is_active' => true,
+                    'force_password_change' => $su['force_change'],
+                ]
+            );
+        }
+
+        // Additional Regular Users (employees)
+        $regularUsers = [
+            'Fadli Maulana',
+            'Gita Puspita',
+            'Hendra Wijaya',
+            'Indah Permata',
+            'Joko Susilo',
+        ];
+
+        foreach ($regularUsers as $i => $name) {
+            $email = strtolower(str_replace(' ', '.', $name)) . '@mito.local';
+            User::updateOrCreate(
+                ['email' => $email],
+                [
+                    'name' => $name,
+                    'password' => Hash::make('User@123'),
+                    'email_verified_at' => now(),
+                    'role_id' => $userRole->id,
+                    'department_id' => null,
+                    'is_active' => true,
+                    'force_password_change' => false,
+                ]
+            );
+        }
+
+        // ========== Seed Sample Tickets ==========
+        $this->call([TicketSeeder::class]);
     }
 }

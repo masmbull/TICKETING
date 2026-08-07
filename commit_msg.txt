@@ -1,12 +1,1 @@
-feat: Sprint 2 - Complete implementation
-
-Implementations:
-- Models: User, Ticket, Category, Role, Department, TicketStatus, SlaPolicy, TicketAttachment
-- Seeders: Roles, Departments, TicketStatuses, SLAPolicies, updated DatabaseSeeder
-- Auth: Force password change middleware, password change view, last_login_at
-- User CRUD: Full management with role/department assignment, toggle status
-- Dynamic sidebar: Role-based menu rendering per user role
-- SLA Policy: Settings page with CRUD
-- Ticket refactor: Category auto-priority, assignee dropdown, SLA timestamps
-- Dashboard: Per-role statistics views
-- UI: Status pills, priority badges, Jira-inspired styling
+Sprint 2: Complete implementation - Models, Seeders, RBAC, User CRUD, Ticket Assignments, SLA Policies, Dashboard, UI Polish
