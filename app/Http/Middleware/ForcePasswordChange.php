@@ -10,6 +10,11 @@ class ForcePasswordChange
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // Skip force password change in demo mode
+        if (config('app.demo_mode', false)) {
+            return $next($request);
+        }
+
         if (auth()->check() && auth()->user()->force_password_change) {
             if ($request->route()->getName() !== 'password.change' && $request->route()->getName() !== 'password.update') {
                 return redirect()->route('password.change')
