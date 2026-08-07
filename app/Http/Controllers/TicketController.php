@@ -146,6 +146,12 @@ class TicketController extends Controller
      */
     public function store(Request $request)
     {
+        // Normalize a single non-array file upload into an array so the
+        // attachments.* validation rules always run and reject bad files.
+        if ($request->hasFile('attachments') && !is_array($request->file('attachments'))) {
+            $request->files->set('attachments', [$request->file('attachments')]);
+        }
+
         $validated = $request->validate([
             'category_id'    => 'nullable|exists:categories,id',
             'sub_category_id' => 'nullable|exists:sub_categories,id',
@@ -153,7 +159,8 @@ class TicketController extends Controller
             'priority'       => 'required|in:low,medium,high,critical',
             'description'    => 'required',
             'assignee_id'    => 'nullable|exists:users,id',
-            'attachments.*'  => 'file|max:10240',
+            'attachments'    => 'nullable|array',
+            'attachments.*'  => 'file|max:10240|mimes:png,jpg,jpeg,pdf,zip',
         ]);
 
         // Generate ticket number: HD-YYYYMMDD-000001
@@ -190,16 +197,26 @@ class TicketController extends Controller
                 mkdir($privatePath, 0755, true);
             }
 
-            foreach ($request->file('attachments') as $file) {
-                $storedName = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $files = $request->file('attachments');
+            if (!is_array($files)) {
+                $files = [$files];
+            }
+
+            foreach ($files as $file) {
+                $originalName = $file->getClientOriginalName();
+                $extension = strtolower($file->getClientOriginalExtension() ?: 'bin');
+                $mimeType = $file->getMimeType();
+                $fileSize = $file->getSize();
+                $storedName = uniqid() . '_' . time() . '.' . $extension;
+
                 $file->move($privatePath, $storedName);
 
                 TicketAttachment::create([
-                    'ticket_id'        => $ticket->id,
-                    'original_filename' => $file->getClientOriginalName(),
-                    'stored_filename'  => $storedName,
-                    'mime_type'        => $file->getMimeType(),
-                    'file_size'        => $file->getSize(),
+                    'ticket_id'         => $ticket->id,
+                    'original_filename' => $originalName,
+                    'stored_filename'   => $storedName,
+                    'mime_type'         => $mimeType,
+                    'file_size'         => $fileSize,
                 ]);
             }
         }

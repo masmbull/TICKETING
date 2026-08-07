@@ -165,8 +165,8 @@
 
                     <label class="form-label">Files</label>
                     <div class="mt-2">
-                        <div id="dropZone" class="relative flex flex-col items-center justify-center w-full border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer transition-all duration-200 hover:border-primary-300 hover:bg-primary-50/20 dark:hover:border-primary-600 dark:hover:bg-primary-500/10 bg-slate-50/50 dark:bg-slate-900/50">
-                            <div class="flex flex-col items-center justify-center pt-6 pb-6 px-4">
+                        <div id="dropZone" class="relative flex flex-col items-center justify-center w-full border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer transition-all duration-200 hover:border-primary-300 hover:bg-primary-50/20 dark:hover:border-primary-600 dark:hover:bg-primary-500/10 bg-slate-50/50 dark:bg-slate-900/50" role="button" tabindex="0">
+                            <div class="flex flex-col items-center justify-center pt-6 pb-6 px-4 pointer-events-none">
                                 <div class="w-12 h-12 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center mb-3 shadow-sm">
                                     <svg class="w-5 h-5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
@@ -175,8 +175,9 @@
                                 <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Drop files here or click to upload</p>
                                 <p class="text-xs text-slate-400 dark:text-slate-500 mt-1.5">Maximum 10MB per file. PNG, JPG, PDF, ZIP supported.</p>
                             </div>
-                            <input type="file" name="attachments[]" multiple class="hidden" id="attachments">
+                            <input type="file" name="attachments[]" multiple class="hidden" id="attachments" accept=".png,.jpg,.jpeg,.pdf,.zip,image/png,image/jpeg,application/pdf,application/zip">
                         </div>
+                        <div id="uploadError" class="mt-2 hidden"></div>
                     </div>
 
                     {{-- File preview list --}}
@@ -203,6 +204,7 @@
         </form>
     </div>
 </div>
+@endsection
 
 @push('scripts')
 <script>
@@ -256,6 +258,110 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Drag and drop styling for file upload
     if (dropZone && fileInput) {
+        const MAX_FILE_SIZE = 10 * 1024 * 1024;
+        const ALLOWED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'pdf', 'zip'];
+        const ALLOWED_MIMES = ['image/png', 'image/jpeg', 'application/pdf', 'application/zip', 'application/x-zip-compressed'];
+        const errorBox = document.getElementById('uploadError');
+
+        function showError(message) {
+            if (!errorBox) return;
+            errorBox.innerHTML = '<p class="text-xs text-danger-600 dark:text-danger-400 flex items-start gap-1.5"><svg class="w-3.5 h-3.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>' + escapeHtml(message) + '</span></p>';
+            errorBox.classList.remove('hidden');
+        }
+
+        function clearError() {
+            if (errorBox) errorBox.classList.add('hidden');
+        }
+
+        function isValidFile(file) {
+            const ext = (file.name.split('.').pop() || '').toLowerCase();
+            if (!ALLOWED_EXTENSIONS.includes(ext)) {
+                showError('"' + file.name + '" has an unsupported type. Only PNG, JPG, PDF and ZIP files are allowed.');
+                return false;
+            }
+            if (file.size > MAX_FILE_SIZE) {
+                showError('"' + file.name + '" exceeds the 10MB size limit.');
+                return false;
+            }
+            return true;
+        }
+
+        function updateFileInput() {
+            const dt = new DataTransfer();
+            const accepted = [];
+            Array.from(fileInput.files).forEach(f => {
+                if (isValidFile(f)) accepted.push(f);
+            });
+            accepted.forEach(f => dt.items.add(f));
+            fileInput.files = dt.files;
+        }
+
+        function addFiles(fileList) {
+            const incoming = Array.from(fileList);
+            const existing = Array.from(fileInput.files);
+            const names = new Set(existing.map(f => f.name));
+            const merged = existing.slice();
+
+            incoming.forEach(file => {
+                if (names.has(file.name)) return;
+                if (!isValidFile(file)) return;
+                names.add(file.name);
+                merged.push(file);
+            });
+
+            const dt = new DataTransfer();
+            merged.forEach(f => dt.items.add(f));
+            fileInput.files = dt.files;
+            clearError();
+            renderPreview();
+        }
+
+        function renderPreview() {
+            const files = Array.from(fileInput.files);
+            if (files.length === 0) {
+                filePreviewList.classList.add('hidden');
+                filePreviewList.innerHTML = '';
+                return;
+            }
+
+            filePreviewList.innerHTML = '';
+            filePreviewList.classList.remove('hidden');
+
+            files.forEach(file => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm animate-slide-up';
+
+                const icon = document.createElement('div');
+                icon.className = 'w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center flex-shrink-0';
+                icon.innerHTML = '<svg class="w-4 h-4 text-slate-500 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>';
+
+                const info = document.createElement('div');
+                info.className = 'flex-1 min-w-0';
+                info.innerHTML = '<p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">' + escapeHtml(file.name) + '</p>' +
+                    '<p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">' + formatFileSize(file.size) + '</p>';
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'text-slate-400 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10';
+                removeBtn.title = 'Remove file';
+                removeBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+                removeBtn.addEventListener('click', () => {
+                    const dt = new DataTransfer();
+                    Array.from(fileInput.files).forEach(f => {
+                        if (f !== file) dt.items.add(f);
+                    });
+                    fileInput.files = dt.files;
+                    clearError();
+                    renderPreview();
+                });
+
+                item.appendChild(icon);
+                item.appendChild(info);
+                item.appendChild(removeBtn);
+                filePreviewList.appendChild(item);
+            });
+        }
+
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropZone.addEventListener(eventName, preventDefaults, false);
         });
@@ -279,62 +385,25 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInput.click();
+            }
+        });
+
         dropZone.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            fileInput.files = files;
-            handleFiles(files);
+            addFiles(e.dataTransfer.files);
         });
 
         fileInput.addEventListener('change', (e) => {
-            handleFiles(e.target.files);
+            clearError();
+            renderPreview();
+            updateFileInput();
+            renderPreview();
         });
-
-        function handleFiles(files) {
-            if (!files || files.length === 0) {
-                filePreviewList.classList.add('hidden');
-                return;
-            }
-
-            filePreviewList.innerHTML = '';
-            filePreviewList.classList.remove('hidden');
-
-            Array.from(files).forEach(file => {
-                const item = document.createElement('div');
-                item.className = 'flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm animate-slide-up';
-
-                const icon = document.createElement('div');
-                icon.className = 'w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center flex-shrink-0';
-                icon.innerHTML = '<svg class="w-4 h-4 text-slate-500 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>';
-
-                const info = document.createElement('div');
-                info.className = 'flex-1 min-w-0';
-                info.innerHTML = '<p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">' + escapeHtml(file.name) + '</p>' +
-                    '<p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">' + formatFileSize(file.size) + '</p>';
-
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'text-slate-400 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10';
-                removeBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
-                removeBtn.addEventListener('click', () => {
-                    item.remove();
-                    const dt = new DataTransfer();
-                    const currentFiles = Array.from(fileInput.files);
-                    currentFiles.forEach(f => {
-                        if (f !== file) dt.items.add(f);
-                    });
-                    fileInput.files = dt.files;
-                    if (filePreviewList.children.length === 0) {
-                        filePreviewList.classList.add('hidden');
-                    }
-                });
-
-                item.appendChild(icon);
-                item.appendChild(info);
-                item.appendChild(removeBtn);
-                filePreviewList.appendChild(item);
-            });
-        }
 
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
