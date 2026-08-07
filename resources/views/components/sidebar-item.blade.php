@@ -19,8 +19,8 @@
     <a href="{{ route($route) }}"
        class="flex items-center gap-3 px-3 py-2 text-[13px] font-medium rounded-lg transition-all duration-150
               {{ $active
-                  ? 'bg-primary-50 text-primary-600 shadow-sm shadow-primary-500/10'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                  ? 'bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 shadow-sm shadow-primary-500/10'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }}">
         <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {!! $icons[$icon] ?? $icons['folder'] !!}
         </svg>

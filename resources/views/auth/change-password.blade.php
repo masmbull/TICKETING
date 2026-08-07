@@ -9,8 +9,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script>
+        if (localStorage.getItem('theme') !== 'light') { document.documentElement.classList.add('dark'); }
+    </script>
 </head>
-<body class="bg-slate-50 min-h-screen flex items-center justify-center">
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen flex items-center justify-center">
     <div class="w-full max-w-md px-6">
         <div class="text-center mb-8">
             <div class="inline-flex items-center justify-center w-16 h-16 bg-primary-500 rounded-2xl shadow-lg mb-4">
@@ -18,16 +21,16 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                 </svg>
             </div>
-            <h1 class="text-2xl font-bold text-slate-900">MITO IT Helpdesk</h1>
-            <p class="text-sm text-slate-500 mt-1">You must change your password before continuing</p>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">MITO IT Helpdesk</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">You must change your password before continuing</p>
         </div>
 
         <div class="card p-8">
             @if ($errors->any())
-                <div class="mb-4 p-4 bg-danger-50 border border-danger-200 rounded-xl">
+                <div class="mb-4 p-4 bg-danger-50 dark:bg-danger-500/15 border border-danger-200 dark:border-danger-500/30 rounded-xl">
                     <div class="flex items-start gap-2">
                         <svg class="w-5 h-5 text-danger-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <div class="text-sm text-danger-700">
+                        <div class="text-sm text-danger-700 dark:text-danger-400">
                             @foreach ($errors->all() as $error)
                                 <p>{{ $error }}</p>
                             @endforeach
@@ -73,7 +76,7 @@
             </form>
         </div>
 
-        <p class="text-center text-xs text-slate-400 mt-8">
+        <p class="text-center text-xs text-slate-400 dark:text-slate-500 mt-8">
             &copy; {{ date('Y') }} MITO IT Helpdesk. All rights reserved.
         </p>
     </div>

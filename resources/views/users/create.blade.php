@@ -6,19 +6,19 @@
 <div class="py-6">
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center mb-6">
-            <a href="{{ route('users.index') }}" class="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors">
+            <a href="{{ route('users.index') }}" class="p-2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
             </a>
-            <h1 class="text-2xl font-bold text-slate-900">Create User</h1>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Create User</h1>
         </div>
 
         <div class="card">
             <div class="p-6">
                 @if ($errors->any())
-                    <div class="mb-4 p-4 bg-danger-50 border border-danger-200 rounded-xl">
+                    <div class="mb-4 p-4 bg-danger-50 border border-danger-200 rounded-xl dark:bg-danger-500/15 dark:border-danger-700">
                         <div class="flex items-start gap-2">
-                            <svg class="w-5 h-5 text-danger-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            <div class="text-sm text-danger-700">
+                            <svg class="w-5 h-5 text-danger-500 dark:text-danger-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <div class="text-sm text-danger-700 dark:text-danger-300">
                                 @foreach ($errors->all() as $error)
                                     <p>{{ $error }}</p>
                                 @endforeach
@@ -72,8 +72,8 @@
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="force_password_change" id="force_password_change" value="1"
                                {{ old('force_password_change') ? 'checked' : '' }}
-                               class="w-4 h-4 text-primary-500 border-slate-300 rounded focus:ring-primary-500/20" />
-                        <label for="force_password_change" class="text-sm text-slate-700">Force password change on first login</label>
+                               class="w-4 h-4 text-primary-500 border-slate-300 rounded focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-800" />
+                        <label for="force_password_change" class="text-sm text-slate-700 dark:text-slate-300">Force password change on first login</label>
                     </div>
 
                     <div class="flex items-center justify-end gap-3 pt-4">

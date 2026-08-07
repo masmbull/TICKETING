@@ -8,8 +8,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script>
+        if (localStorage.getItem('theme') !== 'light') { document.documentElement.classList.add('dark'); }
+    </script>
 </head>
-<body class="min-h-screen bg-slate-50 flex">
+<body class="min-h-screen bg-slate-50 dark:bg-slate-950 flex">
     <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 relative overflow-hidden">
         <div class="absolute inset-0 opacity-10">
             <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="#ffffff" fill-opacity="0.4"><path d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/></g></g></svg>
@@ -60,20 +63,20 @@
                     </svg>
                 </div>
                 <div>
-                    <div class="text-lg font-bold text-slate-900">MITO IT Helpdesk</div>
+                    <div class="text-lg font-bold text-slate-900 dark:text-white">MITO IT Helpdesk</div>
                 </div>
             </div>
 
-            <h2 class="text-2xl font-bold text-slate-900">Sign in</h2>
-            <p class="mt-2 text-sm text-slate-500">
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Sign in</h2>
+            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
                 Enter your credentials to access the helpdesk
             </p>
 
             @if($errors->any())
-            <div class="mt-6 p-4 bg-danger-50 border border-danger-200 rounded-xl">
+            <div class="mt-6 p-4 bg-danger-50 dark:bg-danger-500/15 border border-danger-200 dark:border-danger-500/30 rounded-xl">
                 <div class="flex items-start gap-2">
                     <svg class="w-5 h-5 text-danger-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <div class="text-sm text-danger-700">
+                    <div class="text-sm text-danger-700 dark:text-danger-400">
                         @foreach ($errors->all() as $error)
                             <p>{{ $error }}</p>
                         @endforeach
@@ -86,14 +89,14 @@
                 @csrf
 
                 <div>
-                    <label for="email" class="block text-sm font-semibold text-slate-700 mb-1.5">Email address</label>
+                    <label for="email" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Email address</label>
                     <input id="email" name="email" type="email" value="{{ old('email') }}" required autofocus autocomplete="email"
                            class="input"
                            placeholder="you@mito.local">
                 </div>
 
                 <div>
-                    <label for="password" class="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
+                    <label for="password" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Password</label>
                     <input id="password" name="password" type="password" required autocomplete="current-password"
                            class="input"
                            placeholder="Enter your password">
@@ -101,8 +104,8 @@
 
                 <div class="flex items-center justify-between">
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="remember" class="w-4 h-4 text-primary-500 border-slate-300 rounded focus:ring-primary-500/20" {{ old('remember') ? 'checked' : '' }}>
-                        <span class="text-sm text-slate-600">Remember me</span>
+                        <input type="checkbox" name="remember" class="w-4 h-4 text-primary-500 dark:text-primary-400 border-slate-300 dark:border-slate-600 rounded focus:ring-primary-500/20" {{ old('remember') ? 'checked' : '' }}>
+                        <span class="text-sm text-slate-600 dark:text-slate-400">Remember me</span>
                     </label>
                 </div>
 
@@ -112,7 +115,7 @@
                 </button>
             </form>
 
-            <p class="mt-8 text-center text-xs text-slate-400">
+            <p class="mt-8 text-center text-xs text-slate-400 dark:text-slate-500">
                 &copy; 2026 MITO IT Helpdesk
             </p>
         </div>

@@ -22,12 +22,12 @@ $sizes = [
 
 $variants = [
     'primary'   => 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-sm',
-    'secondary' => 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-blue-500 shadow-sm',
+    'secondary' => 'bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 border border-gray-300 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 focus:ring-blue-500 shadow-sm',
     'danger'    => 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm',
     'success'   => 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 shadow-sm',
     'warning'   => 'bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-500 shadow-sm',
-    'ghost'     => 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:ring-gray-500',
-    'link'      => 'text-blue-600 hover:text-blue-800 underline-offset-2 hover:underline focus:ring-blue-500',
+    'ghost'     => 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white focus:ring-gray-500',
+    'link'      => 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline-offset-2 hover:underline focus:ring-blue-500',
 ];
 
 $blockClass = $block ? 'w-full' : '';

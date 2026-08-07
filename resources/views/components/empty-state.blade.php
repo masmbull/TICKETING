@@ -10,12 +10,12 @@
 @endphp
 
 <div class="text-center py-16">
-    <svg class="mx-auto h-14 w-14 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg class="mx-auto h-14 w-14 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         {!! $icons[$icon] ?? $icons['folder'] !!}
     </svg>
-    <h3 class="mt-4 text-sm font-semibold text-slate-900">{{ $title }}</h3>
+    <h3 class="mt-4 text-sm font-semibold text-slate-900 dark:text-white">{{ $title }}</h3>
     @if($description)
-    <p class="mt-1.5 text-sm text-slate-500">{{ $description }}</p>
+    <p class="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{{ $description }}</p>
     @endif
     @if($slot)
     <div class="mt-6">

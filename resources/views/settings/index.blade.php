@@ -5,15 +5,15 @@
 @section('content')
 <div class="space-y-6">
     <div>
-        <h1 class="text-2xl font-bold text-slate-900">Settings</h1>
-        <p class="mt-1 text-sm text-slate-500">Manage application settings</p>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Settings</h1>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage application settings</p>
     </div>
 
     <div class="max-w-2xl space-y-6">
         {{-- Profile --}}
         <div class="card">
-            <div class="p-5 border-b border-slate-100">
-                <h3 class="text-sm font-bold text-slate-900">Profile</h3>
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Profile</h3>
             </div>
             <div class="p-5">
                 <div class="flex items-center gap-4 mb-4">
@@ -21,10 +21,10 @@
                         {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
                     </div>
                     <div>
-                        <div class="text-base font-bold text-slate-900">{{ auth()->user()->name }}</div>
-                        <div class="text-sm text-slate-500">{{ auth()->user()->email }}</div>
+                        <div class="text-base font-bold text-slate-900 dark:text-white">{{ auth()->user()->name }}</div>
+                        <div class="text-sm text-slate-500 dark:text-slate-400">{{ auth()->user()->email }}</div>
                         <div class="mt-1">
-                            <span class="inline-flex px-2 py-0.5 text-xs font-bold rounded-full bg-primary-50 text-primary-700 capitalize">
+                            <span class="inline-flex px-2 py-0.5 text-xs font-bold rounded-full bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400 capitalize">
                                 {{ auth()->user()->role->name ?? 'User' }}
                             </span>
                         </div>
@@ -39,8 +39,8 @@
 
         {{-- Change Password --}}
         <div class="card">
-            <div class="p-5 border-b border-slate-100">
-                <h3 class="text-sm font-bold text-slate-900">Security</h3>
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Security</h3>
             </div>
             <div class="p-5">
                 <form method="POST" action="{{ route('profile.update') }}" class="space-y-4">
@@ -71,30 +71,30 @@
         {{-- Admin Shortcuts --}}
         @if(auth()->user()->isAdmin())
         <div class="card">
-            <div class="p-5 border-b border-slate-100">
-                <h3 class="text-sm font-bold text-slate-900">Administration</h3>
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Administration</h3>
             </div>
             <div class="p-5">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <a href="{{ route('users.index') }}" class="quick-action">
-                        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                         <div>
-                            <div class="text-sm font-semibold text-slate-900">Users</div>
-                            <div class="text-xs text-slate-500">Manage users & roles</div>
+                            <div class="text-sm font-semibold text-slate-900 dark:text-white">Users</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">Manage users & roles</div>
                         </div>
                     </a>
                     <a href="{{ route('categories.index') }}" class="quick-action">
-                        <svg class="w-5 h-5 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 11h.01M7 15h.01M7 19h.01M4 7h.01M4 11h.01M4 15h.01M4 19h.01"/></svg>
+                        <svg class="w-5 h-5 text-warning-600 dark:text-warning-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 11h.01M7 15h.01M7 19h.01M4 7h.01M4 11h.01M4 15h.01M4 19h.01"/></svg>
                         <div>
-                            <div class="text-sm font-semibold text-slate-900">Categories</div>
-                            <div class="text-xs text-slate-500">Manage categories</div>
+                            <div class="text-sm font-semibold text-slate-900 dark:text-white">Categories</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">Manage categories</div>
                         </div>
                     </a>
                     <a href="{{ route('sla-policies.index') }}" class="quick-action">
-                        <svg class="w-5 h-5 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <svg class="w-5 h-5 text-success-600 dark:text-success-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         <div>
-                            <div class="text-sm font-semibold text-slate-900">SLA Policies</div>
-                            <div class="text-xs text-slate-500">Configure SLA rules</div>
+                            <div class="text-sm font-semibold text-slate-900 dark:text-white">SLA Policies</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">Configure SLA rules</div>
                         </div>
                     </a>
                 </div>

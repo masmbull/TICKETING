@@ -5,15 +5,15 @@
 @section('content')
 <div class="space-y-6">
     <div>
-        <h1 class="text-2xl font-bold text-slate-900">My Profile</h1>
-        <p class="mt-1 text-sm text-slate-500">Manage your account information</p>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">My Profile</h1>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage your account information</p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {{-- Profile Info --}}
         <div class="card">
-            <div class="p-5 border-b border-slate-100">
-                <h2 class="text-base font-bold text-slate-900">Profile Information</h2>
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800">
+                <h2 class="text-base font-bold text-slate-900 dark:text-white">Profile Information</h2>
             </div>
             <div class="p-5">
                 <form method="POST" action="{{ route('profile.update') }}" class="space-y-4">
@@ -38,8 +38,8 @@
 
         {{-- Change Password --}}
         <div class="card">
-            <div class="p-5 border-b border-slate-100">
-                <h2 class="text-base font-bold text-slate-900">Change Password</h2>
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800">
+                <h2 class="text-base font-bold text-slate-900 dark:text-white">Change Password</h2>
             </div>
             <div class="p-5">
                 <form method="POST" action="{{ route('profile.password.update') }}" class="space-y-4">
@@ -67,22 +67,22 @@
 
         {{-- Account Info --}}
         <div class="lg:col-span-2 card">
-            <div class="p-5 border-b border-slate-100">
-                <h2 class="text-base font-bold text-slate-900">Account Information</h2>
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800">
+                <h2 class="text-base font-bold text-slate-900 dark:text-white">Account Information</h2>
             </div>
             <div class="p-5">
                 <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                     <div>
-                        <dt class="text-slate-500 font-medium">Role</dt>
-                        <dd class="font-semibold text-slate-900 mt-1">{{ ucfirst($user->role?->name ?? 'User') }}</dd>
+                        <dt class="text-slate-500 dark:text-slate-400 font-medium">Role</dt>
+                        <dd class="font-semibold text-slate-900 dark:text-white mt-1">{{ ucfirst($user->role?->name ?? 'User') }}</dd>
                     </div>
                     <div>
-                        <dt class="text-slate-500 font-medium">Department</dt>
-                        <dd class="font-semibold text-slate-900 mt-1">{{ $user->department?->name ?? '—' }}</dd>
+                        <dt class="text-slate-500 dark:text-slate-400 font-medium">Department</dt>
+                        <dd class="font-semibold text-slate-900 dark:text-white mt-1">{{ $user->department?->name ?? '—' }}</dd>
                     </div>
                     <div>
-                        <dt class="text-slate-500 font-medium">Member Since</dt>
-                        <dd class="font-semibold text-slate-900 mt-1">{{ $user->created_at->format('M d, Y') }}</dd>
+                        <dt class="text-slate-500 dark:text-slate-400 font-medium">Member Since</dt>
+                        <dd class="font-semibold text-slate-900 dark:text-white mt-1">{{ $user->created_at->format('M d, Y') }}</dd>
                     </div>
                 </dl>
             </div>

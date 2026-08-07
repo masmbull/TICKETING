@@ -9,9 +9,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script>
+        if (localStorage.getItem('theme') !== 'light') { document.documentElement.classList.add('dark'); }
+    </script>
     @yield('styles')
 </head>
-<body class="bg-slate-50 min-h-screen font-sans text-slate-800" x-data="{ sidebarOpen: true, mobileSidebar: false, adminOpen: true, managerOpen: true, staffOpen: true, userOpen: true, mgmtOpen: false, notifOpen: false, userDropdownOpen: false }">
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen font-sans text-slate-800 dark:text-slate-200" x-data="{ sidebarOpen: true, mobileSidebar: false, adminOpen: true, managerOpen: true, staffOpen: true, userOpen: true, mgmtOpen: false, notifOpen: false, userDropdownOpen: false, darkMode: localStorage.getItem('theme') !== 'light' }" x-init="() => { $watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' : 'light'); document.documentElement.classList.toggle('dark', val); }); document.documentElement.classList.toggle('dark', darkMode); }">
 
     <div class="flex min-h-screen">
         @include('partials.sidebar')
@@ -27,14 +30,14 @@
                      x-show="show"
                      x-transition:enter="toast"
                      x-transition:leave="toast-exit"
-                     class="mb-6 flex items-center gap-3 px-5 py-3.5 bg-white border border-success-200 rounded-xl shadow-md shadow-success-500/5">
-                    <div class="w-8 h-8 rounded-lg bg-success-100 flex items-center justify-center flex-shrink-0">
-                        <svg class="w-4 h-4 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     class="mb-6 flex items-center gap-3 px-5 py-3.5 bg-white dark:bg-slate-800 border border-success-200 dark:border-success-500/30 rounded-xl shadow-md shadow-success-500/5">
+                    <div class="w-8 h-8 rounded-lg bg-success-100 dark:bg-success-500/15 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4 h-4 text-success-600 dark:text-success-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <span class="text-sm font-medium text-slate-700">{{ session('success') }}</span>
-                    <button @click="show = false" class="ml-auto text-slate-400 hover:text-slate-600 transition-colors">
+                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ session('success') }}</span>
+                    <button @click="show = false" class="ml-auto text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -45,14 +48,14 @@
                      x-show="show"
                      x-transition:enter="toast"
                      x-transition:leave="toast-exit"
-                     class="mb-6 flex items-center gap-3 px-5 py-3.5 bg-white border border-danger-200 rounded-xl shadow-md shadow-danger-500/5">
-                    <div class="w-8 h-8 rounded-lg bg-danger-100 flex items-center justify-center flex-shrink-0">
-                        <svg class="w-4 h-4 text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     class="mb-6 flex items-center gap-3 px-5 py-3.5 bg-white dark:bg-slate-800 border border-danger-200 dark:border-danger-500/30 rounded-xl shadow-md shadow-danger-500/5">
+                    <div class="w-8 h-8 rounded-lg bg-danger-100 dark:bg-danger-500/15 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4 h-4 text-danger-600 dark:text-danger-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <span class="text-sm font-medium text-slate-700">{{ session('error') }}</span>
-                    <button @click="show = false" class="ml-auto text-slate-400 hover:text-slate-600 transition-colors">
+                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ session('error') }}</span>
+                    <button @click="show = false" class="ml-auto text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -63,14 +66,14 @@
                      x-show="show"
                      x-transition:enter="toast"
                      x-transition:leave="toast-exit"
-                     class="mb-6 flex items-center gap-3 px-5 py-3.5 bg-white border border-warning-200 rounded-xl shadow-md shadow-warning-500/5">
-                    <div class="w-8 h-8 rounded-lg bg-warning-100 flex items-center justify-center flex-shrink-0">
-                        <svg class="w-4 h-4 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     class="mb-6 flex items-center gap-3 px-5 py-3.5 bg-white dark:bg-slate-800 border border-warning-200 dark:border-warning-500/30 rounded-xl shadow-md shadow-warning-500/5">
+                    <div class="w-8 h-8 rounded-lg bg-warning-100 dark:bg-warning-500/15 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4 h-4 text-warning-600 dark:text-warning-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
                     </div>
-                    <span class="text-sm font-medium text-slate-700">{{ session('warning') }}</span>
-                    <button @click="show = false" class="ml-auto text-slate-400 hover:text-slate-600 transition-colors">
+                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ session('warning') }}</span>
+                    <button @click="show = false" class="ml-auto text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -79,8 +82,8 @@
                 @yield('content')
             </main>
 
-            <footer class="px-6 py-4 border-t border-slate-100 bg-white/50">
-                <div class="flex items-center justify-between text-xs text-slate-400">
+            <footer class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
+                <div class="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
                     <span>&copy; {{ date('Y') }} MITO IT Helpdesk</span>
                     <span>Laravel v{{ Illuminate\Foundation\Application::VERSION }}</span>
                 </div>

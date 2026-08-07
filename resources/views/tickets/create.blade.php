@@ -4,37 +4,61 @@
 
 @section('content')
 <div class="min-h-screen -m-6 p-6 lg:p-8">
-    <div class="flex items-center gap-3 mb-6">
-        <a href="{{ route('tickets.index') }}" class="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        </a>
-        <div>
-            <h1 class="text-xl font-bold text-slate-900">Create New Ticket</h1>
-            <p class="text-sm text-slate-500 mt-0.5">Submit a new support request</p>
+    <div class="max-w-[1200px] mx-auto w-full">
+
+        {{-- Header --}}
+        <div class="flex items-center gap-4 mb-8">
+            <a href="{{ route('tickets.index') }}" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-white dark:text-slate-500 dark:hover:text-slate-300 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all duration-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Create New Ticket</h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Submit a new support request and we'll get back to you shortly</p>
+            </div>
         </div>
-    </div>
 
-    <form method="POST" action="{{ route('tickets.store') }}" enctype="multipart/form-data" class="max-w-7xl w-full">
-        @csrf
+        <form method="POST" action="{{ route('tickets.store') }}" enctype="multipart/form-data" class="space-y-6" id="createTicketForm">
+            @csrf
 
-        <div class="space-y-6">
-            {{-- Subject --}}
+            {{-- Basic Information --}}
             <div class="card">
-                <div class="p-5">
-                    <label for="subject" class="form-label form-label-required">Subject</label>
-                    <input type="text" name="subject" id="subject" value="{{ old('subject') }}" required
-                           class="input"
-                           placeholder="Brief description of your issue">
-                    @error('subject')
-                        <p class="form-error">{{ $message }}</p>
-                    @enderror
+                <div class="p-6">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-9 h-9 rounded-xl bg-primary-50 dark:bg-primary-500/10 border border-primary-100 dark:border-primary-500/20 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Basic Information</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">What do you need help with?</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="subject" class="form-label form-label-required">Subject</label>
+                        <input type="text" name="subject" id="subject" value="{{ old('subject') }}" required
+                               class="input"
+                               placeholder="Brief description of your issue">
+                        @error('subject')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
             </div>
 
-            {{-- Category & Sub Category --}}
+            {{-- Classification --}}
             <div class="card">
-                <div class="p-5">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="p-6">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Classification</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Help us route your request to the right team</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <label for="category_id" class="form-label form-label-required">Category</label>
                             <select name="category_id" id="category_id" required class="select">
@@ -59,17 +83,27 @@
                 </div>
             </div>
 
-            {{-- Priority & Assignee --}}
+            {{-- Priority & Assignment --}}
             <div class="card">
-                <div class="p-5">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="p-6">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Priority & Assignment</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Set urgency and optional assignee</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <label for="priority" class="form-label form-label-required">Priority</label>
                             <select name="priority" id="priority" required class="select">
-                                <option value="low" {{ old('priority') === 'low' ? 'selected' : '' }}>Low</option>
-                                <option value="medium" {{ old('priority', 'medium') === 'medium' ? 'selected' : '' }}>Medium</option>
-                                <option value="high" {{ old('priority') === 'high' ? 'selected' : '' }}>High</option>
-                                <option value="critical" {{ old('priority') === 'critical' ? 'selected' : '' }}>Critical</option>
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
                             </select>
                             @error('priority')
                                 <p class="form-error">{{ $message }}</p>
@@ -94,48 +128,80 @@
 
             {{-- Description --}}
             <div class="card">
-                <div class="p-5">
-                    <label for="description" class="form-label form-label-required">Description</label>
-                    <textarea name="description" id="description" rows="6" required class="textarea"
-                              placeholder="Provide as much detail as possible...">{{ old('description') }}</textarea>
-                    @error('description')
-                        <p class="form-error">{{ $message }}</p>
-                    @enderror
+                <div class="p-6">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Description</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Provide as much detail as possible</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="description" class="form-label form-label-required">Description</label>
+                        <textarea name="description" id="description" rows="6" required class="textarea"
+                                  placeholder="Describe your issue in detail. Include steps to reproduce, error messages, and any relevant information...">{{ old('description') }}</textarea>
+                        @error('description')
+                            <p class="form-error">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
             </div>
 
             {{-- Attachments --}}
             <div class="card">
-                <div class="p-5">
-                    <label class="form-label">Attachments</label>
-                    <div class="mt-2 flex items-center justify-center w-full">
-                        <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-primary-300 hover:bg-primary-50/30 transition-all duration-200">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <svg class="w-8 h-8 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-                                </svg>
-                                <p class="text-sm text-slate-600 font-medium">Drop files here or click to upload</p>
-                                <p class="text-xs text-slate-400 mt-1">Max 10MB per file</p>
+                <div class="p-6">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Attachments</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Upload screenshots, logs, or relevant files</p>
+                        </div>
+                    </div>
+
+                    <label class="form-label">Files</label>
+                    <div class="mt-2">
+                        <div id="dropZone" class="relative flex flex-col items-center justify-center w-full border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer transition-all duration-200 hover:border-primary-300 hover:bg-primary-50/20 dark:hover:border-primary-600 dark:hover:bg-primary-500/10 bg-slate-50/50 dark:bg-slate-900/50">
+                            <div class="flex flex-col items-center justify-center pt-6 pb-6 px-4">
+                                <div class="w-12 h-12 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center mb-3 shadow-sm">
+                                    <svg class="w-5 h-5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                    </svg>
+                                </div>
+                                <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Drop files here or click to upload</p>
+                                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1.5">Maximum 10MB per file. PNG, JPG, PDF, ZIP supported.</p>
                             </div>
                             <input type="file" name="attachments[]" multiple class="hidden" id="attachments">
-                        </label>
+                        </div>
                     </div>
+
+                    {{-- File preview list --}}
+                    <div id="filePreviewList" class="mt-3 space-y-2 hidden"></div>
+
                     @error('attachments')
-                        <p class="form-error">{{ $message }}</p>
+                        <p class="form-error mt-2">{{ $message }}</p>
                     @enderror
                 </div>
             </div>
 
-            {{-- Submit --}}
-            <div class="flex items-center gap-3">
-                <button type="submit" class="btn-primary">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                    Submit Ticket
-                </button>
-                <a href="{{ route('tickets.index') }}" class="btn-secondary">Cancel</a>
+            {{-- Actions --}}
+            <div class="flex items-center justify-between pt-2 pb-6">
+                <p class="text-xs text-slate-400 dark:text-slate-500">Fields marked with <span class="text-red-500">*</span> are required</p>
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('tickets.index') }}" class="btn-secondary">Cancel</a>
+                    <button type="submit" class="btn-primary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        Submit Ticket
+                    </button>
+                </div>
             </div>
-        </div>
-    </form>
+
+        </form>
+    </div>
 </div>
 
 @push('scripts')
@@ -144,6 +210,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const categorySelect = document.getElementById('category_id');
     const subCategorySelect = document.getElementById('sub_category_id');
     const prioritySelect = document.getElementById('priority');
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('attachments');
+    const filePreviewList = document.getElementById('filePreviewList');
 
     const categoryData = {!! json_encode($categories->map(fn($c) => [
         'id' => $c->id,
@@ -183,6 +252,103 @@ document.addEventListener('DOMContentLoaded', function() {
     if (oldCategoryId) {
         loadSubCategories(oldCategoryId);
         updatePriority(oldCategoryId);
+    }
+
+    // Drag and drop styling for file upload
+    if (dropZone && fileInput) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.add('border-primary-400', 'bg-primary-50/40', 'scale-[1.01]');
+                dropZone.classList.remove('border-slate-200', 'bg-slate-50/50');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove('border-primary-400', 'bg-primary-50/40', 'scale-[1.01]');
+                dropZone.classList.add('border-slate-200', 'bg-slate-50/50');
+            });
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            handleFiles(files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            if (!files || files.length === 0) {
+                filePreviewList.classList.add('hidden');
+                return;
+            }
+
+            filePreviewList.innerHTML = '';
+            filePreviewList.classList.remove('hidden');
+
+            Array.from(files).forEach(file => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm animate-slide-up';
+
+                const icon = document.createElement('div');
+                icon.className = 'w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center flex-shrink-0';
+                icon.innerHTML = '<svg class="w-4 h-4 text-slate-500 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>';
+
+                const info = document.createElement('div');
+                info.className = 'flex-1 min-w-0';
+                info.innerHTML = '<p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">' + escapeHtml(file.name) + '</p>' +
+                    '<p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">' + formatFileSize(file.size) + '</p>';
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'text-slate-400 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10';
+                removeBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+                removeBtn.addEventListener('click', () => {
+                    item.remove();
+                    const dt = new DataTransfer();
+                    const currentFiles = Array.from(fileInput.files);
+                    currentFiles.forEach(f => {
+                        if (f !== file) dt.items.add(f);
+                    });
+                    fileInput.files = dt.files;
+                    if (filePreviewList.children.length === 0) {
+                        filePreviewList.classList.add('hidden');
+                    }
+                });
+
+                item.appendChild(icon);
+                item.appendChild(info);
+                item.appendChild(removeBtn);
+                filePreviewList.appendChild(item);
+            });
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
     }
 });
 </script>
