@@ -45,7 +45,7 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Links</h2>
             <div class="space-y-3">
-                @if(auth()->user()->role->slug === 'admin')
+                @if(auth()->user()->role?->slug === 'admin')
                     <a href="{{ route('users.index') }}" class="block p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                         <div class="text-sm font-medium text-gray-900">User Management</div>
                         <div class="text-xs text-gray-500">Manage users, roles, and departments</div>

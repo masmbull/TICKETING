@@ -6,7 +6,7 @@
 <div class="max-w-4xl mx-auto">
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3">
-            <a href="{{ route('tickets.index')" class="text-gray-500 hover:text-gray-700">←</a>
+            <a href="{{ route('tickets.index') }}" class="text-gray-500 hover:text-gray-700">←</a>
             <h1 class="text-2xl font-bold text-gray-900">{{ $ticket->ticket_number }}</h1>
             @php
                 $statusColors = [
@@ -87,7 +87,7 @@
 
                 <form method="POST" action="{{ route('tickets.comments.store', $ticket->id) }}">
                     @csrf
-                    <textarea name="comment" rows="3" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm mb-3" placeholder="Add a comment...">{{ old('comment') }}</textarea>
+                    <textarea name="comment" rows="3" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm mb-3" placeholder="Add a Comment">{{ old('comment') }}</textarea>
                     <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Post Comment</button>
                 </form>
             </div>
