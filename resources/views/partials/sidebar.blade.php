@@ -5,8 +5,7 @@
 @endphp
 
 <aside class="sidebar z-40"
-       :class="sidebarOpen ? 'w-[260px]' : 'w-[72px]'"
-       x-data="{ open: true }">
+       :class="sidebarOpen ? 'w-[260px]' : 'w-[72px]'">
 
     {{-- Logo --}}
     <div class="flex items-center h-16 px-4 border-b border-slate-100 flex-shrink-0">
@@ -34,7 +33,7 @@
     <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1 sidebar-scroll">
         {{-- ADMIN SECTION --}}
         @if($role === 'admin')
-        <div x-data="{ adminOpen: open }" x-init="adminOpen = open">
+        <div>
             <button @click="adminOpen = !adminOpen" class="w-full flex items-center justify-between px-3 py-1.5" :class="sidebarOpen ? '' : 'justify-center'">
                 <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400" x-show="sidebarOpen" x-transition>Administration</span>
                 <svg class="w-3 h-3 text-slate-400 transition-transform duration-200" :class="adminOpen ? 'rotate-0' : '-rotate-90'" x-show="sidebarOpen" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -66,7 +65,7 @@
 
         {{-- MANAGER SECTION --}}
         @if($role === 'manager')
-        <div x-data="{ managerOpen: open }" x-init="managerOpen = open">
+        <div>
             <button @click="managerOpen = !managerOpen" class="w-full flex items-center justify-between px-3 py-1.5" :class="sidebarOpen ? '' : 'justify-center'">
                 <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400" x-show="sidebarOpen" x-transition>Support</span>
                 <svg class="w-3 h-3 text-slate-400 transition-transform duration-200" :class="managerOpen ? 'rotate-0' : '-rotate-90'" x-show="sidebarOpen" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -90,7 +89,7 @@
 
         {{-- STAFF SECTION --}}
         @if($role === 'staff')
-        <div x-data="{ staffOpen: open }" x-init="staffOpen = open">
+        <div>
             <button @click="staffOpen = !staffOpen" class="w-full flex items-center justify-between px-3 py-1.5" :class="sidebarOpen ? '' : 'justify-center'">
                 <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400" x-show="sidebarOpen" x-transition>Support</span>
                 <svg class="w-3 h-3 text-slate-400 transition-transform duration-200" :class="staffOpen ? 'rotate-0' : '-rotate-90'" x-show="sidebarOpen" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -114,7 +113,7 @@
 
         {{-- USER SECTION --}}
         @if($role === 'user')
-        <div x-data="{ userOpen: open }" x-init="userOpen = open">
+        <div>
             <button @click="userOpen = !userOpen" class="w-full flex items-center justify-between px-3 py-1.5" :class="sidebarOpen ? '' : 'justify-center'">
                 <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400" x-show="sidebarOpen" x-transition>Tickets</span>
                 <svg class="w-3 h-3 text-slate-400 transition-transform duration-200" :class="userOpen ? 'rotate-0' : '-rotate-90'" x-show="sidebarOpen" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -138,7 +137,7 @@
 
         {{-- MANAGEMENT SECTION (Admin + Manager) --}}
         @if(in_array($role, ['admin', 'manager']))
-        <div x-data="{ mgmtOpen: false }" class="mt-4 pt-4 border-t border-slate-100">
+        <div class="mt-4 pt-4 border-t border-slate-100">
             <button @click="mgmtOpen = !mgmtOpen" class="w-full flex items-center justify-between px-3 py-1.5" :class="sidebarOpen ? '' : 'justify-center'">
                 <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400" x-show="sidebarOpen" x-transition>Management</span>
                 <svg class="w-3 h-3 text-slate-400 transition-transform duration-200" :class="mgmtOpen ? 'rotate-0' : '-rotate-90'" x-show="sidebarOpen" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -165,8 +164,8 @@
 
     {{-- User Card --}}
     <div class="border-t border-slate-100 p-3 flex-shrink-0">
-        <div class="relative" x-data="{ open: false }" @click.away="open = false">
-            <button @click="open = !open" class="w-full flex items-center gap-3 rounded-xl hover:bg-slate-50 transition-all duration-200 cursor-pointer group" :class="sidebarOpen ? 'px-2 py-2' : 'justify-center px-0 py-2'">
+        <div class="relative" @click.away="userDropdownOpen = false">
+            <button @click="userDropdownOpen = !userDropdownOpen" class="w-full flex items-center gap-3 rounded-xl hover:bg-slate-50 transition-all duration-200 cursor-pointer group" :class="sidebarOpen ? 'px-2 py-2' : 'justify-center px-0 py-2'">
                 <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm ring-2 ring-white transition-all duration-200 group-hover:ring-primary-100 group-hover:shadow-md">
                     {{ $initials }}
                 </div>
@@ -174,11 +173,11 @@
                     <div class="text-sm font-semibold text-slate-800 truncate">{{ $user->name }}</div>
                     <div class="text-[11px] font-medium text-slate-400 truncate">{{ $user->role->name ?? 'User' }}</div>
                 </div>
-                <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0" :class="open ? 'rotate-180' : ''" x-show="sidebarOpen" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0" :class="userDropdownOpen ? 'rotate-180' : ''" x-show="sidebarOpen" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </button>
 
             {{-- Dropdown --}}
-            <div x-show="open" x-transition:enter="dropdown-enter" x-transition:leave="dropdown-leave" x-cloak
+            <div x-show="userDropdownOpen" x-transition:enter="dropdown-enter" x-transition:leave="dropdown-leave" x-cloak
                  class="absolute bottom-full left-0 mb-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg shadow-slate-200/60 overflow-hidden z-50">
                 <div class="px-4 py-3 border-b border-slate-100">
                     <div class="text-sm font-semibold text-slate-900 truncate">{{ $user->name }}</div>

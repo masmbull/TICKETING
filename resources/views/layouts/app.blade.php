@@ -11,7 +11,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @yield('styles')
 </head>
-<body class="bg-slate-50 min-h-screen font-sans text-slate-800" x-data="{ sidebarOpen: true, mobileSidebar: false }">
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800" x-data="{ sidebarOpen: true, mobileSidebar: false, adminOpen: true, managerOpen: true, staffOpen: true, userOpen: true, mgmtOpen: false, notifOpen: false, userDropdownOpen: false }">
 
     <div class="flex min-h-screen">
         @include('partials.sidebar')

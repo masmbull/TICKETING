@@ -541,7 +541,6 @@ body {
     background: white;
     display: flex;
     flex-direction: column;
-    width: 260px;
     transition: width 0.2s ease;
 }
 .sidebar-collapsed {

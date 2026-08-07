@@ -14,7 +14,7 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('tickets.store') }}" enctype="multipart/form-data" class="max-w-3xl">
+    <form method="POST" action="{{ route('tickets.store') }}" enctype="multipart/form-data" class="max-w-7xl w-full">
         @csrf
 
         <div class="space-y-6">

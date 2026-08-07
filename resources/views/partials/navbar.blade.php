@@ -17,14 +17,14 @@
 
     <div class="flex items-center gap-1">
         {{-- Notifications --}}
-        <div x-data="{ open: false }" class="relative">
-            <button @click="open = !open" @keydown.escape="open = false"
+        <div class="relative">
+            <button @click="notifOpen = !notifOpen" @keydown.escape="notifOpen = false"
                     class="relative p-2.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200 hover:scale-105 active:scale-95">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                 <span class="absolute top-2 right-2 w-2 h-2 bg-danger-500 rounded-full ring-2 ring-white" style="animation: pulseSoft 2s ease-in-out infinite;"></span>
             </button>
 
-            <div x-show="open" @click.away="open = false"
+            <div x-show="notifOpen" @click.away="notifOpen = false"
                  x-transition:enter="dropdown-enter" x-transition:leave="dropdown-leave"
                  class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg shadow-slate-200/60 border border-slate-100 overflow-hidden z-50" style="display:none;">
                 <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -54,17 +54,17 @@
         <div class="w-px h-6 bg-slate-200 mx-1"></div>
 
         {{-- User Dropdown --}}
-        <div class="relative" x-data="{ open: false }">
-            <button @click="open = !open" @keydown.escape="open = false"
+        <div class="relative">
+            <button @click="userDropdownOpen = !userDropdownOpen" @keydown.escape="userDropdownOpen = false"
                     class="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl hover:bg-slate-100 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
                 <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold shadow-sm ring-2 ring-white transition-all duration-200 group-hover:ring-primary-100 group-hover:shadow-md">
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                 </div>
                 <span class="text-sm font-medium text-slate-700 hidden sm:block">{{ auth()->user()->name }}</span>
-                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="userDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
             </button>
 
-            <div x-show="open" @click.away="open = false"
+            <div x-show="userDropdownOpen" @click.away="userDropdownOpen = false"
                  x-transition:enter="dropdown-enter" x-transition:leave="dropdown-leave"
                  class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg shadow-slate-200/60 border border-slate-100 py-1 z-50 overflow-hidden" style="display:none;">
                 <div class="px-5 py-4 border-b border-slate-100">
