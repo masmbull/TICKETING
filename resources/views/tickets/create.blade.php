@@ -133,11 +133,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const subCategorySelect = document.getElementById('sub_category_id');
     const prioritySelect = document.getElementById('priority');
 
-    const categoryData = @json($categories->map(fn($c) => [
+    const categoryData = {!! json_encode($categories->map(fn($c) => [
         'id' => $c->id,
         'default_priority' => $c->default_priority,
         'subcategories' => $c->subCategories->map(fn($sc) => ['id' => $sc->id, 'name' => $sc->name])
-    ]));
+    ])) !!};
 
     const oldCategoryId = '{{ old("category_id") }}';
     const oldSubCategoryId = '{{ old("sub_category_id") }}';

@@ -1,1 +1,1 @@
-Sprint 2: Complete implementation - Models, Seeders, RBAC, User CRUD, Ticket Assignments, SLA Policies, Dashboard, UI Polish
+Sprint 2: Fix Blade view bugs 

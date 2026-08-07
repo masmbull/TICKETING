@@ -1,93 +1,86 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="en" class="antialiased">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'MITO IT Helpdesk')</title>
+    <title>@yield('title', 'Dashboard') - MITO IT Helpdesk</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @stack('styles')
+    @yield('styles')
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: true, mobileSidebar: false }">
-        <!-- Sidebar (Desktop: fixed, Mobile: overlay) -->
-        <div class="hidden lg:block" :class="{ 'lg:w-64': sidebarOpen, 'lg:w-0': !sidebarOpen }" x-transition>
-            @include('partials.sidebar')
-        </div>
+<body class="bg-[#f8fafc] min-h-screen font-sans text-slate-800" x-data="{ sidebarOpen: true, mobileSidebar: false }">
 
-        <!-- Mobile sidebar overlay -->
-        <div x-show="mobileSidebar" x-transition:enter="transition-opacity ease-linear duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="mobileSidebar = false" class="fixed inset-0 z-40 bg-gray-900/50 lg:hidden" style="display:none"></div>
+    <div class="flex min-h-screen">
+        {{-- SIDEBAR --}}
+        @include('partials.sidebar')
 
-        <!-- Mobile sidebar panel -->
-        <div x-show="mobileSidebar" x-transition:enter="transition ease-in-out duration-200" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in-out duration-200" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full" class="fixed inset-y-0 left-0 z-50 lg:hidden" style="display:none">
-            @include('partials.sidebar')
-        </div>
+        {{-- MAIN CONTENT --}}
+        <div class="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-out"
+             :class="sidebarOpen ? 'lg:ml-[260px]' : 'lg:ml-[72px]'">
 
-        <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col overflow-hidden min-w-0">
-            <!-- Navbar -->
+            {{-- NAVBAR --}}
             @include('partials.navbar')
 
-            <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto">
-                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                    <!-- Flash Messages -->
-                    @if(session('success'))
-                    <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3" id="flash-success">
-                        <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            {{-- PAGE CONTENT --}}
+            <main class="flex-1 p-6 lg:p-8 max-w-[1600px] mx-auto w-full">
+                {{-- Flash Messages with Alpine.js --}}
+                @if(session('success'))
+                <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 5000)"
+                     x-show="show"
+                     x-transition:enter="toast-enter"
+                     x-transition:leave="toast-leave"
+                     class="mb-6 flex items-center gap-3 px-5 py-3.5 bg-white border border-success-200 rounded-2xl shadow-lg shadow-success-500/5">
+                    <div class="w-8 h-8 rounded-xl bg-success-100 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4 h-4 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <p class="text-sm text-green-800">{{ session('success') }}</p>
-                        <button onclick="this.parentElement.remove()" class="ml-auto text-green-600 hover:text-green-800">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
                     </div>
-                    @endif
+                    <span class="text-sm font-medium text-slate-700">{{ session('success') }}</span>
+                    <button @click="show = false" class="ml-auto text-slate-400 hover:text-slate-600 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                @endif
 
-                    @if(session('error'))
-                    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-                        <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                @if(session('error'))
+                <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 5000)"
+                     x-show="show"
+                     x-transition:enter="toast-enter"
+                     x-transition:leave="toast-leave"
+                     class="mb-6 flex items-center gap-3 px-5 py-3.5 bg-white border border-danger-200 rounded-2xl shadow-lg shadow-danger-500/5">
+                    <div class="w-8 h-8 rounded-xl bg-danger-100 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4 h-4 text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <p class="text-sm text-red-800">{{ session('error') }}</p>
                     </div>
-                    @endif
-
-                    @if($errors->any())
-                    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <ul class="list-disc list-inside text-sm text-red-800 space-y-1">
-                            @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    @endif
-
-                    @yield('content')
+                    <span class="text-sm font-medium text-slate-700">{{ session('error') }}</span>
+                    <button @click="show = false" class="ml-auto text-slate-400 hover:text-slate-600 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
                 </div>
+                @endif
+
+                @yield('content')
             </main>
 
-            <!-- Footer -->
-            @include('partials.footer')
+            {{-- FOOTER --}}
+            <footer class="px-6 py-4 border-t border-slate-100 bg-white/50">
+                <div class="flex items-center justify-between text-xs text-slate-400">
+                    <span>&copy; {{ date('Y') }} MITO IT Helpdesk</span>
+                    <span>Laravel v{{ Illuminate\Foundation\Application::VERSION }}</span>
+                </div>
+            </footer>
         </div>
     </div>
 
-    <!-- Alpine.js for interactivity -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    @stack('scripts')
+    {{-- Mobile sidebar overlay --}}
+    <div x-show="mobileSidebar" x-transition:enter="transition-opacity duration-300 ease-out" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity duration-200 ease-in" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+         @click="mobileSidebar = false"
+         class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden"></div>
 
-    <script>
-        // Flash message auto-dismiss
-        setTimeout(() => {
-            const flash = document.getElementById('flash-success');
-            if (flash) {
-                flash.style.transition = 'opacity 0.3s';
-                flash.style.opacity = '0';
-                setTimeout(() => flash.remove(), 300);
-            }
-        }, 5000);
-    </script>
+    @yield('scripts')
 </body>
 </html>

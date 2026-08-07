@@ -65,6 +65,7 @@
         'high' => 'bg-orange-100 text-orange-700 border border-orange-200',
         'critical' => 'bg-red-100 text-red-700 border border-red-200',
     ];
+@endphp
 
 @section('content')
 <div class="min-h-screen bg-gray-50 -m-6 p-6">
