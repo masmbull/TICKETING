@@ -166,7 +166,7 @@
     {{-- User Card --}}
     <div class="border-t border-slate-100 p-3 flex-shrink-0">
         <div class="relative" x-data="{ open: false }" @click.away="open = false">
-            <button @click="open = !open" class="w-full flex items-center gap-3 {{ sidebarOpen ? 'px-2 py-2' : 'justify-center px-0 py-2' }} rounded-xl hover:bg-slate-50 transition-all duration-200 cursor-pointer group">
+            <button @click="open = !open" class="w-full flex items-center gap-3 rounded-xl hover:bg-slate-50 transition-all duration-200 cursor-pointer group" :class="sidebarOpen ? 'px-2 py-2' : 'justify-center px-0 py-2'">
                 <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm ring-2 ring-white transition-all duration-200 group-hover:ring-primary-100 group-hover:shadow-md">
                     {{ $initials }}
                 </div>
