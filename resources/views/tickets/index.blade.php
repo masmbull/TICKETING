@@ -18,6 +18,7 @@
     ];
 @endphp
 
+@section('content')
 <div class="min-h-screen bg-gray-50 -m-6 p-6">
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">

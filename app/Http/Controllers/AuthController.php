@@ -61,7 +61,7 @@ class AuthController extends Controller
     /**
      * Show the role-specific login form.
      */
-    public function showLoginForm(?string $role = null): View
+    public function showLoginForm(?string $role = null): View|RedirectResponse
     {
         $config = $this->roles[$role] ?? null;
 

@@ -2,6 +2,7 @@
 
 @section('title', 'Create Ticket - MITO IT Helpdesk')
 
+@section('content')
 <div class="min-h-screen bg-gray-50 -m-6 p-6">
     {{-- Header --}}
     <div class="flex items-center gap-3 mb-6">
@@ -70,15 +71,15 @@
                             <option value="critical" {{ old('priority') === 'critical' ? 'selected' : '' }}>Critical</option>
                         </select>
                     </div>
-                    @if((Auth::user()->isAdmin() || Auth::user()->isManager()) && isset($users))
+                    @if((Auth::user()->isAdmin() || Auth::user()->isManager()) && isset($agents) && $agents->count() > 0)
                     <div>
                         <label for="assignee_id" class="block text-sm font-semibold text-gray-900 mb-2">Assign To</label>
                         <select name="assignee_id" id="assignee_id"
                                 class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-sm">
                             <option value="">Unassigned</option>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}" {{ old('assignee_id') == $user->id ? 'selected' : '' }}>
-                                    {{ $user->name }} ({{ $user->role->name ?? 'User' }})
+                            @foreach($agents as $agent)
+                                <option value="{{ $agent->id }}" {{ old('assignee_id') == $agent->id ? 'selected' : '' }}>
+                                    {{ $agent->name }} ({{ $agent->role->name ?? 'User' }})
                                 </option>
                             @endforeach
                         </select>
@@ -171,7 +172,6 @@ document.addEventListener('DOMContentLoaded', function() {
         loadSubCategories(oldCategoryId);
         updatePriority(oldCategoryId);
     }
-});
+    });
 </script>
 @endpush
-@endsection

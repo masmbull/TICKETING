@@ -25,3 +25,5 @@ yarn-error.log
 # Archive files
 *.7z
 *.zip
+  
+.env 

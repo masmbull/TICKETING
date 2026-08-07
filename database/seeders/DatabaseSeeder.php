@@ -2,28 +2,21 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Seed roles, departments, statuses, SLA policies, categories
         $this->call([
             RoleSeeder::class,
             DepartmentSeeder::class,
             TicketStatusSeeder::class,
             SlaPolicySeeder::class,
             CategorySeeder::class,
-        ]);
-
-        // Seed all users (admin, manager, staff, regular)
-        $this->call([
             UserSeeder::class,
-        ]);
-
-        // Seed sample tickets
-        $this->call([
             TicketSeeder::class,
         ]);
     }
