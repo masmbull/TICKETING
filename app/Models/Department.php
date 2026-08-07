@@ -3,31 +3,28 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Category extends Model
+class Department extends Model
 {
     protected $fillable = [
         'name',
         'slug',
         'description',
         'is_active',
-        'default_priority',
-        'sla_policy_id',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
     ];
 
-    public function subCategories(): HasMany
+    public function users(): HasMany
     {
-        return $this->hasMany(SubCategory::class);
+        return $this->hasMany(User::class);
     }
 
-    public function slaPolicy(): BelongsTo
+    public function tickets(): HasMany
     {
-        return $this->belongsTo(SlaPolicy::class);
+        return $this->hasMany(Ticket::class);
     }
 }

@@ -1,14 +1,12 @@
-BUGFIX-003: Fix empty SubCategory dropdown on ticket creation
+feat: Sprint 2 - Complete implementation
 
-Root cause: JavaScript in create.blade.php referenced category.sub_categories
-(snake_case) but the @json() serialized relationship key was sub_categories
-(snake_case) — the JS was actually using the correct key. The real issue was
-that the TicketController create() method was not eager-loading the
-subCategories relationship, so the JSON data contained no subcategory data.
-
-Fix: Added Category::with('subCategories') in TicketController@create to
-eager-load subcategories, ensuring the JSON payload includes sub_categories
-data for the frontend dropdown population.
-
-Verified via Puppeteer test: selecting 'CCTV' category now populates
-subcategory dropdown with 'Camera' and 'Recording' options.
+Implementations:
+- Models: User, Ticket, Category, Role, Department, TicketStatus, SlaPolicy, TicketAttachment
+- Seeders: Roles, Departments, TicketStatuses, SLAPolicies, updated DatabaseSeeder
+- Auth: Force password change middleware, password change view, last_login_at
+- User CRUD: Full management with role/department assignment, toggle status
+- Dynamic sidebar: Role-based menu rendering per user role
+- SLA Policy: Settings page with CRUD
+- Ticket refactor: Category auto-priority, assignee dropdown, SLA timestamps
+- Dashboard: Per-role statistics views
+- UI: Status pills, priority badges, Jira-inspired styling

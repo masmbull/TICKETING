@@ -4,25 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Models\Ticket;
 use App\Models\TicketComment;
+use App\Models\TicketAttachment;
 use App\Models\Category;
 use App\Models\SubCategory;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Session;
 
 class TicketController extends Controller
 {
     /**
-     * Display a listing of the user's tickets with search & filter.
+     * Display a listing of the user's tickets (My Tickets).
      */
     public function index(Request $request): View
     {
-        $query = Ticket::where('user_id', auth()->id())->with(['category', 'subCategory']);
+        $query = Ticket::where('user_id', auth()->id())->with(['category', 'subCategory', 'assignee']);
 
-        // Search
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('ticket_number', 'ILIKE', "%{$search}%")
@@ -30,19 +29,64 @@ class TicketController extends Controller
             });
         }
 
-        // Status filter
         if ($status = $request->input('status')) {
             $query->where('status', $status);
         }
 
-        // Priority filter
         if ($priority = $request->input('priority')) {
             $query->where('priority', $priority);
         }
 
-        // Category filter
-        if ($categoryId = $request->input('category_id')) {
-            $query->where('category_id', $categoryId);
+        $tickets = $query->latest()->paginate(15)->withQueryString();
+        $categories = Category::with('subCategories')->where('is_active', true)->orderBy('name')->get();
+
+        return view('tickets.index', compact('tickets', 'categories'));
+    }
+
+    /**
+     * All tickets view (Admin/Manager).
+     */
+    public function allTickets(Request $request): View
+    {
+        $query = Ticket::with(['category', 'subCategory', 'user', 'assignee']);
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('ticket_number', 'ILIKE', "%{$search}%")
+                  ->orWhere('subject', 'ILIKE', "%{$search}%");
+            });
+        }
+
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        if ($priority = $request->input('priority')) {
+            $query->where('priority', $priority);
+        }
+
+        $tickets = $query->latest()->paginate(15)->withQueryString();
+        $categories = Category::with('subCategories')->where('is_active', true)->orderBy('name')->get();
+
+        return view('tickets.index', compact('tickets', 'categories'));
+    }
+
+    /**
+     * Assigned tickets (Staff).
+     */
+    public function assignedTickets(Request $request): View
+    {
+        $query = Ticket::where('assignee_id', auth()->id())->with(['category', 'subCategory', 'user']);
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('ticket_number', 'ILIKE', "%{$search}%")
+                  ->orWhere('subject', 'ILIKE', "%{$search}%");
+            });
+        }
+
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
         }
 
         $tickets = $query->latest()->paginate(15)->withQueryString();
@@ -58,7 +102,16 @@ class TicketController extends Controller
     {
         $categories = Category::with('subCategories')->where('is_active', true)->orderBy('name')->get();
 
-        return view('tickets.create', compact('categories'));
+        // Admin/Manager can assign tickets
+        $agents = collect();
+        if (auth()->user()->isAdmin() || auth()->user()->isManager()) {
+            $agents = User::where('is_active', true)
+                ->whereIn('role_id', [2, 3]) // Manager + Staff
+                ->orderBy('name')
+                ->get();
+        }
+
+        return view('tickets.create', compact('categories', 'agents'));
     }
 
     /**
@@ -76,6 +129,19 @@ class TicketController extends Controller
     }
 
     /**
+     * Get category default priority (AJAX).
+     */
+    public function categoryPriority(Request $request): JsonResponse
+    {
+        $categoryId = $request->input('category_id');
+        $category = Category::find($categoryId);
+
+        return response()->json([
+            'default_priority' => $category->default_priority ?? 'medium',
+        ]);
+    }
+
+    /**
      * Store a newly created ticket in storage.
      */
     public function store(Request $request)
@@ -86,6 +152,8 @@ class TicketController extends Controller
             'subject'        => 'required|max:255',
             'priority'       => 'required|in:low,medium,high,critical',
             'description'    => 'required',
+            'assignee_id'    => 'nullable|exists:users,id',
+            'attachments.*'  => 'file|max:10240',
         ]);
 
         // Generate ticket number: HD-YYYYMMDD-000001
@@ -103,7 +171,6 @@ class TicketController extends Controller
 
         $ticketNumber = "HD-{$today}-{$newNumber}";
 
-        // Create ticket
         $ticket = Ticket::create([
             'ticket_number'  => $ticketNumber,
             'subject'        => $validated['subject'],
@@ -113,7 +180,29 @@ class TicketController extends Controller
             'user_id'        => auth()->id(),
             'category_id'    => $validated['category_id'] ?? null,
             'sub_category_id' => $validated['sub_category_id'] ?? null,
+            'assignee_id'    => $validated['assignee_id'] ?? null,
         ]);
+
+        // Handle file attachments
+        if ($request->hasFile('attachments')) {
+            $privatePath = storage_path('app/private/attachments');
+            if (!is_dir($privatePath)) {
+                mkdir($privatePath, 0755, true);
+            }
+
+            foreach ($request->file('attachments') as $file) {
+                $storedName = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $file->move($privatePath, $storedName);
+
+                TicketAttachment::create([
+                    'ticket_id'        => $ticket->id,
+                    'original_filename' => $file->getClientOriginalName(),
+                    'stored_filename'  => $storedName,
+                    'mime_type'        => $file->getMimeType(),
+                    'file_size'        => $file->getSize(),
+                ]);
+            }
+        }
 
         return redirect()->route('tickets.index')
             ->with('success', 'Ticket created successfully. Ticket number: ' . $ticket->ticket_number);
@@ -124,9 +213,20 @@ class TicketController extends Controller
      */
     public function show(string $id): View
     {
-        $ticket = Ticket::with(['category', 'subCategory', 'user', 'comments.user'])
-            ->where('user_id', auth()->id())
-            ->findOrFail($id);
+        $user = auth()->user();
+
+        // Admin/Manager can see all tickets, others only their own or assigned
+        if ($user->isAdmin() || $user->isManager()) {
+            $ticket = Ticket::with(['category', 'subCategory', 'user', 'assignee', 'comments.user', 'attachments'])
+                ->findOrFail($id);
+        } else {
+            $ticket = Ticket::with(['category', 'subCategory', 'user', 'assignee', 'comments.user', 'attachments'])
+                ->where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                      ->orWhere('assignee_id', $user->id);
+                })
+                ->findOrFail($id);
+        }
 
         return view('tickets.show', compact('ticket'));
     }
@@ -140,25 +240,27 @@ class TicketController extends Controller
             'status' => 'required|in:Open,In Progress,Waiting User,Resolved,Closed',
         ]);
 
-        $ticket = Ticket::where('user_id', auth()->id())->findOrFail($id);
+        $user = auth()->user();
+        if ($user->isAdmin() || $user->isManager()) {
+            $ticket = Ticket::findOrFail($id);
+        } else {
+            $ticket = Ticket::where('user_id', $user->id)->findOrFail($id);
+        }
 
-        $oldStatus = $ticket->status;
         $newStatus = $validated['status'];
 
-        // Only update if status actually changed
-        if ($oldStatus !== $newStatus) {
-            $ticket->update(['status' => $newStatus]);
+        if ($ticket->status !== $newStatus) {
+            $updates = ['status' => $newStatus];
 
-            // Append timeline entry to session
-            $timeline = Session::get('timeline_' . $id, []);
-            $timeline[] = [
-                'type'       => 'status_change',
-                'old_status' => $oldStatus,
-                'new_status' => $newStatus,
-                'user'       => auth()->user()->name,
-                'timestamp'  => now()->toDateTimeString(),
-            ];
-            Session::put('timeline_' . $id, $timeline);
+            // Track resolved/closed timestamps
+            if ($newStatus === 'Resolved' && !$ticket->resolved_at) {
+                $updates['resolved_at'] = now();
+            }
+            if ($newStatus === 'Closed' && !$ticket->closed_at) {
+                $updates['closed_at'] = now();
+            }
+
+            $ticket->update($updates);
         }
 
         return redirect()->route('tickets.show', $id)
@@ -174,13 +276,27 @@ class TicketController extends Controller
             'comment' => 'required|min:3',
         ]);
 
-        $ticket = Ticket::where('user_id', auth()->id())->findOrFail($id);
+        $user = auth()->user();
+        if ($user->isAdmin() || $user->isManager()) {
+            $ticket = Ticket::findOrFail($id);
+        } else {
+            $ticket = Ticket::where('user_id', $user->id)
+                ->orWhere('assignee_id', $user->id)
+                ->findOrFail($id);
+        }
 
         TicketComment::create([
             'ticket_id' => $ticket->id,
-            'user_id'   => auth()->id(),
+            'user_id'   => $user->id,
             'comment'   => $validated['comment'],
         ]);
+
+        // Track first_response_at for staff
+        if ($user->isStaff() || $user->isAdmin() || $user->isManager()) {
+            if (!$ticket->first_response_at) {
+                $ticket->update(['first_response_at' => now()]);
+            }
+        }
 
         return redirect()->route('tickets.show', $id)
             ->with('success', 'Comment posted successfully.');

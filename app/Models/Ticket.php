@@ -20,19 +20,35 @@ class Ticket extends Model
         'user_id',
         'category_id',
         'sub_category_id',
+        'assignee_id',
+        'department_id',
+        'first_response_at',
+        'resolved_at',
+        'closed_at',
+        'sla_priority',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'first_response_at' => 'datetime',
+        'resolved_at' => 'datetime',
+        'closed_at' => 'datetime',
     ];
 
-    /**
-     * Get the user that owns the ticket.
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assignee_id');
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 
     /**
@@ -51,11 +67,13 @@ class Ticket extends Model
         return $this->belongsTo(SubCategory::class);
     }
 
-    /**
-     * Get the comments for the ticket.
-     */
     public function comments(): HasMany
     {
         return $this->hasMany(TicketComment::class)->orderBy('created_at', 'asc');
+    }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(TicketAttachment::class);
     }
 }

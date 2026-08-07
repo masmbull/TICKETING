@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class AuthController extends Controller
@@ -32,6 +34,23 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
+            // Update last_login_at
+            User::where('id', auth()->id())->update(['last_login_at' => now()]);
+
+            // Check if user is active
+            if (!auth()->user()->is_active) {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'Your account has been deactivated. Please contact administrator.',
+                ])->withInput($request->only('email', 'remember'));
+            }
+
+            // Force password change check
+            if (auth()->user()->force_password_change) {
+                return redirect()->route('password.change')
+                    ->with('warning', 'You must change your password before continuing.');
+            }
+
             return redirect()->intended('/dashboard');
         }
 
@@ -40,6 +59,32 @@ class AuthController extends Controller
                 'email' => 'The provided credentials do not match our records.',
             ])
             ->withInput($request->only('email', 'remember'));
+    }
+
+    /**
+     * Show the change password form (forced).
+     */
+    public function showChangePasswordForm(): View
+    {
+        return view('auth.change-password');
+    }
+
+    /**
+     * Handle the forced password change.
+     */
+    public function changePassword(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'password' => ['required', 'confirmed', 'min:8'],
+        ]);
+
+        $user = auth()->user();
+        $user->update([
+            'password' => Hash::make($request->password),
+            'force_password_change' => false,
+        ]);
+
+        return redirect('/dashboard')->with('success', 'Password changed successfully.');
     }
 
     /**

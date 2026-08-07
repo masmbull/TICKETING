@@ -1,5 +1,6 @@
 @php
     $currentRoute = request()->route() ? request()->route()->getName() : '';
+    $userRole = auth()->user()->role->slug ?? 'user';
 @endphp
 
 <aside class="w-64 bg-white border-r border-gray-200 flex flex-col h-screen overflow-y-auto">
@@ -16,7 +17,7 @@
     <!-- Menu -->
     <nav class="flex-1 py-4">
         <ul class="space-y-1">
-            <!-- Dashboard -->
+            <!-- Dashboard (All roles) -->
             <li>
                 <a href="{{ route('dashboard') }}"
                    class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ $currentRoute === 'dashboard' ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
@@ -28,15 +29,42 @@
                 </a>
             </li>
 
-            <!-- Divider -->
             <li class="px-6 my-2">
                 <div class="border-t border-gray-200"></div>
             </li>
 
-            <!-- Ticket Management -->
+            <!-- Tickets Section -->
             <li class="px-6 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Ticket Management
+                Tickets
             </li>
+
+            {{-- Admin/Manager: All Tickets --}}
+            @if(in_array($userRole, ['admin', 'manager']))
+                <li>
+                    <a href="{{ route('tickets.all') }}"
+                       class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ in_array($currentRoute, ['tickets.all']) ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        All Tickets
+                    </a>
+                </li>
+            @endif
+
+            {{-- Staff: Assigned Tickets --}}
+            @if($userRole === 'staff')
+                <li>
+                    <a href="{{ route('tickets.assigned') }}"
+                       class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ $currentRoute === 'tickets.assigned' ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        Assigned to Me
+                    </a>
+                </li>
+            @endif
+
+            {{-- All roles: My Tickets --}}
             <li>
                 <a href="{{ route('tickets.index') }}"
                    class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ in_array($currentRoute, ['tickets.index', 'tickets.show']) ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
@@ -46,6 +74,8 @@
                     My Tickets
                 </a>
             </li>
+
+            {{-- All roles: Create Ticket --}}
             <li>
                 <a href="{{ route('tickets.create') }}"
                    class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ $currentRoute === 'tickets.create' ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
@@ -56,31 +86,69 @@
                 </a>
             </li>
 
-            <!-- Divider -->
             <li class="px-6 my-2">
                 <div class="border-t border-gray-200"></div>
             </li>
 
-            <!-- Administration -->
-            <li class="px-6 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Administration
-            </li>
-            <li>
-                <a href="{{ route('categories.index') }}"
-                   class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ $currentRoute === 'categories.index' ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 11h.01M7 15h.01M7 19h.01M4 7h.01M4 11h.01M4 15h.01M4 19h.01"/>
-                    </svg>
-                    Categories
-                </a>
-            </li>
+            <!-- Administration (Admin only) -->
+            @if($userRole === 'admin')
+                <li class="px-6 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Administration
+                </li>
+                <li>
+                    <a href="{{ route('users.index') }}"
+                       class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ in_array($currentRoute, ['users.index', 'users.create', 'users.edit', 'users.show']) ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                        Users
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('categories.index') }}"
+                       class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ $currentRoute === 'categories.index' ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 11h.01M7 15h.01M7 19h.01M4 7h.01M4 11h.01M4 15h.01M4 19h.01"/>
+                        </svg>
+                        Categories
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('sla-policies.index') }}"
+                       class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ $currentRoute === 'sla-policies.index' ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        SLA Policies
+                    </a>
+                </li>
 
-            <!-- Divider -->
-            <li class="px-6 my-2">
-                <div class="border-t border-gray-200"></div>
-            </li>
+                <li class="px-6 my-2">
+                    <div class="border-t border-gray-200"></div>
+                </li>
+            @endif
 
-            <!-- Settings & Account -->
+            <!-- Manager: Categories (view only) -->
+            @if($userRole === 'manager')
+                <li class="px-6 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Administration
+                </li>
+                <li>
+                    <a href="{{ route('categories.index') }}"
+                       class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ $currentRoute === 'categories.index' ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 11h.01M7 15h.01M7 19h.01M4 7h.01M4 11h.01M4 15h.01M4 19h.01"/>
+                        </svg>
+                        Categories
+                    </a>
+                </li>
+
+                <li class="px-6 my-2">
+                    <div class="border-t border-gray-200"></div>
+                </li>
+            @endif
+
+            <!-- Settings & Account (All roles) -->
             <li>
                 <a href="{{ route('profile.edit') }}"
                    class="flex items-center px-6 py-2.5 text-sm font-medium rounded-r-lg transition-colors {{ $currentRoute === 'profile.edit' ? 'bg-blue-50 text-blue-700 border-l-3 border-blue-600' : 'text-gray-700 hover:bg-gray-100' }}">
@@ -100,7 +168,6 @@
                 </a>
             </li>
 
-            <!-- Divider -->
             <li class="px-6 my-2">
                 <div class="border-t border-gray-200"></div>
             </li>
