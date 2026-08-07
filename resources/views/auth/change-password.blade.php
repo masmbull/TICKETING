@@ -2,33 +2,32 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Change Password - MITO IT Helpdesk</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+<body class="bg-slate-50 min-h-screen flex items-center justify-center">
     <div class="w-full max-w-md px-6">
-        <!-- Logo / Brand -->
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg mb-4">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-primary-500 rounded-2xl shadow-lg mb-4">
                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                 </svg>
             </div>
-            <h1 class="text-2xl font-bold text-gray-900">MITO IT Helpdesk</h1>
-            <p class="text-sm text-gray-600 mt-1">You must change your password before continuing</p>
+            <h1 class="text-2xl font-bold text-slate-900">MITO IT Helpdesk</h1>
+            <p class="text-sm text-slate-500 mt-1">You must change your password before continuing</p>
         </div>
 
-        <!-- Change Password Card -->
-        <div class="bg-white rounded-xl shadow-md p-8">
+        <div class="card p-8">
             @if ($errors->any())
-                <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <div class="flex items-start">
-                        <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <div class="text-sm text-red-700">
+                <div class="mb-4 p-4 bg-danger-50 border border-danger-200 rounded-xl">
+                    <div class="flex items-start gap-2">
+                        <svg class="w-5 h-5 text-danger-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div class="text-sm text-danger-700">
                             @foreach ($errors->all() as $error)
                                 <p>{{ $error }}</p>
                             @endforeach
@@ -40,9 +39,8 @@
             <form method="POST" action="{{ route('password.update') }}" class="space-y-6">
                 @csrf
 
-                <!-- New Password -->
                 <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                    <label for="password" class="form-label form-label-required">New Password</label>
                     <input
                         type="password"
                         id="password"
@@ -50,42 +48,32 @@
                         required
                         minlength="8"
                         autocomplete="new-password"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('password') border-red-500 @enderror"
+                        class="input"
                         placeholder="Min. 8 characters"
                     >
                 </div>
 
-                <!-- Confirm Password -->
                 <div>
-                    <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                    <label for="password_confirmation" class="form-label form-label-required">Confirm Password</label>
                     <input
                         type="password"
                         id="password_confirmation"
                         name="password_confirmation"
                         required
                         autocomplete="new-password"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        class="input"
                         placeholder="Re-enter your new password"
                     >
                 </div>
 
-                <!-- Submit Button -->
-                <div>
-                    <button
-                        type="submit"
-                        class="w-full flex justify-center items-center px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                    >
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                        Change Password
-                    </button>
-                </div>
+                <button type="submit" class="btn-primary w-full flex justify-center items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    Change Password
+                </button>
             </form>
         </div>
 
-        <!-- Footer -->
-        <p class="text-center text-xs text-gray-500 mt-8">
+        <p class="text-center text-xs text-slate-400 mt-8">
             &copy; {{ date('Y') }} MITO IT Helpdesk. All rights reserved.
         </p>
     </div>

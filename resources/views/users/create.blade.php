@@ -6,52 +6,52 @@
 <div class="py-6">
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center mb-6">
-            <a href="{{ route('users.index') }}" class="text-gray-500 hover:text-gray-700 mr-2">
+            <a href="{{ route('users.index') }}" class="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
             </a>
-            <h1 class="text-2xl font-bold text-gray-900">Create User</h1>
+            <h1 class="text-2xl font-bold text-slate-900">Create User</h1>
         </div>
 
-        @if ($errors->any())
-            <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-                @foreach ($errors->all() as $error)
-                    <p>{{ $error }}</p>
-                @endforeach
-            </div>
-        @endif
+        <div class="card">
+            <div class="p-6">
+                @if ($errors->any())
+                    <div class="mb-4 p-4 bg-danger-50 border border-danger-200 rounded-xl">
+                        <div class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-danger-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <div class="text-sm text-danger-700">
+                                @foreach ($errors->all() as $error)
+                                    <p>{{ $error }}</p>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
-        <div class="bg-white shadow rounded-lg p-6">
-            <form method="POST" action="{{ route('users.store') }}">
-                @csrf
-                <div class="space-y-4">
+                <form method="POST" action="{{ route('users.store') }}" class="space-y-4">
+                    @csrf
                     <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700">Name *</label>
-                        <input type="text" name="name" id="name" value="{{ old('name') }}" required
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        <label for="name" class="form-label form-label-required">Full Name</label>
+                        <input type="text" name="name" id="name" value="{{ old('name') }}" required class="input" />
                     </div>
 
                     <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">Email *</label>
-                        <input type="email" name="email" id="email" value="{{ old('email') }}" required
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        <label for="email" class="form-label form-label-required">Email Address</label>
+                        <input type="email" name="email" id="email" value="{{ old('email') }}" required class="input" />
                     </div>
 
                     <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700">Password *</label>
-                        <input type="password" name="password" id="password" required
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        <label for="password" class="form-label form-label-required">Password</label>
+                        <input type="password" name="password" id="password" required class="input" />
                     </div>
 
                     <div>
-                        <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirm Password *</label>
-                        <input type="password" name="password_confirmation" id="password_confirmation" required
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        <label for="password_confirmation" class="form-label form-label-required">Confirm Password</label>
+                        <input type="password" name="password_confirmation" id="password_confirmation" required class="input" />
                     </div>
 
                     <div>
-                        <label for="role_id" class="block text-sm font-medium text-gray-700">Role *</label>
-                        <select name="role_id" id="role_id" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        <label for="role_id" class="form-label form-label-required">Role</label>
+                        <select name="role_id" id="role_id" required class="select">
                             <option value="">Select Role</option>
                             @foreach($roles as $role)
                                 <option value="{{ $role->id }}" {{ old('role_id') == $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
@@ -60,9 +60,8 @@
                     </div>
 
                     <div>
-                        <label for="department_id" class="block text-sm font-medium text-gray-700">Department</label>
-                        <select name="department_id" id="department_id"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        <label for="department_id" class="form-label">Department</label>
+                        <select name="department_id" id="department_id" class="select">
                             <option value="">No Department</option>
                             @foreach($departments as $dept)
                                 <option value="{{ $dept->id }}" {{ old('department_id') == $dept->id ? 'selected' : '' }}>{{ $dept->name }}</option>
@@ -70,19 +69,19 @@
                         </select>
                     </div>
 
-                    <div class="flex items-center">
+                    <div class="flex items-center gap-2">
                         <input type="checkbox" name="force_password_change" id="force_password_change" value="1"
                                {{ old('force_password_change') ? 'checked' : '' }}
-                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        <label for="force_password_change" class="ml-2 text-sm text-gray-700">Force password change on first login</label>
+                               class="w-4 h-4 text-primary-500 border-slate-300 rounded focus:ring-primary-500/20" />
+                        <label for="force_password_change" class="text-sm text-slate-700">Force password change on first login</label>
                     </div>
-                </div>
 
-                <div class="mt-6 flex items-center justify-end gap-3">
-                    <a href="{{ route('users.index') }}" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-300">Cancel</a>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">Create User</button>
-                </div>
-            </form>
+                    <div class="flex items-center justify-end gap-3 pt-4">
+                        <a href="{{ route('users.index') }}" class="btn-secondary">Cancel</a>
+                        <button type="submit" class="btn-primary">Create User</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>

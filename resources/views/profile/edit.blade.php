@@ -4,90 +4,88 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Header -->
     <div>
-        <h1 class="text-2xl font-bold text-gray-900">My Profile</h1>
-        <p class="mt-1 text-sm text-gray-500">Manage your account information</p>
+        <h1 class="text-2xl font-bold text-slate-900">My Profile</h1>
+        <p class="mt-1 text-sm text-slate-500">Manage your account information</p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Profile Info -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Profile Information</h2>
-            <form method="POST" action="{{ route('profile.update') }}">
-                @csrf
-                @method('PATCH')
-                <div class="space-y-4">
+        {{-- Profile Info --}}
+        <div class="card">
+            <div class="p-5 border-b border-slate-100">
+                <h2 class="text-base font-bold text-slate-900">Profile Information</h2>
+            </div>
+            <div class="p-5">
+                <form method="POST" action="{{ route('profile.update') }}" class="space-y-4">
+                    @csrf
+                    @method('PATCH')
                     <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                        <input type="text" id="name" name="name" value="{{ old('name', $user->name) }}" required
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <label for="name" class="form-label form-label-required">Full Name</label>
+                        <input type="text" id="name" name="name" value="{{ old('name', $user->name) }}" required class="input" />
                     </div>
                     <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
-                        <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" required
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <label for="email" class="form-label form-label-required">Email Address</label>
+                        <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" required class="input" />
                     </div>
                     <div>
-                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                        <input type="text" id="phone" name="phone" value="{{ old('phone', $user->phone) }}"
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                               placeholder="Optional">
+                        <label for="phone" class="form-label">Phone Number</label>
+                        <input type="text" id="phone" name="phone" value="{{ old('phone', $user->phone) }}" class="input" placeholder="Optional" />
                     </div>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                        Save Changes
-                    </button>
-                </div>
-            </form>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </form>
+            </div>
         </div>
 
-        <!-- Change Password -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Change Password</h2>
-            <form method="POST" action="{{ route('profile.password.update') }}">
-                @csrf
-                @method('PATCH')
-                <div class="space-y-4">
+        {{-- Change Password --}}
+        <div class="card">
+            <div class="p-5 border-b border-slate-100">
+                <h2 class="text-base font-bold text-slate-900">Change Password</h2>
+            </div>
+            <div class="p-5">
+                <form method="POST" action="{{ route('profile.password.update') }}" class="space-y-4">
+                    @csrf
+                    @method('PATCH')
                     <div>
-                        <label for="current_password" class="block text-sm font-medium text-gray-700 mb-1">Current Password *</label>
-                        <input type="password" id="current_password" name="current_password" required
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <label for="current_password" class="form-label form-label-required">Current Password</label>
+                        <input type="password" id="current_password" name="current_password" required class="input" />
                     </div>
                     <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">New Password *</label>
-                        <input type="password" id="password" name="password" required minlength="8"
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <p class="text-xs text-gray-400 mt-1">Minimum 8 characters</p>
+                        <label for="password" class="form-label form-label-required">New Password</label>
+                        <input type="password" id="password" name="password" required minlength="8" class="input" />
+                        <p class="form-help">Minimum 8 characters</p>
                     </div>
                     <div>
-                        <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password *</label>
-                        <input type="password" id="password_confirmation" name="password_confirmation" required
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <label for="password_confirmation" class="form-label form-label-required">Confirm New Password</label>
+                        <input type="password" id="password_confirmation" name="password_confirmation" required class="input" />
                     </div>
-                    <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                    <button type="submit" class="btn-primary" style="background-color: #f59e0b;">
                         Change Password
                     </button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
 
-        <!-- Account Info -->
-        <div class="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Account Information</h2>
-            <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                <div>
-                    <dt class="text-gray-500">Role</dt>
-                    <dd class="font-medium text-gray-900 mt-1">{{ ucfirst($user->role) }}</dd>
-                </div>
-                <div>
-                    <dt class="text-gray-500">Department</dt>
-                    <dd class="font-medium text-gray-900 mt-1">{{ $user->department ?? '—' }}</dd>
-                </div>
-                <div>
-                    <dt class="text-gray-500">Member Since</dt>
-                    <dd class="font-medium text-gray-900 mt-1">{{ $user->created_at->format('M d, Y') }}</dd>
-                </div>
-            </dl>
+        {{-- Account Info --}}
+        <div class="lg:col-span-2 card">
+            <div class="p-5 border-b border-slate-100">
+                <h2 class="text-base font-bold text-slate-900">Account Information</h2>
+            </div>
+            <div class="p-5">
+                <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <dt class="text-slate-500 font-medium">Role</dt>
+                        <dd class="font-semibold text-slate-900 mt-1">{{ ucfirst($user->role?->name ?? 'User') }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-slate-500 font-medium">Department</dt>
+                        <dd class="font-semibold text-slate-900 mt-1">{{ $user->department?->name ?? '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-slate-500 font-medium">Member Since</dt>
+                        <dd class="font-semibold text-slate-900 mt-1">{{ $user->created_at->format('M d, Y') }}</dd>
+                    </div>
+                </dl>
+            </div>
         </div>
     </div>
 </div>
