@@ -29,13 +29,15 @@
             <div class="card">
                 <div class="p-5">
                     <div class="flex items-center justify-between mb-3">
-                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold
-                            @match($policy->priority)
-                                @case('Critical') bg-danger-50 text-danger-700 @break
-                                @case('High') bg-orange-50 text-orange-700 @break
-                                @case('Medium') bg-warning-50 text-warning-700 @break
-                                @default bg-success-50 text-success-700
-                            @endmatch">{{ $policy->priority }}</span>
+                        @php
+                            $priorityClass = match($policy->priority){
+                                'Critical' => 'bg-danger-50 text-danger-700',
+                                'High' => 'bg-orange-50 text-orange-700',
+                                'Medium' => 'bg-warning-50 text-warning-700',
+                                default => 'bg-success-50 text-success-700',
+                            };
+                        @endphp
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold {{ $priorityClass }}">{{ $policy->priority }}</span>
                         @if($policy->is_active)
                             <span class="w-2 h-2 rounded-full bg-success-400"></span>
                         @else
