@@ -11,11 +11,8 @@ use App\Http\Controllers\SlaPolicyController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
-Route::get('/', function () {
-    return redirect('/login');
-});
-
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::get('/', [AuthController::class, 'showWelcome'])->name('welcome');
+Route::get('/login/{role?}', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
 
 // Authenticated routes

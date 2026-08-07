@@ -6,20 +6,30 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'MITO IT Helpdesk')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @stack('scripts')
+    @stack('styles')
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
-    <div class="flex min-h-screen">
-        <!-- Sidebar -->
-        @include('partials.sidebar')
+<body class="bg-gray-50 min-h-screen">
+    <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: true, mobileSidebar: false }">
+        <!-- Sidebar (Desktop: fixed, Mobile: overlay) -->
+        <div class="hidden lg:block" :class="{ 'lg:w-64': sidebarOpen, 'lg:w-0': !sidebarOpen }" x-transition>
+            @include('partials.sidebar')
+        </div>
+
+        <!-- Mobile sidebar overlay -->
+        <div x-show="mobileSidebar" x-transition:enter="transition-opacity ease-linear duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="mobileSidebar = false" class="fixed inset-0 z-40 bg-gray-900/50 lg:hidden" style="display:none"></div>
+
+        <!-- Mobile sidebar panel -->
+        <div x-show="mobileSidebar" x-transition:enter="transition ease-in-out duration-200" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in-out duration-200" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full" class="fixed inset-y-0 left-0 z-50 lg:hidden" style="display:none">
+            @include('partials.sidebar')
+        </div>
 
         <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="flex-1 flex flex-col overflow-hidden min-w-0">
             <!-- Navbar -->
             @include('partials.navbar')
 
             <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto bg-gray-50">
+            <main class="flex-1 overflow-y-auto">
                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                     <!-- Flash Messages -->
                     @if(session('success'))
@@ -63,5 +73,21 @@
             @include('partials.footer')
         </div>
     </div>
+
+    <!-- Alpine.js for interactivity -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @stack('scripts')
+
+    <script>
+        // Flash message auto-dismiss
+        setTimeout(() => {
+            const flash = document.getElementById('flash-success');
+            if (flash) {
+                flash.style.transition = 'opacity 0.3s';
+                flash.style.opacity = '0';
+                setTimeout(() => flash.remove(), 300);
+            }
+        }, 5000);
+    </script>
 </body>
 </html>

@@ -1,34 +1,39 @@
-<nav class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6">
-    <!-- Left: Hamburger -->
-    <div class="flex items-center">
-        <button type="button" class="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg p-2 transition-colors">
+@php
+    $currentUser = auth()->user();
+@endphp
+
+<header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 flex-shrink-0">
+    <!-- Left: Mobile menu toggle + Search -->
+    <div class="flex items-center gap-3 flex-1 min-w-0">
+        <!-- Mobile: Hamburger -->
+        <button @click="mobileSidebar = !mobileSidebar" class="lg:hidden p-1.5 text-gray-500 hover:text-gray-700 rounded-lg">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
-            <span class="sr-only">Toggle sidebar</span>
         </button>
-    </div>
 
-    <!-- Right: User Info -->
-    <div class="flex items-center space-x-4">
-        <!-- Profile Icon -->
-        <div class="flex items-center justify-center w-9 h-9 bg-blue-100 text-blue-600 rounded-full">
-            <span class="text-sm font-semibold">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
-        </div>
-
-        <!-- User Name -->
-        <span class="text-sm font-medium text-gray-700">{{ auth()->user()->name }}</span>
-
-        <!-- Logout -->
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit"
-                    class="inline-flex items-center px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        <!-- Search Bar -->
+        <form action="{{ route('tickets.all') }}" method="GET" class="hidden sm:flex items-center w-full max-w-md">
+            <div class="relative w-full">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
-                Logout
-            </button>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search tickets..." class="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-colors" />
+            </div>
         </form>
     </div>
-</nav>
+
+    <!-- Right: User dropdown -->
+    <div class="flex items-center gap-3">
+        <!-- User Info -->
+        <div class="hidden sm:flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                {{ strtoupper(substr($currentUser->name, 0, 2)) }}
+            </div>
+            <div class="text-right">
+                <div class="text-sm font-medium text-gray-900">{{ $currentUser->name }}</div>
+                <div class="text-xs text-gray-400 capitalize">{{ $currentUser->role->name ?? 'User' }}</div>
+            </div>
+        </div>
+    </div>
+</header>

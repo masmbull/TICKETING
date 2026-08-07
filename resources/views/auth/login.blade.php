@@ -4,20 +4,40 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Login - MITO IT Helpdesk</title>
+    <title>Login{{ isset($roleName) ? " - {$roleName}" : "" }} - MITO Ticketing System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
     <div class="w-full max-w-md px-6">
+        <!-- Back Button -->
+        <div class="mb-4">
+            <a href="{{ url('/') }}" class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Back
+            </a>
+        </div>
+
         <!-- Logo / Brand -->
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg mb-4">
+            <div class="inline-flex items-center justify-center w-16 h-16 {{ $roleColor ?? 'bg-blue-600' }} rounded-2xl shadow-lg mb-4">
                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                 </svg>
             </div>
-            <h1 class="text-2xl font-bold text-gray-900">MITO IT Helpdesk</h1>
-            <p class="text-sm text-gray-600 mt-1">Sign in to your account</p>
+            <h1 class="text-2xl font-bold text-gray-900">MITO Ticketing System</h1>
+            <p class="text-sm text-gray-600 mt-1">
+                @if(isset($roleName))
+                    Sign in as <span class="font-semibold {{ $roleTextColor ?? 'text-blue-600' }}">{{ $roleName }}</span>
+                @else
+                    Sign in to your account
+                @endif
+            </p>
         </div>
 
         <!-- Login Card -->
@@ -39,6 +59,9 @@
 
             <form method="POST" action="{{ route('login.attempt') }}" class="space-y-6">
                 @csrf
+                @if(isset($roleSlug))
+                    <input type="hidden" name="role" value="{{ $roleSlug }}">
+                @endif
 
                 <!-- Email -->
                 <div>
@@ -47,12 +70,12 @@
                         type="email"
                         id="email"
                         name="email"
-                        value="{{ old('email') }}"
+                        value="{{ old('email', $demoEmail ?? '') }}"
                         required
                         autofocus
                         autocomplete="email"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('email') border-red-500 @enderror"
-                        placeholder="you@example.com"
+                        placeholder="you@mito.local"
                     >
                 </div>
 
@@ -83,7 +106,7 @@
                         <span class="ml-2 text-sm text-gray-600">Remember me</span>
                     </label>
 
-                    <a href="#" class="text-sm text-blue-600 hover:text-blue-500 hover:underline">
+                    <a href="#" class="text-sm text-gray-400 cursor-not-allowed" title="Disabled for MVP">
                         Forgot Password?
                     </a>
                 </div>
@@ -92,7 +115,7 @@
                 <div>
                     <button
                         type="submit"
-                        class="w-full flex justify-center items-center px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                        class="w-full flex justify-center items-center px-4 py-2.5 {{ $roleColor ?? 'bg-blue-600' }} text-white text-sm font-semibold rounded-lg shadow-sm {{ $roleHoverColor ?? 'hover:bg-blue-700' }} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                     >
                         Login
                     </button>
@@ -102,7 +125,7 @@
 
         <!-- Footer -->
         <p class="text-center text-xs text-gray-500 mt-8">
-            &copy; {{ date('Y') }} MITO IT Helpdesk. All rights reserved.
+            &copy; {{ date('Y') }} MITO Ticketing System. All rights reserved.
         </p>
     </div>
 </body>

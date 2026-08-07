@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,11 +13,70 @@ use Illuminate\View\View;
 class AuthController extends Controller
 {
     /**
-     * Show the login form.
+     * Role-specific login configuration.
      */
-    public function showLoginForm(): View
+    private array $roles = [
+        'admin' => [
+            'slug' => 'admin',
+            'name' => 'Administrator',
+            'email' => 'admin@mito.local',
+            'color' => 'bg-purple-600',
+            'hoverColor' => 'hover:bg-purple-700',
+            'textColor' => 'text-purple-600',
+        ],
+        'manager' => [
+            'slug' => 'manager',
+            'name' => 'IT Manager',
+            'email' => 'manager.it@mito.local',
+            'color' => 'bg-blue-600',
+            'hoverColor' => 'hover:bg-blue-700',
+            'textColor' => 'text-blue-600',
+        ],
+        'support' => [
+            'slug' => 'support',
+            'name' => 'IT Support',
+            'email' => 'shohibul@mito.local',
+            'color' => 'bg-green-600',
+            'hoverColor' => 'hover:bg-green-700',
+            'textColor' => 'text-green-600',
+        ],
+        'employee' => [
+            'slug' => 'employee',
+            'name' => 'Employee',
+            'email' => 'daniel@mito.local',
+            'color' => 'bg-amber-600',
+            'hoverColor' => 'hover:bg-amber-700',
+            'textColor' => 'text-amber-600',
+        ],
+    ];
+
+    /**
+     * Show the welcome/landing page.
+     */
+    public function showWelcome(): View
     {
-        return view('auth.login');
+        return view('welcome');
+    }
+
+    /**
+     * Show the role-specific login form.
+     */
+    public function showLoginForm(?string $role = null): View
+    {
+        $config = $this->roles[$role] ?? null;
+
+        if (!$config) {
+            return redirect('/');
+        }
+
+        return view('auth.login', [
+            'roleSlug' => $config['slug'],
+            'roleName' => $config['name'],
+            'roleColor' => $config['color'],
+            'roleHoverColor' => $config['hoverColor'],
+            'roleTextColor' => $config['textColor'],
+            'demoEmail' => $config['email'],
+        ]);
     }
 
     /**
@@ -30,23 +90,37 @@ class AuthController extends Controller
         ]);
 
         $remember = $request->boolean('remember');
+        $roleSlug = $request->input('role');
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
+            $user = auth()->user();
+
             // Update last_login_at
-            User::where('id', auth()->id())->update(['last_login_at' => now()]);
+            $user->update(['last_login_at' => now()]);
 
             // Check if user is active
-            if (!auth()->user()->is_active) {
+            if (!$user->is_active) {
                 Auth::logout();
                 return back()->withErrors([
                     'email' => 'Your account has been deactivated. Please contact administrator.',
                 ])->withInput($request->only('email', 'remember'));
             }
 
+            // If role-specific login, verify user has that role
+            if ($roleSlug) {
+                $role = Role::where('slug', $roleSlug)->first();
+                if ($role && $user->role_id !== $role->id) {
+                    Auth::logout();
+                    return back()->withErrors([
+                        'email' => "This account does not have the {$role->name} role.",
+                    ])->withInput($request->only('email', 'remember'));
+                }
+            }
+
             // Force password change check
-            if (auth()->user()->force_password_change) {
+            if ($user->force_password_change) {
                 return redirect()->route('password.change')
                     ->with('warning', 'You must change your password before continuing.');
             }
@@ -97,6 +171,6 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/login');
+        return redirect('/');
     }
 }
