@@ -101,17 +101,12 @@ class TicketController extends Controller
     public function create(): View
     {
         $categories = Category::with('subCategories')->where('is_active', true)->orderBy('name')->get();
+        $slaPolicies = \App\Models\SlaPolicy::where('is_active', true)->orderBy('name')->get();
+        $staffUsers = User::whereHas('role', function($q) {
+            $q->whereIn('slug', ['admin', 'manager', 'staff']);
+        })->orderBy('name')->get();
 
-        // Admin/Manager can assign tickets
-        $agents = collect();
-        if (auth()->user()->isAdmin() || auth()->user()->isManager()) {
-            $agents = User::where('is_active', true)
-                ->whereIn('role_id', [2, 3]) // Manager + Staff
-                ->orderBy('name')
-                ->get();
-        }
-
-        return view('tickets.create', compact('categories', 'agents'));
+        return view('tickets.create', compact('categories', 'slaPolicies', 'staffUsers'));
     }
 
     /**
@@ -158,7 +153,6 @@ class TicketController extends Controller
             'subject'        => 'required|max:255',
             'priority'       => 'required|in:low,medium,high,critical',
             'description'    => 'required',
-            'assignee_id'    => 'nullable|exists:users,id',
             'attachments'    => 'nullable|array',
             'attachments.*'  => 'file|max:10240|mimes:png,jpg,jpeg,pdf,zip',
         ]);
@@ -187,7 +181,6 @@ class TicketController extends Controller
             'user_id'        => auth()->id(),
             'category_id'    => $validated['category_id'] ?? null,
             'sub_category_id' => $validated['sub_category_id'] ?? null,
-            'assignee_id'    => $validated['assignee_id'] ?? null,
         ]);
 
         // Handle file attachments
@@ -282,6 +275,44 @@ class TicketController extends Controller
 
         return redirect()->route('tickets.show', $id)
             ->with('success', 'Ticket status updated successfully.');
+    }
+
+    /**
+     * Update ticket assignee (API).
+     */
+    public function updateAssignee(Request $request, string $id): JsonResponse
+    {
+        if (!in_array(auth()->user()->role?->slug, ['admin', 'manager'])) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $validated = $request->validate([
+            'assignee_id' => 'nullable|exists:users,id',
+        ]);
+
+        $ticket = Ticket::findOrFail($id);
+        $ticket->update(['assignee_id' => $validated['assignee_id']]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Update ticket priority (API).
+     */
+    public function updatePriority(Request $request, string $id): JsonResponse
+    {
+        if (!in_array(auth()->user()->role?->slug, ['admin', 'manager', 'staff'])) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $validated = $request->validate([
+            'priority' => 'required|in:low,medium,high,critical',
+        ]);
+
+        $ticket = Ticket::findOrFail($id);
+        $ticket->update(['priority' => $validated['priority']]);
+
+        return response()->json(['success' => true]);
     }
 
     /**

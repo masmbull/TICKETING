@@ -14,7 +14,7 @@
 
 <div class="space-y-1">
     @if($label)
-        <label for="{{ $name }}" class="block text-sm font-medium text-gray-700 dark:text-slate-300">
+        <label for="{{ $name }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
             {{ $label }}
             @if($required)<span class="text-red-500 ml-0.5">*</span>@endif
         </label>
@@ -25,7 +25,7 @@
         {{ $required ? 'required' : '' }}
         {{ $disabled ? 'disabled' : '' }}
         {{ $attributes->merge([
-            'class' => 'block w-full rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-900 shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 sm:text-sm ' . ($error ? 'border-red-300 dark:border-red-500 text-red-900 dark:text-red-400 focus:border-red-500 focus:ring-red-500' : '')
+            'class' => 'select ' . ($error ? 'select-error' : '')
         ]) }}
     >
         @if($includeEmpty)

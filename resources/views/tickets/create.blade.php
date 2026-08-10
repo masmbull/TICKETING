@@ -83,6 +83,8 @@
                 </div>
             </div>
 
+            @php $role = auth()->user()->role?->slug ?? 'user'; @endphp
+            @if(in_array($role, ['admin', 'manager', 'staff']))
             {{-- Priority & Assignment --}}
             <div class="card">
                 <div class="p-6">
@@ -92,11 +94,11 @@
                         </div>
                         <div>
                             <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Priority & Assignment</h2>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Set urgency and optional assignee</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Set urgency and assign to team member</p>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div>
                             <label for="priority" class="form-label form-label-required">Priority</label>
                             <select name="priority" id="priority" required class="select">
@@ -109,22 +111,32 @@
                                 <p class="form-error">{{ $message }}</p>
                             @enderror
                         </div>
-                        @if((Auth::user()->isAdmin() || Auth::user()->isManager()) && isset($agents) && $agents->count() > 0)
                         <div>
-                            <label for="assignee_id" class="form-label">Assign To</label>
-                            <select name="assignee_id" id="assignee_id" class="select">
-                                <option value="">Unassigned</option>
-                                @foreach($agents as $agent)
-                                    <option value="{{ $agent->id }}" {{ old('assignee_id') == $agent->id ? 'selected' : '' }}>
-                                        {{ $agent->name }} ({{ $agent->role->name ?? 'User' }})
+                            <label for="sla_policy_id" class="form-label">SLA Policy</label>
+                            <select name="sla_policy_id" id="sla_policy_id" class="select">
+                                <option value="">Auto-assign</option>
+                                @foreach($slaPolicies ?? [] as $sla)
+                                    <option value="{{ $sla->id }}" {{ old('sla_policy_id') == $sla->id ? 'selected' : '' }}>
+                                        {{ $sla->name }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
-                        @endif
+                        <div>
+                            <label for="assignee_id" class="form-label">Assign To</label>
+                            <select name="assignee_id" id="assignee_id" class="select">
+                                <option value="">Unassigned</option>
+                                @foreach($staffUsers ?? [] as $staff)
+                                    <option value="{{ $staff->id }}" {{ old('assignee_id') == $staff->id ? 'selected' : '' }}>
+                                        {{ $staff->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
+            @endif
 
             {{-- Description --}}
             <div class="card">

@@ -38,6 +38,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/my-tickets/{id}/comments', [TicketController::class, 'storeComment'])->name('tickets.comments.store');
         Route::get('/api/subcategories', [TicketController::class, 'subcategories'])->name('api.subcategories');
         Route::get('/api/category-priority', [TicketController::class, 'categoryPriority'])->name('api.category-priority');
+        Route::patch('/tickets/{id}/assign', [TicketController::class, 'updateAssignee'])->name('tickets.assign');
+        Route::patch('/tickets/{id}/priority', [TicketController::class, 'updatePriority'])->name('tickets.priority');
+        Route::patch('/tickets/{id}/status', [TicketController::class, 'updateStatus'])->name('tickets.status.update');
 
         // Assigned Tickets (Staff)
         Route::get('/assigned-tickets', [TicketController::class, 'assignedTickets'])->name('tickets.assigned');
@@ -58,9 +61,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
         Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
         Route::patch('/categories/{id}', [CategoryController::class, 'update'])->name('categories.update');
+        Route::delete('/categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy');
         Route::get('/api/categories/{id}/subcategories', [CategoryController::class, 'subcategories'])->name('categories.subcategories');
         Route::post('/subcategories', [CategoryController::class, 'storeSubCategory'])->name('subcategories.store');
         Route::patch('/subcategories/{id}', [CategoryController::class, 'updateSubCategory'])->name('subcategories.update');
+        Route::delete('/subcategories/{id}', [CategoryController::class, 'destroySubCategory'])->name('subcategories.destroy');
 
         // SLA Policies (Admin only)
         Route::middleware('admin')->prefix('settings/sla-policies')->name('sla-policies.')->group(function () {

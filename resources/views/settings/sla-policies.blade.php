@@ -60,10 +60,26 @@
                         </div>
                     </div>
                     <div class="mt-3 flex gap-2">
-                        <button onclick="openEditModal({{ $policy->id }}, '{{ $policy->name }}', '{{ $policy->priority }}', {{ $policy->response_hours }}, {{ $policy->resolution_hours }}, {{ $policy->escalation_enabled ? 'true' : 'false' }})" class="text-xs font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors">Edit</button>
-                        <form method="POST" action="{{ route('sla-policies.destroy', $policy->id) }}" onsubmit="return confirm('Delete this policy?')" class="inline">
+                        <button onclick="openEditModal({{ $policy->id }}, '{{ $policy->name }}', '{{ $policy->priority }}', {{ $policy->response_hours }}, {{ $policy->resolution_hours }}, {{ $policy->escalation_enabled ? 'true' : 'false' }})" class="btn-primary btn-sm">
+                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            Edit
+                        </button>
+                        <form method="POST" action="{{ route('sla-policies.destroy', $policy->id) }}" class="inline" x-data="{ show: false }" x-on:submit.prevent="show = true">
                             @csrf @method('DELETE')
-                            <button type="submit" class="text-xs font-semibold text-danger-600 hover:text-danger-700 dark:text-danger-400 dark:hover:text-danger-300 transition-colors">Delete</button>
+                            <button type="button" class="btn-danger btn-sm" x-on:click="show = true">
+                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                Delete
+                            </button>
+                            <div x-show="show" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50" x-cloak>
+                                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-6">
+                                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Confirm Delete</h3>
+                                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Are you sure you want to delete this SLA policy? This action cannot be undone.</p>
+                                    <div class="flex justify-end gap-3">
+                                        <button type="button" class="btn-outline" x-on:click="show = false">Cancel</button>
+                                        <button type="submit" class="btn-danger">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>

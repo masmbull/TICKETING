@@ -133,4 +133,28 @@ class CategoryController extends Controller
         return redirect()->route('categories.index')
             ->with('success', 'Subcategory updated successfully.');
     }
+
+    /**
+     * Delete a category.
+     */
+    public function destroy(string $id): RedirectResponse
+    {
+        $category = Category::findOrFail($id);
+        $category->delete();
+
+        return redirect()->route('categories.index')
+            ->with('success', 'Category deleted successfully.');
+    }
+
+    /**
+     * Delete a subcategory.
+     */
+    public function destroySubCategory(string $id): RedirectResponse
+    {
+        $subCategory = SubCategory::findOrFail($id);
+        $subCategory->delete();
+
+        return redirect()->route('categories.index')
+            ->with('success', 'Subcategory deleted successfully.');
+    }
 }
