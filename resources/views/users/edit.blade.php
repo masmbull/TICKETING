@@ -2,15 +2,20 @@
 
 @section('title', 'Edit User - MITO IT Helpdesk')
 
+@push('skeleton')
+<x-loading />
+@endpush
+
 @section('content')
-<div class="py-6">
-    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center mb-6">
-            <a href="{{ route('users.index') }}" class="p-2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+<div class="space-y-6">
+    <x-page-header :title="'Edit User: ' . $user->name" description="Update user details, role and department">
+        @slot('actions')
+            <a href="{{ route('users.index') }}" class="btn-secondary btn-sm">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Back to Users
             </a>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Edit User: {{ $user->name }}</h1>
-        </div>
+        @endslot
+    </x-page-header>
 
         <div class="card">
             <div class="p-6">
@@ -85,6 +90,5 @@
                 </form>
             </div>
         </div>
-    </div>
 </div>
 @endsection

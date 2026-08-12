@@ -39,8 +39,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/api/subcategories', [TicketController::class, 'subcategories'])->name('api.subcategories');
         Route::get('/api/category-priority', [TicketController::class, 'categoryPriority'])->name('api.category-priority');
         Route::patch('/tickets/{id}/assign', [TicketController::class, 'updateAssignee'])->name('tickets.assign');
+        Route::post('/tickets/{id}/assign-to-me', [TicketController::class, 'assignToMe'])->name('tickets.assign-me');
         Route::patch('/tickets/{id}/priority', [TicketController::class, 'updatePriority'])->name('tickets.priority');
+        Route::patch('/tickets/{id}/sla', [TicketController::class, 'updateSla'])->name('tickets.sla');
         Route::patch('/tickets/{id}/status', [TicketController::class, 'updateStatus'])->name('tickets.status.update');
+        Route::get('/api/search', [TicketController::class, 'search'])->name('api.search');
+        Route::get('/tickets/{id}/attachments/{attachment}/download', [TicketController::class, 'downloadAttachment'])->name('tickets.attachments.download');
+        Route::delete('/tickets/{id}/attachments/{attachment}', [TicketController::class, 'destroyAttachment'])->name('tickets.attachments.destroy');
 
         // Assigned Tickets (Staff)
         Route::get('/assigned-tickets', [TicketController::class, 'assignedTickets'])->name('tickets.assigned');

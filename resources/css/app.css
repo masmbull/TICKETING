@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Explicit scan roots — ensures Blade templates in resources/views are
+   included in class detection on all platforms. */
+@source "../views";
+@source "../js";
+
 @theme {
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
@@ -740,23 +745,33 @@ body {
 
 /* ===== STAT CARD ===== */
 .stat-card {
+    position: relative;
     background: white;
-    border-radius: var(--radius-xl);
+    border-radius: 1rem;
     border: 1px solid #e2e8f0;
-    padding: 1rem;
+    padding: 1.25rem;
+    overflow: hidden;
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04);
-    transition: all 0.2s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 .stat-card:hover {
-    box-shadow: var(--shadow-md);
+    transform: translateY(-3px);
+    border-color: #bfdbfe;
+    box-shadow: 0 12px 24px -8px rgb(15 23 42 / 0.12);
 }
 .stat-icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: var(--radius-xl);
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.875rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 8px 16px -6px rgb(15 23 42 / 0.18);
+}
+.stat-icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
 /* ===== PAGINATION ===== */
@@ -1059,6 +1074,10 @@ body {
     border-color: #334155;
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.2);
 }
+.dark .stat-card:hover {
+    border-color: #2563eb;
+    box-shadow: 0 12px 24px -8px rgb(0 0 0 / 0.5);
+}
 
 .dark .dropdown {
     background: #1e293b;
@@ -1140,3 +1159,205 @@ body {
 .dark ::-webkit-scrollbar-thumb:hover {
     background: #475569;
 }
+
+/* =========================================================
+   Sprint 1 — Enterprise UI/UX polish additions
+   ========================================================= */
+
+/* Hide elements until Alpine takes control */
+[x-cloak] {
+    display: none !important;
+}
+
+/* Visually hidden until keyboard focus — accessibility skip link */
+.skip-to-content {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    transform: translateY(-200%);
+    padding: 0.625rem 1rem;
+    border-radius: 0 0 0.75rem 0;
+    background: #2563eb;
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: transform 0.15s ease-in-out;
+}
+.skip-to-content:focus-visible {
+    transform: translateY(0);
+}
+
+/* Slim scrollbar for the sidebar nav */
+.sidebar-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+.sidebar-scroll::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 9999px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+.dark .sidebar-scroll {
+    scrollbar-color: #475569 transparent;
+}
+.dark .sidebar-scroll::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+.dark .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Centered icon-only sidebar items (collapsed rail mode) */
+.sidebar-item.justify-center {
+    justify-content: center;
+    padding: 0.5rem;
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* =========================================================
+   Sprint 2 — Polish: sidebar sizing, toolbar, toast, dropdowns
+   ========================================================= */
+
+/* Sidebar nav item labels — 24px icons, 18px labels */
+.sidebar-label {
+    font-size: 18px;
+    line-height: 1.2;
+}
+
+/* Toolbar filter selects (ticket list) */
+.toolbar-select {
+    height: 2.25rem;
+    font-size: 0.8125rem;
+    padding: 0 1.75rem 0 0.75rem;
+    border-radius: 0.625rem;
+    border: 1px solid #e2e8f0;
+    background-color: #fff;
+    color: #334155;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 1rem;
+}
+.toolbar-select:hover {
+    border-color: #cbd5e1;
+}
+.toolbar-select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgb(59 130 246 / 0.15);
+}
+.dark .toolbar-select {
+    background-color: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+}
+
+/* Toolbar toggle pill (e.g. Closed filter) */
+.toolbar-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 2.25rem;
+    padding: 0 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #64748b;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.625rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.toolbar-pill:hover {
+    border-color: #94a3b8;
+    color: #334155;
+}
+.toolbar-pill-active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
+}
+.toolbar-pill-active:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #fff;
+}
+.dark .toolbar-pill {
+    background: #1e293b;
+    border-color: #334155;
+    color: #94a3b8;
+}
+.dark .toolbar-pill-active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
+}
+
+/* Toast notifications (window.MITO.toast) */
+.toast-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 260px;
+    max-width: 380px;
+    padding: 0.75rem 1rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #10b981;
+    border-radius: 0.75rem;
+    box-shadow: 0 12px 32px -8px rgb(15 23 42 / 0.2);
+    animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.toast-item-leave {
+    animation: toastOut 0.2s ease-in forwards;
+}
+.dark .toast-item {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+/* Navbar / dropdown transition helpers */
+.dropdown-enter {
+    animation: slideDown 0.2s ease-out forwards;
+}
+.dropdown-leave {
+    animation: dropdownOut 0.15s ease-in forwards;
+}
+@keyframes dropdownOut {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.98);
+    }
+}
+

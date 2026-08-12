@@ -47,17 +47,15 @@ class DashboardController extends Controller
     {
         $stats = [
             'total_tickets' => Ticket::count(),
-            'open_tickets' => Ticket::where('status', 'Open')->count(),
+            'waiting_tickets' => Ticket::where('status', 'Waiting Confirmation')->count(),
             'in_progress_tickets' => Ticket::where('status', 'In Progress')->count(),
-            'resolved_tickets' => Ticket::where('status', 'Resolved')->count(),
-            'closed_tickets' => Ticket::where('status', 'Closed')->count(),
-            'waiting_tickets' => Ticket::where('status', 'Waiting User')->count(),
-            'critical_tickets' => Ticket::where('priority', 'critical')->where('status', '!=', 'Closed')->count(),
-            'high_tickets' => Ticket::where('priority', 'high')->where('status', '!=', 'Closed')->count(),
-            'unassigned_tickets' => Ticket::whereNull('assignee_id')->where('status', '!=', 'Closed')->count(),
+            'completed_tickets' => Ticket::where('status', 'Completed')->count(),
+            'critical_tickets' => Ticket::where('priority', 'critical')->where('status', '!=', 'Completed')->count(),
+            'high_tickets' => Ticket::where('priority', 'high')->where('status', '!=', 'Completed')->count(),
+            'unassigned_tickets' => Ticket::whereNull('assignee_id')->where('status', '!=', 'Completed')->count(),
             'total_users' => User::count(),
             'sla_breach_count' => Ticket::whereNull('first_response_at')
-                ->where('status', 'not in', ['Resolved', 'Closed'])
+                ->where('status', 'not in', ['Completed'])
                 ->where('created_at', '<', Carbon::now()->subHours(4))
                 ->count(),
         ];
@@ -69,9 +67,11 @@ class DashboardController extends Controller
         $statusCounts = Ticket::select('status', DB::raw('count(*) as count'))
             ->groupBy('status')->get();
 
-        $agentPerformance = User::where('role_id', [2, 3])
+        $agentPerformance = User::whereHas('role', function ($q) {
+                $q->whereIn('slug', ['admin', 'manager', 'staff']);
+            })
             ->withCount(['assignedTickets as active_count' => function ($q) {
-                $q->where('status', '!=', 'Closed');
+                $q->where('status', '!=', 'Completed');
             }])
             ->orderByDesc('active_count')
             ->take(5)
@@ -86,12 +86,11 @@ class DashboardController extends Controller
     {
         $stats = [
             'total_tickets' => Ticket::count(),
-            'open_tickets' => Ticket::where('status', 'Open')->count(),
+            'waiting_tickets' => Ticket::where('status', 'Waiting Confirmation')->count(),
             'in_progress_tickets' => Ticket::where('status', 'In Progress')->count(),
-            'resolved_tickets' => Ticket::where('status', 'Resolved')->count(),
-            'closed_tickets' => Ticket::where('status', 'Closed')->count(),
-            'unassigned_tickets' => Ticket::whereNull('assignee_id')->where('status', '!=', 'Closed')->count(),
-            'critical_tickets' => Ticket::where('priority', 'critical')->where('status', '!=', 'Closed')->count(),
+            'completed_tickets' => Ticket::where('status', 'Completed')->count(),
+            'unassigned_tickets' => Ticket::whereNull('assignee_id')->where('status', '!=', 'Completed')->count(),
+            'critical_tickets' => Ticket::where('priority', 'critical')->where('status', '!=', 'Completed')->count(),
         ];
 
         $recentTickets = Ticket::with(['user', 'assignee', 'category'])->latest()->take(5)->get();
@@ -99,9 +98,11 @@ class DashboardController extends Controller
         $statusCounts = Ticket::select('status', DB::raw('count(*) as count'))
             ->groupBy('status')->get();
 
-        $agentPerformance = User::where('role_id', [2, 3])
+        $agentPerformance = User::whereHas('role', function ($q) {
+                $q->whereIn('slug', ['admin', 'manager', 'staff']);
+            })
             ->withCount(['assignedTickets as active_count' => function ($q) {
-                $q->where('status', '!=', 'Closed');
+                $q->where('status', '!=', 'Completed');
             }])
             ->orderByDesc('active_count')
             ->take(5)
@@ -116,15 +117,15 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         $stats = [
-            'assigned_to_me' => Ticket::where('assignee_id', $user->id)->where('status', '!=', 'Closed')->count(),
-            'open_assigned' => Ticket::where('assignee_id', $user->id)->where('status', 'Open')->count(),
+            'assigned_to_me' => Ticket::where('assignee_id', $user->id)->where('status', '!=', 'Completed')->count(),
+            'waiting_assigned' => Ticket::where('assignee_id', $user->id)->where('status', 'Waiting Confirmation')->count(),
             'in_progress_assigned' => Ticket::where('assignee_id', $user->id)->where('status', 'In Progress')->count(),
-            'waiting_assigned' => Ticket::where('assignee_id', $user->id)->where('status', 'Waiting User')->count(),
+            'completed_assigned' => Ticket::where('assignee_id', $user->id)->where('status', 'Completed')->count(),
             'my_tickets' => Ticket::where('user_id', $user->id)->count(),
             'critical_assigned' => Ticket::where('assignee_id', $user->id)
-                ->where('priority', 'critical')->where('status', '!=', 'Closed')->count(),
-            'resolved_today' => Ticket::where('assignee_id', $user->id)
-                ->where('status', 'Resolved')->whereDate('resolved_at', Carbon::today())->count(),
+                ->where('priority', 'critical')->where('status', '!=', 'Completed')->count(),
+            'completed_today' => Ticket::where('assignee_id', $user->id)
+                ->where('status', 'Completed')->whereDate('completed_at', Carbon::today())->count(),
         ];
 
         $recentTickets = Ticket::where('assignee_id', $user->id)
@@ -138,10 +139,9 @@ class DashboardController extends Controller
         $user = auth()->user();
         $stats = [
             'my_total' => Ticket::where('user_id', $user->id)->count(),
-            'my_open' => Ticket::where('user_id', $user->id)->where('status', 'Open')->count(),
+            'my_waiting' => Ticket::where('user_id', $user->id)->where('status', 'Waiting Confirmation')->count(),
             'my_in_progress' => Ticket::where('user_id', $user->id)->where('status', 'In Progress')->count(),
-            'my_resolved' => Ticket::where('user_id', $user->id)->where('status', 'Resolved')->count(),
-            'my_closed' => Ticket::where('user_id', $user->id)->where('status', 'Closed')->count(),
+            'my_completed' => Ticket::where('user_id', $user->id)->where('status', 'Completed')->count(),
         ];
 
         $recentTickets = Ticket::where('user_id', $user->id)
@@ -166,19 +166,19 @@ class DashboardController extends Controller
             ]);
         }
 
-        // Recent status changes (using resolved_at as proxy)
-        $recentResolved = Ticket::whereNotNull('resolved_at')
+        // Recent status changes (using completed_at as proxy)
+        $recentCompleted = Ticket::whereNotNull('completed_at')
             ->with('assignee')
-            ->latest('resolved_at')
+            ->latest('completed_at')
             ->take(3)
             ->get();
-        foreach ($recentResolved as $t) {
+        foreach ($recentCompleted as $t) {
             $activities->push([
-                'type' => 'resolved',
+                'type' => 'completed',
                 'icon' => 'check-circle',
                 'color' => 'green',
-                'message' => ($t->assignee->name ?? 'System') . " resolved {$t->ticket_number}",
-                'time' => $t->resolved_at,
+                'message' => ($t->assignee->name ?? 'System') . " completed {$t->ticket_number}",
+                'time' => $t->completed_at,
             ]);
         }
 

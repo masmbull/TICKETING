@@ -47,50 +47,80 @@
     $menu = $routes[$role] ?? $routes['user'];
 @endphp
 
-<aside x-data="{ open: true }" class="fixed top-0 left-0 z-40 h-screen bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-all duration-200" :class="open ? 'w-[240px]' : 'w-[72px]'">
-    <div class="flex items-center h-16 px-4 border-b border-slate-200 dark:border-slate-800">
-        <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">M</div>
-            <span x-show="open" class="text-sm font-semibold text-slate-900 dark:text-white whitespace-nowrap">MITO Helpdesk</span>
+<aside x-cloak
+       class="fixed inset-y-0 left-0 flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-[width,transform] duration-300 ease-in-out"
+       :class="mobileSidebar ? 'w-[280px] translate-x-0 z-[70]' : (sidebarOpen ? 'w-[240px] -translate-x-full lg:translate-x-0' : 'w-[72px] -translate-x-full lg:translate-x-0')">
+
+    {{-- Logo --}}
+    <div class="flex items-center h-16 px-4 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
+        <a href="{{ route('dashboard') }}" class="flex items-center gap-3 min-w-0">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-blue-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm shadow-blue-500/30">M</div>
+            <span x-show="sidebarOpen || mobileSidebar" x-transition.opacity.duration.150 class="text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap tracking-tight">MITO Helpdesk</span>
         </a>
     </div>
 
-    <button @click="open = !open" class="absolute -right-3 top-[72px] w-6 h-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full flex items-center justify-center shadow-sm hover:shadow transition-all duration-200">
-        <svg class="w-3 h-3 text-slate-500 dark:text-slate-400 transition-transform duration-200" :class="open ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    {{-- Desktop collapse toggle --}}
+    <button @click="sidebarOpen = !sidebarOpen"
+            class="hidden lg:flex absolute -right-3 top-[68px] z-10 w-6 h-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full items-center justify-center shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-500/50 transition-all duration-200"
+            :title="sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'"
+            aria-label="Toggle sidebar">
+        <svg class="w-3 h-3 text-slate-500 dark:text-slate-400 transition-transform duration-300" :class="sidebarOpen ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
     </button>
 
-    <nav class="h-[calc(100vh-4rem)] overflow-y-auto px-3 py-4 space-y-1">
+    <nav @click="mobileSidebar = false" class="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 sidebar-scroll space-y-1">
+
         @foreach($menu as $label => $item)
             @if(is_array($item) && isset($item['route']))
-                <a href="{{ route($item['route']) }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all {{ request()->routeIs($item['route']) ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium' : '' }}" title="{{ $label }}">
-                    <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ $item['icon'] }}"/></svg>
-                    <span x-show="open" x-transition.opacity.duration.200ms class="whitespace-nowrap">{{ $label }}</span>
+                @php $active = request()->routeIs($item['route']); @endphp
+                <a href="{{ route($item['route']) }}"
+                   :title="sidebarOpen || mobileSidebar ? '' : '{{ $label }}'"
+                   :class="sidebarOpen || mobileSidebar ? '' : 'justify-center'"
+                   class="sidebar-item {{ $active ? 'sidebar-item-active' : '' }}">
+                    <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ $item['icon'] }}"/></svg>
+                    <span x-show="sidebarOpen || mobileSidebar" x-transition.opacity.duration.150 class="sidebar-label whitespace-nowrap">{{ $label }}</span>
                 </a>
             @elseif(is_array($item))
-                <div x-data="{ expanded: {{ request()->routeIs(array_column($item, 'route')) ? 'true' : 'false' }} }">
-                    <button @click="expanded = !expanded" class="flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
-                        <span class="flex items-center gap-3">
-                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ $label }}</span>
-                        </span>
-                        <svg x-show="open" class="w-3 h-3 text-slate-400 transition-transform duration-200" :class="expanded ? 'rotate-0' : '-rotate-90'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                @php $groupActive = request()->routeIs(array_column($item, 'route')); @endphp
+
+                {{-- Expanded view: dropdown group --}}
+                <div x-show="sidebarOpen || mobileSidebar" x-data="{ expanded: {{ $groupActive ? 'true' : 'false' }} }" x-transition.opacity.duration.150>
+                    <button @click="expanded = !expanded" class="sidebar-group {{ $groupActive ? 'text-blue-600 dark:text-blue-400 font-semibold' : '' }}">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ $label }}</span>
+                        <svg class="w-3 h-3 text-slate-400 transition-transform duration-200" :class="expanded ? 'rotate-0' : '-rotate-90'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
-                    <div x-show="expanded || !open" x-collapse x-cloak class="ml-2 space-y-0.5 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div x-show="expanded" x-collapse x-cloak class="ml-3 mt-0.5 space-y-0.5 border-l-2 border-slate-200 dark:border-slate-700">
                         @foreach($item as $subLabel => $subItem)
-                            <a href="{{ route($subItem['route']) }}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all rounded-lg {{ request()->routeIs($subItem['route']) ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium' : '' }}" title="{{ $subLabel }}">
-                                <svg class="w-[16px] h-[16px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ $subItem['icon'] }}"/></svg>
-                                <span x-show="open" x-transition.opacity.duration.200ms class="whitespace-nowrap">{{ $subLabel }}</span>
+                            @php $subActive = request()->routeIs($subItem['route']); @endphp
+                            <a href="{{ route($subItem['route']) }}" class="sidebar-item {{ $subActive ? 'sidebar-item-active' : '' }} pl-3">
+                                <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ $subItem['icon'] }}"/></svg>
+                                <span class="sidebar-label whitespace-nowrap">{{ $subLabel }}</span>
                             </a>
                         @endforeach
                     </div>
+                </div>
+
+                {{-- Collapsed view: icon-only sub-items --}}
+                <div x-show="!sidebarOpen && !mobileSidebar" x-transition.opacity.duration.150 class="space-y-1">
+                    @foreach($item as $subLabel => $subItem)
+                        @php $subActive = request()->routeIs($subItem['route']); @endphp
+                        <a href="{{ route($subItem['route']) }}" :title="'{{ $subLabel }}'" class="sidebar-item justify-center {{ $subActive ? 'sidebar-item-active' : '' }}">
+                            <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ $subItem['icon'] }}"/></svg>
+                        </a>
+                    @endforeach
                 </div>
             @endif
         @endforeach
     </nav>
 
-    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-slate-200 dark:border-slate-800">
-        <div x-show="open" x-transition.opacity.duration.200ms class="text-xs text-slate-400 dark:text-slate-500">
-            <div>Version 1.0.0</div>
-            <div>© MITO IT Helpdesk</div>
+    {{-- Footer --}}
+    <div class="flex-shrink-0 border-t border-slate-200 dark:border-slate-800 px-4 py-3.5">
+        <div x-show="sidebarOpen || mobileSidebar" x-transition.opacity.duration.150 class="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+            <div class="font-semibold text-slate-500 dark:text-slate-400">Version 1.0.0</div>
+            <div>&copy; MITO IT Helpdesk</div>
+        </div>
+        <div x-show="!sidebarOpen && !mobileSidebar" x-transition.opacity.duration.150 class="text-center" :title="'Version 1.0.0'">
+            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500">v1.0</span>
         </div>
     </div>
 </aside>
+

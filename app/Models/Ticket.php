@@ -13,8 +13,9 @@ class Ticket extends Model
 
     protected $fillable = [
         'ticket_number',
-        'subject',
         'description',
+        'problem_analysis',
+        'resolution',
         'status',
         'priority',
         'user_id',
@@ -25,7 +26,12 @@ class Ticket extends Model
         'first_response_at',
         'resolved_at',
         'closed_at',
+        'completed_at',
+        'completed_by',
         'sla_priority',
+        'assigned_at',
+        'problem_analysis_at',
+        'resolution_at',
     ];
 
     protected $casts = [
@@ -34,6 +40,10 @@ class Ticket extends Model
         'first_response_at' => 'datetime',
         'resolved_at' => 'datetime',
         'closed_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'assigned_at' => 'datetime',
+        'problem_analysis_at' => 'datetime',
+        'resolution_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -44,6 +54,11 @@ class Ticket extends Model
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assignee_id');
+    }
+
+    public function completedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'completed_by');
     }
 
     public function department(): BelongsTo

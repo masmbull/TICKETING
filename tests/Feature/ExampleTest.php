@@ -8,23 +8,24 @@ use Tests\TestCase;
 class ExampleTest extends TestCase
 {
     /**
-     * Test that the root URL redirects to login (auth required).
+     * Test that the root URL shows the public welcome page.
      */
-    public function test_root_url_redirects_to_login(): void
+    public function test_root_page_loads(): void
     {
         $response = $this->get('/');
 
-        $response->assertStatus(302);
-        $response->assertRedirect('/login');
+        $response->assertStatus(200);
+        $response->assertSee('MITO');
     }
 
     /**
-     * Test that the login page is accessible.
+     * Test that a role-specific login page is accessible.
      */
     public function test_login_page_is_accessible(): void
     {
-        $response = $this->get('/login');
+        $response = $this->get('/login/admin');
 
         $response->assertStatus(200);
+        $response->assertSee('Sign in');
     }
 }

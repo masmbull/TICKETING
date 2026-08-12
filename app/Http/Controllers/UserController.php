@@ -73,7 +73,7 @@ class UserController extends Controller
 
     public function show(int $id): View
     {
-        $user = User::with(['role', 'department', 'tickets'])->findOrFail($id);
+        $user = User::with(['role', 'department', 'createdTickets', 'assignedTickets'])->findOrFail($id);
 
         return view('users.show', compact('user'));
     }

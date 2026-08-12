@@ -2,48 +2,24 @@
 
 @section('title', 'Create Ticket - MITO IT Helpdesk')
 
-@section('content')
-<div class="min-h-screen -m-6 p-6 lg:p-8">
-    <div class="max-w-[1200px] mx-auto w-full">
+@push('skeleton')
+<x-loading />
+@endpush
 
-        {{-- Header --}}
-        <div class="flex items-center gap-4 mb-8">
-            <a href="{{ route('tickets.index') }}" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-white dark:text-slate-500 dark:hover:text-slate-300 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all duration-200">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+@section('content')
+<div class="space-y-6">
+    {{-- PAGE HEADER --}}
+    <x-page-header title="Create New Ticket" description="Submit a new support request and we'll get back to you shortly">
+        @slot('actions')
+            <a href="{{ route('tickets.index') }}" class="btn-secondary btn-sm">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Back to Tickets
             </a>
-            <div>
-                <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Create New Ticket</h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Submit a new support request and we'll get back to you shortly</p>
-            </div>
-        </div>
+        @endslot
+    </x-page-header>
 
         <form method="POST" action="{{ route('tickets.store') }}" enctype="multipart/form-data" class="space-y-6" id="createTicketForm">
             @csrf
-
-            {{-- Basic Information --}}
-            <div class="card">
-                <div class="p-6">
-                    <div class="flex items-center gap-3 mb-5">
-                        <div class="w-9 h-9 rounded-xl bg-primary-50 dark:bg-primary-500/10 border border-primary-100 dark:border-primary-500/20 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-4 h-4 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        </div>
-                        <div>
-                            <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Basic Information</h2>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">What do you need help with?</p>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="subject" class="form-label form-label-required">Subject</label>
-                        <input type="text" name="subject" id="subject" value="{{ old('subject') }}" required
-                               class="input"
-                               placeholder="Brief description of your issue">
-                        @error('subject')
-                            <p class="form-error">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-            </div>
 
             {{-- Classification --}}
             <div class="card">
@@ -214,7 +190,6 @@
             </div>
 
         </form>
-    </div>
 </div>
 @endsection
 
@@ -252,6 +227,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updatePriority(categoryId) {
+        // The priority field is only rendered for support roles — guard the
+        // case where the current user is an employee and the field is absent.
+        if (!prioritySelect) return;
         const category = categoryData.find(c => c.id == categoryId);
         if (category && category.default_priority) {
             prioritySelect.value = category.default_priority;
@@ -412,7 +390,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         fileInput.addEventListener('change', (e) => {
             clearError();
-            renderPreview();
             updateFileInput();
             renderPreview();
         });

@@ -2,21 +2,24 @@
 
 @section('title', 'User Management - MITO IT Helpdesk')
 
+@push('skeleton')
+<x-loading variant="table" />
+@endpush
+
 @section('content')
-<div class="py-6">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">User Management</h1>
+<div class="space-y-6">
+    <x-page-header title="User Management" description="Manage users, roles and departments">
+        @slot('actions')
             <a href="{{ route('users.create') }}" class="btn-primary">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                 Add User
             </a>
-        </div>
+        @endslot
+    </x-page-header>
 
         {{-- Filters --}}
-        <div class="card mb-6">
-            <form method="GET" class="p-4">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <x-filter-bar action="{{ route('users.index') }}" method="GET">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name or email..."
                                class="input" />
@@ -45,17 +48,15 @@
                         </select>
                     </div>
                 </div>
-                <div class="mt-3 flex gap-2">
-                    <button type="submit" class="btn-primary btn-sm">Filter</button>
-                    <a href="{{ route('users.index') }}" class="btn-secondary btn-sm">Reset</a>
-                </div>
-            </form>
-        </div>
+            @slot('actions')
+                <button type="submit" class="btn-primary btn-sm">Filter</button>
+                <a href="{{ route('users.index') }}" class="btn-secondary btn-sm">Reset</a>
+            @endslot
+        </x-filter-bar>
 
         {{-- Users Table --}}
-        <div class="card overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="table">
+        <x-table>
+            <table class="table">
                     <thead>
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">User</th>
@@ -153,11 +154,9 @@
                         @endforelse
                     </tbody>
                 </table>
-            </div>
-            <div class="px-6 py-3 border-t border-slate-100 dark:border-slate-800">
+            @slot('footer')
                 {{ $users->withQueryString()->links('components.pagination') }}
-            </div>
-        </div>
-    </div>
+            @endslot
+        </x-table>
 </div>
 @endsection

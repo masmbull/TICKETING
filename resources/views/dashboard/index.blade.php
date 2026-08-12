@@ -5,11 +5,9 @@
 @php
     $role = Auth::user()->role?->slug ?? 'user';
     $statusColors = [
-        'Open' => 'bg-primary-50 text-primary-700 border border-primary-200 dark:bg-primary-500/10 dark:text-primary-400 dark:border-primary-500/30',
+        'Waiting Confirmation' => 'bg-primary-50 text-primary-700 border border-primary-200 dark:bg-primary-500/10 dark:text-primary-400 dark:border-primary-500/30',
         'In Progress' => 'bg-warning-50 text-warning-700 border border-warning-200 dark:bg-warning-500/15 dark:text-warning-400 dark:border-warning-500/30',
-        'Waiting User' => 'bg-orange-50 text-orange-700 border border-orange-200 dark:bg-orange-500/15 dark:text-orange-400 dark:border-orange-500/30',
-        'Resolved' => 'bg-success-50 text-success-700 border border-success-200 dark:bg-success-500/15 dark:text-success-400 dark:border-success-500/30',
-        'Closed' => 'bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
+        'Completed' => 'bg-success-50 text-success-700 border border-success-200 dark:bg-success-500/15 dark:text-success-400 dark:border-success-500/30',
     ];
     $priorityColors = [
         'low' => 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
@@ -20,88 +18,82 @@
 @endphp
 
 @section('content')
-<div class="min-h-screen -m-6 p-6 lg:p-8">
-    {{-- GREETING BAR --}}
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
-                Good {{ now('Asia/Jakarta')->format('H') < 12 ? 'morning' : (now('Asia/Jakarta')->format('H') < 17 ? 'afternoon' : 'evening') }}, {{ explode(' ', Auth::user()->name)[0] }}
-            </h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                {{ now('Asia/Jakarta')->format('l, d F Y') }}
-                <span id="live-clock" class="ml-2 font-mono text-slate-400 dark:text-slate-500"></span>
-            </p>
-        </div>
-        <div class="flex items-center gap-3 mt-3 sm:mt-0">
+<div class="space-y-6">
+    {{-- PAGE HEADER --}}
+    <x-page-header
+        :title="'Good ' . (now('Asia/Jakarta')->format('H') < 12 ? 'morning' : (now('Asia/Jakarta')->format('H') < 17 ? 'afternoon' : 'evening')) . ', ' . explode(' ', Auth::user()->name)[0]"
+        :description="now('Asia/Jakarta')->format('l, d F Y')"
+    >
+        @slot('actions')
             <a href="{{ route('tickets.create') }}" class="btn-primary">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 New Ticket
             </a>
-        </div>
-    </div>
+        @endslot
+    </x-page-header>
 
     {{-- ADMIN DASHBOARD --}}
     @if($role === 'admin')
         {{-- Compact Stats Row --}}
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-            <div class="stat-card">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="stat-icon bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                    </div>
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-slate-900 dark:text-white animated-counter">{{ $stats['total_tickets'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Total</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-slate-900 dark:text-white animated-counter leading-tight tabular-nums">{{ $stats['total_tickets'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">Total</div>
+                </div>
             </div>
 
-            <div class="stat-card">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="stat-icon bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    </div>
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400 flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-primary-600 dark:text-primary-400 animated-counter">{{ $stats['open_tickets'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Open</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-primary-600 dark:text-primary-400 animated-counter leading-tight tabular-nums">{{ $stats['waiting_tickets'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">Waiting Confirmation</div>
+                </div>
             </div>
 
-            <div class="stat-card">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="stat-icon bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-warning-400">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                    </div>
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-warning-400 flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-warning-600 dark:text-warning-400 animated-counter">{{ $stats['in_progress_tickets'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">In Progress</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-warning-600 dark:text-warning-400 animated-counter leading-tight tabular-nums">{{ $stats['in_progress_tickets'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">In Progress</div>
+                </div>
             </div>
 
-            <div class="stat-card">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="stat-icon bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-400">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    </div>
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-400 flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-success-600 dark:text-success-400 animated-counter">{{ $stats['resolved_tickets'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Resolved</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-success-600 dark:text-success-400 animated-counter leading-tight tabular-nums">{{ $stats['completed_tickets'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">Completed</div>
+                </div>
             </div>
 
-            <div class="stat-card">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="stat-icon bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                    </div>
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400 flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-orange-600 dark:text-orange-400 animated-counter">{{ $stats['unassigned_tickets'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Unassigned</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-orange-600 dark:text-orange-400 animated-counter leading-tight tabular-nums">{{ $stats['unassigned_tickets'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">Unassigned</div>
+                </div>
             </div>
 
-            <div class="stat-card">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="stat-icon bg-danger-50 text-danger-600 dark:bg-danger-500/15 dark:text-danger-400">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                    </div>
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-danger-50 text-danger-600 dark:bg-danger-500/15 dark:text-danger-400 flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-danger-600 dark:text-danger-400 animated-counter">{{ $stats['sla_breach_count'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">SLA Breach</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-danger-600 dark:text-danger-400 animated-counter leading-tight tabular-nums">{{ $stats['sla_breach_count'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">SLA Breach</div>
+                </div>
             </div>
         </div>
 
@@ -123,7 +115,7 @@
                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' }}">{{ $ticket->status }}</span>
                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide {{ $priorityColors[$ticket->priority] ?? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' }}">{{ $ticket->priority }}</span>
                             </div>
-                            <p class="text-sm text-slate-700 dark:text-slate-300 truncate">{{ $ticket->subject }}</p>
+                            <p class="text-sm text-slate-700 dark:text-slate-300 truncate">{{ \Illuminate\Support\Str::limit($ticket->description ?? '', 80) }}</p>
                         </div>
                         <div class="text-right flex-shrink-0">
                             <div class="text-xs text-slate-400 dark:text-slate-500">{{ $ticket->created_at->diffForHumans() }}</div>
@@ -230,33 +222,50 @@
     {{-- MANAGER DASHBOARD --}}
     @elseif($role === 'manager')
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            <div class="stat-card">
-                <div class="stat-icon bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 mb-2">
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-slate-900 dark:text-white animated-counter">{{ $stats['total_tickets'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Tickets</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-slate-900 dark:text-white animated-counter leading-tight tabular-nums">{{ $stats['total_tickets'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">Total Tickets</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400 mb-2">
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400 flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-primary-600 dark:text-primary-400 animated-counter">{{ $stats['open_tickets'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Open</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-primary-600 dark:text-primary-400 animated-counter leading-tight tabular-nums">{{ $stats['waiting_tickets'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">Waiting Confirmation</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-warning-400 mb-2">
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-warning-400 flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-warning-600 dark:text-warning-400 animated-counter">{{ $stats['in_progress_tickets'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">In Progress</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-warning-600 dark:text-warning-400 animated-counter leading-tight tabular-nums">{{ $stats['in_progress_tickets'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">In Progress</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon bg-danger-50 text-danger-600 dark:bg-danger-500/15 dark:text-danger-400 mb-2">
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-400 flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-success-600 dark:text-success-400 animated-counter leading-tight tabular-nums">{{ $stats['completed_tickets'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">Completed</div>
+                </div>
+            </div>
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-danger-50 text-danger-600 dark:bg-danger-500/15 dark:text-danger-400 flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-danger-600 dark:text-danger-400 animated-counter">{{ $stats['critical_tickets'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Critical</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-danger-600 dark:text-danger-400 animated-counter leading-tight tabular-nums">{{ $stats['critical_tickets'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">Critical</div>
+                </div>
             </div>
         </div>
 
@@ -276,7 +285,7 @@
                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' }}">{{ $ticket->status }}</span>
                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide {{ $priorityColors[$ticket->priority] ?? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' }}">{{ $ticket->priority }}</span>
                             </div>
-                            <p class="text-sm text-slate-700 dark:text-slate-300 truncate">{{ $ticket->subject }}</p>
+                            <p class="text-sm text-slate-700 dark:text-slate-300 truncate">{{ \Illuminate\Support\Str::limit($ticket->description ?? '', 80) }}</p>
                         </div>
                         <div class="text-xs text-slate-400 dark:text-slate-500 flex-shrink-0">{{ $ticket->created_at->diffForHumans() }}</div>
                     </a>
@@ -298,11 +307,9 @@
                         @php
                             $pct = $stats['total_tickets'] > 0 ? round(($sc->count / $stats['total_tickets']) * 100) : 0;
                             $barColor = match($sc->status) {
-                                'Open' => 'bg-primary-500',
+                                'Waiting Confirmation' => 'bg-primary-500',
                                 'In Progress' => 'bg-warning-500',
-                                'Waiting User' => 'bg-orange-500',
-                                'Resolved' => 'bg-success-500',
-                                'Closed' => 'bg-slate-400',
+                                'Completed' => 'bg-success-500',
                                 default => 'bg-slate-400',
                             };
                         @endphp
@@ -344,33 +351,41 @@
     {{-- STAFF DASHBOARD --}}
     @elseif($role === 'staff')
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            <div class="stat-card">
-                <div class="stat-icon bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400 mb-2">
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400 flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-primary-600 dark:text-primary-400 animated-counter">{{ $stats['assigned_to_me'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Assigned</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-primary-600 dark:text-primary-400 animated-counter leading-tight tabular-nums">{{ $stats['assigned_to_me'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">Assigned</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-warning-400 mb-2">
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-warning-400 flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-warning-600 dark:text-warning-400 animated-counter">{{ $stats['in_progress_assigned'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">In Progress</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-warning-600 dark:text-warning-400 animated-counter leading-tight tabular-nums">{{ $stats['in_progress_assigned'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">In Progress</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon bg-danger-50 text-danger-600 dark:bg-danger-500/15 dark:text-danger-400 mb-2">
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-danger-50 text-danger-600 dark:bg-danger-500/15 dark:text-danger-400 flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-danger-600 dark:text-danger-400 animated-counter">{{ $stats['critical_assigned'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Critical</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-danger-600 dark:text-danger-400 animated-counter leading-tight tabular-nums">{{ $stats['critical_assigned'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">Critical</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-400 mb-2">
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-400 flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-success-600 dark:text-success-400 animated-counter">{{ $stats['resolved_today'] ?? 0 }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Resolved Today</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-success-600 dark:text-success-400 animated-counter leading-tight tabular-nums">{{ $stats['completed_today'] ?? 0 }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">Completed Today</div>
+                </div>
             </div>
         </div>
 
@@ -389,7 +404,7 @@
                             <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' }}">{{ $ticket->status }}</span>
                             <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide {{ $priorityColors[$ticket->priority] ?? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' }}">{{ $ticket->priority }}</span>
                         </div>
-                        <p class="text-sm text-slate-700 dark:text-slate-300 truncate">{{ $ticket->subject }}</p>
+                        <p class="text-sm text-slate-700 dark:text-slate-300 truncate">{{ \Illuminate\Support\Str::limit($ticket->description ?? '', 80) }}</p>
                     </div>
                     <div class="text-xs text-slate-400 dark:text-slate-500 flex-shrink-0">{{ $ticket->created_at->diffForHumans() }}</div>
                 </a>
@@ -403,33 +418,41 @@
     {{-- USER DASHBOARD --}}
     @else
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            <div class="stat-card">
-                <div class="stat-icon bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 mb-2">
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-slate-900 dark:text-white animated-counter">{{ $stats['my_total'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">My Tickets</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-slate-900 dark:text-white animated-counter leading-tight tabular-nums">{{ $stats['my_total'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">My Tickets</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400 mb-2">
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400 flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-primary-600 dark:text-primary-400 animated-counter">{{ $stats['my_open'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Open</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-primary-600 dark:text-primary-400 animated-counter leading-tight tabular-nums">{{ $stats['my_waiting'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">Waiting Confirmation</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-warning-400 mb-2">
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-warning-400 flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-warning-600 dark:text-warning-400 animated-counter">{{ $stats['my_in_progress'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">In Progress</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-warning-600 dark:text-warning-400 animated-counter leading-tight tabular-nums">{{ $stats['my_in_progress'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">In Progress</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-400 mb-2">
+            <div class="stat-card flex items-center gap-4">
+                <div class="stat-icon bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-400 flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
-                <div class="text-2xl font-bold text-success-600 dark:text-success-400 animated-counter">{{ $stats['my_resolved'] }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Resolved</div>
+                <div class="min-w-0">
+                    <div class="text-2xl font-bold text-success-600 dark:text-success-400 animated-counter leading-tight tabular-nums">{{ $stats['my_completed'] }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">Completed</div>
+                </div>
             </div>
         </div>
 
@@ -448,7 +471,7 @@
                             <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide {{ $statusColors[$ticket->status] ?? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' }}">{{ $ticket->status }}</span>
                             <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide {{ $priorityColors[$ticket->priority] ?? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' }}">{{ $ticket->priority }}</span>
                         </div>
-                        <p class="text-sm text-slate-700 dark:text-slate-300 truncate">{{ $ticket->subject }}</p>
+                        <p class="text-sm text-slate-700 dark:text-slate-300 truncate">{{ \Illuminate\Support\Str::limit($ticket->description ?? '', 80) }}</p>
                     </div>
                     <div class="text-xs text-slate-400 dark:text-slate-500 flex-shrink-0">{{ $ticket->created_at->diffForHumans() }}</div>
                 </a>
@@ -467,20 +490,4 @@
     @endif
 </div>
 
-@push('scripts')
-<script>
-    function updateClock() {
-        const now = new Date();
-        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-        const gmt7 = new Date(utc + (7 * 3600000));
-        const hours = String(gmt7.getHours()).padStart(2, '0');
-        const minutes = String(gmt7.getMinutes()).padStart(2, '0');
-        const seconds = String(gmt7.getSeconds()).padStart(2, '0');
-        const el = document.getElementById('live-clock');
-        if (el) el.textContent = hours + ':' + minutes + ':' + seconds + ' WIB';
-    }
-    updateClock();
-    setInterval(updateClock, 1000);
-</script>
-@endpush
 @endsection

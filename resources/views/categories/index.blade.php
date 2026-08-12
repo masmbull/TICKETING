@@ -2,12 +2,14 @@
 
 @section('title', 'Category Management - MITO IT Helpdesk')
 
+@push('skeleton')
+<x-loading variant="cards" :count="3" />
+@endpush
+
 @section('content')
 <div class="space-y-6">
-    <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Category Management</h1>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage ticket categories and subcategories</p>
-    </div>
+    <x-page-header title="Category Management" description="Manage ticket categories and subcategories" />
+
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Add Category Form --}}

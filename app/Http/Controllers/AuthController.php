@@ -63,6 +63,11 @@ class AuthController extends Controller
      */
     public function showLoginForm(?string $role = null): View|RedirectResponse
     {
+        // Authenticated users should not see the login page.
+        if (auth()->check()) {
+            return redirect()->route('dashboard');
+        }
+
         $config = $this->roles[$role] ?? null;
 
         if (!$config) {
@@ -84,6 +89,11 @@ class AuthController extends Controller
      */
     public function login(Request $request): RedirectResponse
     {
+        // Already authenticated users are redirected to the dashboard.
+        if (auth()->check()) {
+            return redirect()->route('dashboard');
+        }
+
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],

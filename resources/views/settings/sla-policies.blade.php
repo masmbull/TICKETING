@@ -2,27 +2,20 @@
 
 @section('title', 'SLA Policies - MITO IT Helpdesk')
 
+@push('skeleton')
+<x-loading variant="cards" :count="4" />
+@endpush
+
 @section('content')
 <div class="space-y-6">
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">SLA Policies</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage service level agreements for different priority levels</p>
-        </div>
-        <button onclick="document.getElementById('createModal').classList.remove('hidden')" class="btn-primary">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            New Policy
-        </button>
-    </div>
-
-    @if(session('success'))
-        <div class="p-4 bg-success-50 border border-success-200 dark:bg-success-500/15 dark:border-success-500/30 rounded-xl">
-            <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 text-success-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span class="text-sm font-medium text-success-700 dark:text-success-400">{{ session('success') }}</span>
-            </div>
-        </div>
-    @endif
+    <x-page-header title="SLA Policies" description="Manage service level agreements for different priority levels">
+        @slot('actions')
+            <button onclick="document.getElementById('createModal').classList.remove('hidden')" class="btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                New Policy
+            </button>
+        @endslot
+    </x-page-header>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         @forelse($policies as $policy)

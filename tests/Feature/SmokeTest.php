@@ -14,13 +14,15 @@ class SmokeTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+    private User $staff;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Seed categories
+        // Seed categories and roles (staff needed for workflow tests)
         $this->seed(\Database\Seeders\CategorySeeder::class);
+        $this->seed(\Database\Seeders\RoleSeeder::class);
 
         // Create a test user
         $this->user = User::factory()->create([
@@ -28,23 +30,32 @@ class SmokeTest extends TestCase
             'password' => bcrypt('Test@123'),
             'email_verified_at' => now(),
         ]);
+
+        // Create an IT Support staff member
+        $this->staff = User::factory()->create([
+            'name' => 'IT Staff One',
+            'email' => 'staff1@mito.local',
+            'password' => bcrypt('Test@123'),
+            'role_id' => \App\Models\Role::where('slug', 'staff')->value('id'),
+            'email_verified_at' => now(),
+        ]);
     }
 
     // ─── Auth Pages ───────────────────────────────────────
 
-    public function test_root_redirects_to_login(): void
+    public function test_root_page_loads(): void
     {
         $response = $this->get('/');
-        $response->assertStatus(302);
-        $response->assertRedirect('/login');
+        $response->assertStatus(200);
+        $response->assertSee('MITO');
     }
 
     public function test_login_page_loads(): void
     {
-        $response = $this->get('/login');
+        $response = $this->get('/login/admin');
         $response->assertStatus(200);
         $response->assertSee('MITO');
-        $response->assertSee('Login');
+        $response->assertSee('Sign in');
     }
 
     public function test_login_with_valid_credentials(): void
@@ -75,7 +86,7 @@ class SmokeTest extends TestCase
         $this->actingAs($this->user);
 
         $response = $this->post('/logout');
-        $response->assertRedirect('/login');
+        $response->assertRedirect('/');
         $this->assertGuest();
     }
 
@@ -125,16 +136,15 @@ class SmokeTest extends TestCase
             'user_id' => $this->user->id,
             'category_id' => $category->id,
             'sub_category_id' => $subCategory->id,
-            'subject' => 'Test Ticket',
             'description' => 'Test description for smoke test',
             'priority' => 'medium',
-            'status' => 'open',
+            'status' => 'Waiting Confirmation',
         ]);
 
         $response = $this->get('/my-tickets');
         $response->assertStatus(200);
         $response->assertSee('TKT-000001');
-        $response->assertSee('Test Ticket');
+        $response->assertSee('Test description for smoke test');
     }
 
     public function test_my_tickets_search(): void
@@ -149,15 +159,14 @@ class SmokeTest extends TestCase
             'user_id' => $this->user->id,
             'category_id' => $category->id,
             'sub_category_id' => $subCategory->id,
-            'subject' => 'Network connectivity issue',
-            'description' => 'Cannot connect to WiFi',
+            'description' => 'Cannot connect to WiFi on the 3rd floor',
             'priority' => 'high',
-            'status' => 'open',
+            'status' => 'Waiting Confirmation',
         ]);
 
-        $response = $this->get('/my-tickets?search=Network');
+        $response = $this->get('/my-tickets?search=WiFi');
         $response->assertStatus(200);
-        $response->assertSee('Network connectivity issue');
+        $response->assertSee('Cannot connect to WiFi on the 3rd floor');
     }
 
     public function test_my_tickets_filter_by_status(): void
@@ -172,15 +181,14 @@ class SmokeTest extends TestCase
             'user_id' => $this->user->id,
             'category_id' => $category->id,
             'sub_category_id' => $subCategory->id,
-            'subject' => 'Resolved issue',
-            'description' => 'This was resolved',
+            'description' => 'This issue was fully resolved',
             'priority' => 'low',
-            'status' => 'resolved',
+            'status' => 'Completed',
         ]);
 
-        $response = $this->get('/my-tickets?status=resolved');
+        $response = $this->get('/my-tickets?status=Completed');
         $response->assertStatus(200);
-        $response->assertSee('Resolved issue');
+        $response->assertSee('This issue was fully resolved');
     }
 
     // ─── Create Ticket ────────────────────────────────────
@@ -191,9 +199,9 @@ class SmokeTest extends TestCase
 
         $response = $this->get('/my-tickets/create');
         $response->assertStatus(200);
-        $response->assertSee('Create Support Ticket');
+        $response->assertSee('Create New Ticket');
         $response->assertSee('Category');
-        $response->assertSee('Subject');
+        $response->assertDontSee('Subject');
         $response->assertSee('Description');
         $response->assertSee('Priority');
     }
@@ -208,7 +216,6 @@ class SmokeTest extends TestCase
         $response = $this->post('/my-tickets', [
             'category_id' => $category->id,
             'sub_category_id' => $subCategory->id,
-            'subject' => 'Printer not working',
             'description' => 'The office printer on floor 3 is not responding.',
             'priority' => 'medium',
         ]);
@@ -216,9 +223,9 @@ class SmokeTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('tickets', [
             'user_id' => $this->user->id,
-            'subject' => 'Printer not working',
+            'description' => 'The office printer on floor 3 is not responding.',
             'priority' => 'medium',
-            'status' => 'Open',
+            'status' => 'Waiting Confirmation',
         ]);
     }
 
@@ -227,13 +234,12 @@ class SmokeTest extends TestCase
         $this->actingAs($this->user);
 
         $response = $this->post('/my-tickets', [
-            'subject' => '',
             'description' => '',
             'category_id' => '',
             'priority' => '',
         ]);
 
-        $response->assertSessionHasErrors(['subject', 'description', 'priority']);
+        $response->assertSessionHasErrors(['description']);
     }
 
     // ─── Ticket Detail ────────────────────────────────────
@@ -250,18 +256,16 @@ class SmokeTest extends TestCase
             'user_id' => $this->user->id,
             'category_id' => $category->id,
             'sub_category_id' => $subCategory->id,
-            'subject' => 'Detail test ticket',
             'description' => 'Testing ticket detail page',
             'priority' => 'medium',
-            'status' => 'open',
+            'status' => 'Waiting Confirmation',
         ]);
 
         $response = $this->get("/my-tickets/{$ticket->id}");
         $response->assertStatus(200);
         $response->assertSee('TKT-000010');
-        $response->assertSee('Detail test ticket');
         $response->assertSee('Testing ticket detail page');
-        $response->assertSee('Add a Comment');
+        $response->assertSee('Add a comment');
     }
 
     public function test_ticket_detail_shows_comments(): void
@@ -276,10 +280,9 @@ class SmokeTest extends TestCase
             'user_id' => $this->user->id,
             'category_id' => $category->id,
             'sub_category_id' => $subCategory->id,
-            'subject' => 'Comment test',
             'description' => 'Testing comments',
             'priority' => 'low',
-            'status' => 'open',
+            'status' => 'Waiting Confirmation',
         ]);
 
         $ticket->comments()->create([
@@ -306,10 +309,9 @@ class SmokeTest extends TestCase
             'user_id' => $this->user->id,
             'category_id' => $category->id,
             'sub_category_id' => $subCategory->id,
-            'subject' => 'Comment store test',
             'description' => 'Testing comment storage',
             'priority' => 'medium',
-            'status' => 'open',
+            'status' => 'Waiting Confirmation',
         ]);
 
         $response = $this->post("/my-tickets/{$ticket->id}/comments", [
@@ -326,51 +328,154 @@ class SmokeTest extends TestCase
 
     // ─── Status Update ────────────────────────────────────
 
-    public function test_update_ticket_status(): void
+    public function test_update_ticket_status_requires_staff_role(): void
     {
+        // Regular users cannot change ticket status (backend enforcement).
         $this->actingAs($this->user);
 
         $category = Category::first();
-        $subCategory = SubCategory::first();
 
         $ticket = Ticket::create([
             'ticket_number' => 'TKT-000013',
             'user_id' => $this->user->id,
             'category_id' => $category->id,
-            'sub_category_id' => $subCategory->id,
-            'subject' => 'Status update test',
-            'description' => 'Testing status change',
-            'priority' => 'high',
-            'status' => 'open',
+            'description' => 'Testing status permissions',
+            'priority' => 'medium',
+            'status' => 'Waiting Confirmation',
+            'assignee_id' => $this->staff->id,
         ]);
 
         $response = $this->patch("/my-tickets/{$ticket->id}/status", [
             'status' => 'In Progress',
+            'problem_analysis' => 'Analysed the issue.',
+        ]);
+
+        $response->assertForbidden();
+    }
+
+    public function test_update_ticket_status_moves_to_in_progress(): void
+    {
+        $this->actingAs($this->staff);
+
+        $category = Category::first();
+
+        $ticket = Ticket::create([
+            'ticket_number' => 'TKT-000013',
+            'user_id' => $this->user->id,
+            'category_id' => $category->id,
+            'description' => 'Testing status change',
+            'priority' => 'high',
+            'status' => 'Waiting Confirmation',
+            'assignee_id' => $this->staff->id,
+        ]);
+
+        $response = $this->patch("/my-tickets/{$ticket->id}/status", [
+            'status' => 'In Progress',
+            'problem_analysis' => 'Suspect faulty network adapter driver.',
         ]);
 
         $response->assertRedirect();
         $this->assertDatabaseHas('tickets', [
             'id' => $ticket->id,
             'status' => 'In Progress',
+            'problem_analysis' => 'Suspect faulty network adapter driver.',
         ]);
     }
 
-    public function test_update_ticket_status_validates(): void
+    public function test_update_ticket_status_requires_problem_analysis(): void
     {
-        $this->actingAs($this->user);
+        $this->actingAs($this->staff);
 
         $category = Category::first();
-        $subCategory = SubCategory::first();
 
         $ticket = Ticket::create([
             'ticket_number' => 'TKT-000014',
             'user_id' => $this->user->id,
             'category_id' => $category->id,
-            'sub_category_id' => $subCategory->id,
-            'subject' => 'Validation test',
+            'description' => 'Testing analysis requirement',
+            'priority' => 'medium',
+            'status' => 'Waiting Confirmation',
+            'assignee_id' => $this->staff->id,
+        ]);
+
+        $response = $this->patch("/my-tickets/{$ticket->id}/status", [
+            'status' => 'In Progress',
+        ]);
+
+        $response->assertSessionHasErrors('problem_analysis');
+    }
+
+    public function test_update_ticket_status_requires_resolution_for_completed(): void
+    {
+        $this->actingAs($this->staff);
+
+        $category = Category::first();
+
+        $ticket = Ticket::create([
+            'ticket_number' => 'TKT-000015',
+            'user_id' => $this->user->id,
+            'category_id' => $category->id,
+            'description' => 'Testing resolution requirement',
+            'priority' => 'medium',
+            'status' => 'In Progress',
+            'assignee_id' => $this->staff->id,
+            'problem_analysis' => 'Analysed: broken cable.',
+        ]);
+
+        $response = $this->patch("/my-tickets/{$ticket->id}/status", [
+            'status' => 'Completed',
+        ]);
+
+        $response->assertSessionHasErrors('resolution');
+    }
+
+    public function test_complete_ticket_records_completion_metadata(): void
+    {
+        $this->actingAs($this->staff);
+
+        $category = Category::first();
+
+        $ticket = Ticket::create([
+            'ticket_number' => 'TKT-000016',
+            'user_id' => $this->user->id,
+            'category_id' => $category->id,
+            'description' => 'Testing completion',
+            'priority' => 'low',
+            'status' => 'In Progress',
+            'assignee_id' => $this->staff->id,
+            'problem_analysis' => 'Analysed: faulty cable.',
+        ]);
+
+        $response = $this->patch("/my-tickets/{$ticket->id}/status", [
+            'status' => 'Completed',
+            'resolution' => 'Replaced the cable.',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('tickets', [
+            'id' => $ticket->id,
+            'status' => 'Completed',
+            'resolution' => 'Replaced the cable.',
+            'completed_by' => $this->staff->id,
+        ]);
+
+        $this->assertNotNull(Ticket::find($ticket->id)->completed_at);
+    }
+
+    public function test_update_ticket_status_validates(): void
+    {
+        $this->actingAs($this->staff);
+
+        $category = Category::first();
+
+        $ticket = Ticket::create([
+            'ticket_number' => 'TKT-000017',
+            'user_id' => $this->user->id,
+            'category_id' => $category->id,
             'description' => 'Testing validation',
             'priority' => 'medium',
-            'status' => 'open',
+            'status' => 'Waiting Confirmation',
+            'assignee_id' => $this->staff->id,
         ]);
 
         $response = $this->patch("/my-tickets/{$ticket->id}/status", [
@@ -378,6 +483,83 @@ class SmokeTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors('status');
+    }
+
+    public function test_assign_to_me(): void
+    {
+        $this->actingAs($this->staff);
+
+        $category = Category::first();
+
+        $ticket = Ticket::create([
+            'ticket_number' => 'TKT-000018',
+            'user_id' => $this->user->id,
+            'category_id' => $category->id,
+            'description' => 'Testing assign to me',
+            'priority' => 'medium',
+            'status' => 'Waiting Confirmation',
+        ]);
+
+        $response = $this->postJson("/tickets/{$ticket->id}/assign-to-me", [
+            'problem_analysis' => 'Picked up and analysed.',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true]);
+        $this->assertDatabaseHas('tickets', [
+            'id' => $ticket->id,
+            'assignee_id' => $this->staff->id,
+            'status' => 'In Progress',
+        ]);
+    }
+
+    public function test_assign_to_me_requires_analysis(): void
+    {
+        $this->actingAs($this->staff);
+
+        $category = Category::first();
+
+        $ticket = Ticket::create([
+            'ticket_number' => 'TKT-000019',
+            'user_id' => $this->user->id,
+            'category_id' => $category->id,
+            'description' => 'Testing assign analysis requirement',
+            'priority' => 'medium',
+            'status' => 'Waiting Confirmation',
+        ]);
+
+        $response = $this->postJson("/tickets/{$ticket->id}/assign-to-me", []);
+
+        $response->assertStatus(422);
+        $response->assertJsonPath('errors.problem_analysis', 'Problem analysis is required before you can take this ticket.');
+    }
+
+    public function test_assign_to_me_rejects_ticket_assigned_to_other_staff(): void
+    {
+        $this->actingAs($this->staff);
+
+        $otherStaff = User::factory()->create([
+            'role_id' => \App\Models\Role::where('slug', 'staff')->value('id'),
+        ]);
+
+        $category = Category::first();
+
+        $ticket = Ticket::create([
+            'ticket_number' => 'TKT-000020',
+            'user_id' => $this->user->id,
+            'category_id' => $category->id,
+            'description' => 'Testing assign conflict',
+            'priority' => 'medium',
+            'status' => 'Waiting Confirmation',
+            'assignee_id' => $otherStaff->id,
+        ]);
+
+        // Staff cannot even see tickets assigned to another staff member.
+        $response = $this->postJson("/tickets/{$ticket->id}/assign-to-me", [
+            'problem_analysis' => 'Trying to take it.',
+        ]);
+
+        $response->assertStatus(404);
     }
 
     // ─── Categories ───────────────────────────────────────

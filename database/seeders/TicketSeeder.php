@@ -50,11 +50,10 @@ class TicketSeeder extends Seeder
         $netDept = Department::where('slug', 'network')->first();
 
         $tickets = [
-            // Open tickets (various priorities)
+            // Waiting Confirmation tickets (newly submitted)
             [
-                'subject'     => 'Laptop tidak bisa menyala',
                 'description' => 'Laptop Dell Latitude 5520 saya tidak bisa menyala sama sekali sudah 2 hari. Sudah dicoba charge tetap tidak menyala.',
-                'status'      => 'Open',
+                'status'      => 'Waiting Confirmation',
                 'priority'    => 'critical',
                 'user_id'     => $marketing1->id,
                 'category_id' => $hwCat->id,
@@ -64,9 +63,8 @@ class TicketSeeder extends Seeder
                 'days_ago'    => 1,
             ],
             [
-                'subject'     => 'Internet lambat di lantai 3',
                 'description' => 'Koneksi internet di lantai 3 gedung sangat lambat sejak kemarin. Speed test hanya 2 Mbps padahal biasanya 100 Mbps.',
-                'status'      => 'Open',
+                'status'      => 'Waiting Confirmation',
                 'priority'    => 'high',
                 'user_id'     => $finance1->id,
                 'category_id' => $netCat->id,
@@ -76,9 +74,8 @@ class TicketSeeder extends Seeder
                 'days_ago'    => 2,
             ],
             [
-                'subject'     => 'Printer lantai 2 tidak bisa mencetak',
                 'description' => 'Printer HP LaserJet di lantai 2 tidak bisa mencetak. Tampilan layar printer menunjukkan error "Paper Jam" sudah dibersihkan tetap error.',
-                'status'      => 'Open',
+                'status'      => 'Waiting Confirmation',
                 'priority'    => 'medium',
                 'user_id'     => $marketing1->id,
                 'category_id' => $prCat->id,
@@ -88,9 +85,8 @@ class TicketSeeder extends Seeder
                 'days_ago'    => 3,
             ],
             [
-                'subject'     => 'Request install Adobe Photoshop',
                 'description' => 'Saya membutuhkan Adobe Photoshop untuk keperluan desain marketing. Mohon segera diinstall.',
-                'status'      => 'Open',
+                'status'      => 'Waiting Confirmation',
                 'priority'    => 'low',
                 'user_id'     => $finance1->id,
                 'category_id' => $swCat->id,
@@ -100,9 +96,8 @@ class TicketSeeder extends Seeder
                 'days_ago'    => 5,
             ],
 
-            // In Progress tickets
+            // In Progress tickets (analysed and being worked on)
             [
-                'subject'     => 'Monitor berkedip terus menerus',
                 'description' => 'Monitor LG 24 inch saya berkedip terus menerus sejak update driver kemarin. Sudah coba ganti kabel VGA tetap sama.',
                 'status'      => 'In Progress',
                 'priority'    => 'high',
@@ -111,10 +106,10 @@ class TicketSeeder extends Seeder
                 'sub_category_id' => $monitorSub?->id,
                 'assignee_id' => $shohibul->id,
                 'department_id' => $itDept->id,
+                'problem_analysis' => 'Flickering occurs after the latest graphics driver update; suspecting driver regression or refresh-rate conflict on the LG panel.',
                 'days_ago'    => 4,
             ],
             [
-                'subject'     => 'VPN tidak bisa connect dari rumah',
                 'description' => 'VPN Cisco AnyConnect tidak bisa connect dari rumah. Sudah coba reinstall tetap tidak bisa. Error: "Connection attempt has timed out".',
                 'status'      => 'In Progress',
                 'priority'    => 'critical',
@@ -123,10 +118,10 @@ class TicketSeeder extends Seeder
                 'sub_category_id' => $vpnSub?->id,
                 'assignee_id' => $riyanto->id,
                 'department_id' => $netDept->id,
+                'problem_analysis' => 'Timeout at the connection phase points to the corporate firewall blocking AnyConnect UDP port; testing TCP fallback and checking firewall ACLs.',
                 'days_ago'    => 1,
             ],
             [
-                'subject'     => 'Microsoft Teams freeze saat meeting',
                 'description' => 'Microsoft Teams sering freeze dan crash saat meeting dengan lebih dari 10 orang. Sudah clear cache dan reinstall tetap terjadi.',
                 'status'      => 'In Progress',
                 'priority'    => 'medium',
@@ -135,14 +130,12 @@ class TicketSeeder extends Seeder
                 'sub_category_id' => $teamsSub?->id,
                 'assignee_id' => $shohibul->id,
                 'department_id' => $itDept->id,
+                'problem_analysis' => 'Crashes occur specifically in large meetings; GPU hardware acceleration is the likely cause and is being disabled for the affected profile.',
                 'days_ago'    => 3,
             ],
-
-            // Waiting User
             [
-                'subject'     => 'Blue screen error Windows 11',
                 'description' => 'Laptop saya mengalami blue screen error (BSOD) dengan error code IRQL_NOT_LESS_OR_EQUAL. Sudah saya upload dump file.',
-                'status'      => 'Waiting User',
+                'status'      => 'Waiting Confirmation',
                 'priority'    => 'high',
                 'user_id'     => $finance1->id,
                 'category_id' => $swCat->id,
@@ -152,9 +145,8 @@ class TicketSeeder extends Seeder
                 'days_ago'    => 6,
             ],
             [
-                'subject'     => 'Email tidak bisa kirim ke eksternal',
                 'description' => 'Email outlook saya tidak bisa mengirim email ke alamat eksternal. Email ke internal bisa. Sudah coba restart Outlook.',
-                'status'      => 'Waiting User',
+                'status'      => 'Waiting Confirmation',
                 'priority'    => 'medium',
                 'user_id'     => $marketing1->id,
                 'category_id' => $emCat->id,
@@ -164,67 +156,70 @@ class TicketSeeder extends Seeder
                 'days_ago'    => 5,
             ],
 
-            // Resolved tickets
+            // Completed tickets (analysis + resolution + completion metadata)
             [
-                'subject'     => 'Keyboard beberapa tombol tidak berfungsi',
                 'description' => 'Tombol WASD dan Space pada keyboard mechanical saya tidak berfungsi. Sudah 1 minggu.',
-                'status'      => 'Resolved',
+                'status'      => 'Completed',
                 'priority'    => 'medium',
                 'user_id'     => $marketing1->id,
                 'category_id' => $hwCat->id,
                 'sub_category_id' => null,
                 'assignee_id' => $riyanto->id,
                 'department_id' => $itDept->id,
+                'problem_analysis' => 'Multiple keys on the mechanical keyboard stopped registering at the same time; issue isolated to the keyboard PCB rather than the OS.',
+                'resolution' => 'Replaced the faulty mechanical keyboard with a spare unit; all keys verified and working.',
                 'days_ago'    => 10,
             ],
             [
-                'subject'     => 'Request akses folder shared',
                 'description' => 'Saya butuh akses ke folder shared \\\\server\\marketing. Mohon di grant permission.',
-                'status'      => 'Resolved',
+                'status'      => 'Completed',
                 'priority'    => 'low',
                 'user_id'     => $finance1->id,
                 'category_id' => $swCat->id,
                 'sub_category_id' => $appSub?->id,
                 'assignee_id' => $shohibul->id,
                 'department_id' => $itDept->id,
+                'problem_analysis' => 'User requires read/write access to the shared marketing folder; access was not present in the security group.',
+                'resolution' => 'Added user to the MARKETING-FS-RO group; access to \\\\server\\marketing verified successfully.',
                 'days_ago'    => 8,
             ],
-
-            // Closed tickets
             [
-                'subject'     => 'Password email expired',
                 'description' => 'Password email saya sudah expired dan tidak bisa login. Mohon reset password.',
-                'status'      => 'Closed',
+                'status'      => 'Completed',
                 'priority'    => 'medium',
                 'user_id'     => $marketing1->id,
                 'category_id' => $emCat->id,
                 'sub_category_id' => $emailSub?->id,
                 'assignee_id' => $shohibul->id,
                 'department_id' => $itDept->id,
+                'problem_analysis' => 'Password reached its expiry date and the user was locked out; confirmed via the identity provider audit log.',
+                'resolution' => 'Reset the password and enforced a password change at next logon; user confirmed login is working.',
                 'days_ago'    => 15,
             ],
             [
-                'subject'     => 'Printer baru tidak terdeteksi',
                 'description' => 'Printer Canon Pixma yang baru dipasang tidak terdeteksi di komputer. Sudah install driver tetap tidak terdeteksi.',
-                'status'      => 'Closed',
+                'status'      => 'Completed',
                 'priority'    => 'low',
                 'user_id'     => $finance1->id,
                 'category_id' => $prCat->id,
                 'sub_category_id' => $printSub?->id,
                 'assignee_id' => $shohibul->id,
                 'department_id' => $itDept->id,
+                'problem_analysis' => 'New printer connected via USB but the spooler did not detect the device; driver installation had been done before the printer was connected.',
+                'resolution' => 'Re-installed the driver with the printer connected and restarted the print spooler; test page printed successfully.',
                 'days_ago'    => 20,
             ],
             [
-                'subject'     => 'Laptop overheating',
                 'description' => 'Laptop Lenovo ThinkPad saya sering overheating saat menjalankan aplikasi berat. Kipas berputar sangat kencang.',
-                'status'      => 'Closed',
+                'status'      => 'Completed',
                 'priority'    => 'medium',
                 'user_id'     => $marketing1->id,
                 'category_id' => $hwCat->id,
                 'sub_category_id' => $desktopSub?->id,
                 'assignee_id' => $riyanto->id,
                 'department_id' => $itDept->id,
+                'problem_analysis' => 'High CPU/GPU temperatures under load with the fan at maximum; dust build-up inside the cooling assembly was blocking airflow.',
+                'resolution' => 'Cleaned the cooling assembly, replaced the thermal paste and calibrated the fan curve; temperatures are back to normal under load.',
                 'days_ago'    => 25,
             ],
         ];
@@ -245,24 +240,18 @@ class TicketSeeder extends Seeder
                 'updated_at'    => $updatedAt,
             ]));
 
-            // Add first response for non-Open tickets
-            if ($data['status'] !== 'Open' && $data['assignee_id']) {
+            // Add first response for tickets being worked on (In Progress / Completed)
+            if ($data['status'] !== 'Waiting Confirmation' && $data['assignee_id']) {
                 $ticket->update([
                     'first_response_at' => $createdAt->copy()->addMinutes(rand(15, 120)),
                 ]);
             }
 
-            // Add resolved_at for Resolved/Closed
-            if (in_array($data['status'], ['Resolved', 'Closed'])) {
+            // Add completion metadata for Completed tickets
+            if ($data['status'] === 'Completed') {
                 $ticket->update([
-                    'resolved_at' => $updatedAt->copy()->subHours(rand(1, 48)),
-                ]);
-            }
-
-            // Add closed_at for Closed
-            if ($data['status'] === 'Closed' && $ticket->resolved_at) {
-                $ticket->update([
-                    'closed_at' => $ticket->resolved_at->copy()->addHours(rand(1, 72)),
+                    'completed_at' => $updatedAt->copy()->subHours(rand(1, 48)),
+                    'completed_by' => $data['assignee_id'],
                 ]);
             }
 

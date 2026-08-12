@@ -15,6 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'force.password.change' => \App\Http\Middleware\ForcePasswordChange::class,
             'admin' => \App\Http\Middleware\Admin::class,
         ]);
+
+        // Block the browser from caching authenticated pages so that
+        // Back/Forward navigation can never reveal previous sessions.
+        $middleware->web(append: [
+            \App\Http\Middleware\PreventBackHistory::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

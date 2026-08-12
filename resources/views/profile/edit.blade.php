@@ -2,12 +2,13 @@
 
 @section('title', 'My Profile - MITO IT Helpdesk')
 
+@push('skeleton')
+<x-loading variant="form" />
+@endpush
+
 @section('content')
 <div class="space-y-6">
-    <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">My Profile</h1>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage your account information</p>
-    </div>
+    <x-page-header title="My Profile" description="Manage your account information" />
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {{-- Profile Info --}}
