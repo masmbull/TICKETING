@@ -8,14 +8,13 @@ use Tests\TestCase;
 class ExampleTest extends TestCase
 {
     /**
-     * Test that the root URL shows the public welcome page.
+     * Test that the root URL redirects guests to the login page.
      */
     public function test_root_page_loads(): void
     {
         $response = $this->get('/');
 
-        $response->assertStatus(200);
-        $response->assertSee('MITO');
+        $response->assertRedirect('/login');
     }
 
     /**

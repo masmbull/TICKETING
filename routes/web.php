@@ -8,10 +8,17 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SlaPolicyController;
+use App\Http\Controllers\AuditLogController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
-Route::get('/', [AuthController::class, 'showWelcome'])->name('welcome');
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+
+    return redirect()->route('login');
+})->name('welcome');
 Route::get('/login/{role?}', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
 
@@ -78,6 +85,11 @@ Route::middleware('auth')->group(function () {
             Route::post('/', [SlaPolicyController::class, 'store'])->name('store');
             Route::patch('/{id}', [SlaPolicyController::class, 'update'])->name('update');
             Route::delete('/{id}', [SlaPolicyController::class, 'destroy'])->name('destroy');
+        });
+
+        // Audit Logs (Admin only)
+        Route::middleware('admin')->prefix('audit-logs')->name('audit.')->group(function () {
+            Route::get('/', [AuditLogController::class, 'index'])->name('index');
         });
 
         // Profile

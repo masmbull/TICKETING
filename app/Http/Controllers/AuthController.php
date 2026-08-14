@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
+use App\Services\AuditService;
 
 class AuthController extends Controller
 {
@@ -59,8 +60,8 @@ class AuthController extends Controller
     }
 
     /**
-     * Show the role-specific login form.
-     */
+      * Show the role-specific login form.
+      */
     public function showLoginForm(?string $role = null): View|RedirectResponse
     {
         // Authenticated users should not see the login page.
@@ -71,7 +72,7 @@ class AuthController extends Controller
         $config = $this->roles[$role] ?? null;
 
         if (!$config) {
-            return redirect('/');
+            return view('auth.login');
         }
 
         return view('auth.login', [
@@ -176,11 +177,20 @@ class AuthController extends Controller
      */
     public function logout(Request $request): RedirectResponse
     {
+        $user = auth()->user();
+
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        if ($user) {
+            AuditService::log('logout', $user, [], [
+                'name' => $user->name,
+                'email' => $user->email,
+            ]);
+        }
+
+        return redirect()->route('login');
     }
 }

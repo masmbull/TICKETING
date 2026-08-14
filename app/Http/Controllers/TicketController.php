@@ -202,26 +202,32 @@ class TicketController extends Controller
         $slaPriority = $this->resolveSlaPriority($validated['sla_policy_id'] ?? null, $category, $priority);
         $assigneeId = $isSupport ? ($validated['assignee_id'] ?? null) : null;
 
-        // Generate ticket number: HD-YYYYMMDD-000001
+        // Generate ticket number: ITSUP-YYYYMMDD-NNNNN
         $today = now()->format('Ymd');
-        $lastTicket = Ticket::where('ticket_number', 'like', "HD-{$today}-%")
+        $lastTicket = Ticket::where('ticket_number', 'like', "ITSUP-{$today}-%")
             ->orderBy('ticket_number', 'desc')
             ->first();
 
         if ($lastTicket) {
-            $lastNumber = (int) substr($lastTicket->ticket_number, -6);
-            $newNumber = str_pad($lastNumber + 1, 6, '0', STR_PAD_LEFT);
+            $lastNumber = (int) substr($lastTicket->ticket_number, -5);
+            $newNumber = str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
         } else {
-            $newNumber = '000001';
+            $newNumber = '00001';
         }
 
-        $ticketNumber = "HD-{$today}-{$newNumber}";
+        $ticketNumber = "ITSUP-{$today}-{$newNumber}";
+
+        $slaPolicy = $this->resolveSlaPolicyModel($validated['sla_policy_id'] ?? null, $category, $priority);
+        $slaStartedAt = now();
+        $slaDeadline = $slaPolicy ? $slaStartedAt->copy()->addHours($slaPolicy->resolution_hours) : null;
 
         $ticket = Ticket::create([
             'ticket_number'   => $ticketNumber,
             'description'     => $validated['description'],
             'priority'        => $priority,
             'sla_priority'    => $slaPriority,
+            'sla_started_at'  => $slaStartedAt,
+            'sla_deadline'    => $slaDeadline,
             'status'          => 'Waiting Confirmation',
             'user_id'         => auth()->id(),
             'category_id'     => $validated['category_id'] ?? null,
@@ -746,29 +752,31 @@ class TicketController extends Controller
     }
 
     /**
-     * Resolve the SLA priority level for a new ticket.
-     *
-     * Precedence: explicit policy selection -> category SLA policy ->
-     * active policy matching the ticket priority.
-     */
+      * Resolve the SLA priority level for a new ticket.
+      *
+      * Precedence: explicit policy selection -> category SLA policy ->
+      * active policy matching the ticket priority.
+      */
     private function resolveSlaPriority(?int $explicitPolicyId, ?Category $category, string $priority): ?string
     {
+        $policy = $this->resolveSlaPolicyModel($explicitPolicyId, $category, $priority);
+
+        return $policy?->priority;
+    }
+
+    /**
+     * Resolve the SLA policy model for a new ticket.
+     */
+    private function resolveSlaPolicyModel(?int $explicitPolicyId, ?Category $category, string $priority): ?SlaPolicy
+    {
         if ($explicitPolicyId) {
-            $policy = SlaPolicy::find($explicitPolicyId);
-            if ($policy) {
-                return $policy->priority;
-            }
+            return SlaPolicy::find($explicitPolicyId);
         }
 
         if ($category && $category->sla_policy_id) {
-            $policy = $category->slaPolicy;
-            if ($policy) {
-                return $policy->priority;
-            }
+            return $category->slaPolicy;
         }
 
-        $policy = SlaPolicy::where('is_active', true)->where('priority', $priority)->first();
-
-        return $policy?->priority;
+        return SlaPolicy::where('is_active', true)->where('priority', $priority)->first();
     }
 }

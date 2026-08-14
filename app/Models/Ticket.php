@@ -29,6 +29,8 @@ class Ticket extends Model
         'completed_at',
         'completed_by',
         'sla_priority',
+        'sla_started_at',
+        'sla_deadline',
         'assigned_at',
         'problem_analysis_at',
         'resolution_at',
@@ -41,6 +43,8 @@ class Ticket extends Model
         'resolved_at' => 'datetime',
         'closed_at' => 'datetime',
         'completed_at' => 'datetime',
+        'sla_started_at' => 'datetime',
+        'sla_deadline' => 'datetime',
         'assigned_at' => 'datetime',
         'problem_analysis_at' => 'datetime',
         'resolution_at' => 'datetime',
@@ -90,5 +94,97 @@ class Ticket extends Model
     public function attachments(): HasMany
     {
         return $this->hasMany(TicketAttachment::class);
+    }
+
+    public function getSlaStatusAttribute(): string
+    {
+        if (!$this->sla_deadline) {
+            return 'No SLA';
+        }
+
+        if ($this->status === 'Completed') {
+            return 'Met';
+        }
+
+        return now()->greaterThan($this->sla_deadline) ? 'Breached' : 'Active';
+    }
+
+    public function getSlaPerformanceAttribute(): ?string
+    {
+        if ($this->status !== 'Completed' || !$this->sla_started_at || !$this->sla_deadline || !$this->completed_at) {
+            return null;
+        }
+
+        $slaDuration = $this->sla_started_at->diffInSeconds($this->sla_deadline);
+
+        if ($slaDuration <= 0) {
+            return null;
+        }
+
+        $actualDuration = $this->sla_started_at->diffInSeconds($this->completed_at);
+        $ratio = $actualDuration / $slaDuration;
+
+        if ($ratio < 2 / 3) {
+            return 'EXCELLENT';
+        }
+
+        if ($ratio <= 1.0) {
+            return 'NORMAL';
+        }
+
+        return 'POOR';
+    }
+
+    public function getTimelineAttribute(): array
+    {
+        $events = [];
+
+        $events[] = [
+            'label' => 'Ticket Created',
+            'timestamp' => $this->created_at,
+            'actor' => $this->user?->name,
+        ];
+
+        if ($this->assigned_at) {
+            $events[] = [
+                'label' => 'Assigned',
+                'timestamp' => $this->assigned_at,
+                'actor' => $this->assignee?->name,
+            ];
+        }
+
+        if ($this->problem_analysis_at) {
+            $events[] = [
+                'label' => 'Problem Analysis',
+                'timestamp' => $this->problem_analysis_at,
+                'actor' => $this->assignee?->name,
+            ];
+        }
+
+        if ($this->status === 'In Progress' || $this->status === 'Completed') {
+            $events[] = [
+                'label' => 'In Progress',
+                'timestamp' => $this->problem_analysis_at ?? $this->assigned_at ?? $this->created_at,
+                'actor' => $this->assignee?->name,
+            ];
+        }
+
+        if ($this->resolution_at) {
+            $events[] = [
+                'label' => 'Resolution',
+                'timestamp' => $this->resolution_at,
+                'actor' => $this->assignee?->name,
+            ];
+        }
+
+        if ($this->completed_at) {
+            $events[] = [
+                'label' => 'Completed',
+                'timestamp' => $this->completed_at,
+                'actor' => $this->completedBy?->name,
+            ];
+        }
+
+        return $events;
     }
 }

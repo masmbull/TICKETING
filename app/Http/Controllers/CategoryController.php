@@ -18,8 +18,9 @@ class CategoryController extends Controller
     public function index(): View
     {
         $categories = Category::with('subCategories')->orderBy('name')->get();
+        $allCategories = Category::orderBy('name')->get();
 
-        return view('categories.index', compact('categories'));
+        return view('categories.index', compact('categories', 'allCategories'));
     }
 
     /**

@@ -46,8 +46,7 @@ class SmokeTest extends TestCase
     public function test_root_page_loads(): void
     {
         $response = $this->get('/');
-        $response->assertStatus(200);
-        $response->assertSee('MITO');
+        $response->assertRedirect('/login');
     }
 
     public function test_login_page_loads(): void
@@ -86,7 +85,7 @@ class SmokeTest extends TestCase
         $this->actingAs($this->user);
 
         $response = $this->post('/logout');
-        $response->assertRedirect('/');
+        $response->assertRedirect('/login');
         $this->assertGuest();
     }
 

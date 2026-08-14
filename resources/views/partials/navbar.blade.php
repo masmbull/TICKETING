@@ -50,7 +50,7 @@
 
     <div class="flex-1 flex justify-center min-w-0 px-2">
         <form action="{{ $searchAction }}" method="GET" class="relative w-full flex items-center"
-              x-data="{
+              x-data='{
                 q: @json(request('search') ?? ''),
                 open: false,
                 loading: false,
@@ -60,14 +60,14 @@
                     if (t.length < 2) { this.results = { tickets: [], users: [], categories: [] }; this.open = false; return; }
                     const s = this;
                     s.loading = true;
-                    fetch('{{ route('api.search') }}?q=' + encodeURIComponent(t), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+                    fetch("{{ route('api.search') }}?q=" + encodeURIComponent(t), { headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" } })
                         .then(r => { if (!r.ok) throw new Error(); return r.json(); })
                         .then(d => { s.results = d; s.open = true; })
                         .catch(() => { s.results = { tickets: [], users: [], categories: [] }; })
                         .finally(() => { s.loading = false; });
                 },
                 hasResults() { return this.results.tickets.length + this.results.users.length + this.results.categories.length > 0; }
-              }">
+              }'>
             <div class="relative w-full">
                 <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             <input type="text" name="search" x-model="q" placeholder="Search tickets, users, categories..." autocomplete="off"

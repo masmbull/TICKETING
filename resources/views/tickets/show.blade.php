@@ -22,6 +22,9 @@
         'high' => 'bg-orange-50 text-orange-700 border border-orange-200 dark:bg-orange-500/15 dark:text-orange-400 dark:border-orange-500/30',
         'critical' => 'bg-danger-50 text-danger-700 border border-danger-200 dark:bg-danger-500/15 dark:text-danger-400 dark:border-danger-500/30',
     ];
+    $timeline = $ticket->timeline;
+    $slaStatus = $ticket->sla_status;
+    $slaPerformance = $ticket->sla_performance;
 @endphp
 
 @section('content')
@@ -44,9 +47,51 @@
         @endslot
     </x-page-header>
 
+    {{-- TIMELINE --}}
+    <div class="card">
+        <div class="px-5 py-3 border-b border-slate-100 dark:border-slate-800">
+            <h2 class="text-sm font-bold text-slate-900 dark:text-white">Timeline</h2>
+        </div>
+        <div class="px-5 py-4">
+            <div class="relative">
+                <div class="absolute left-2 top-2 bottom-2 w-px bg-slate-200 dark:bg-slate-700"></div>
+                <div class="space-y-4">
+                    @foreach($timeline as $index => $event)
+                    <div class="relative flex items-start gap-4">
+                        <div class="relative z-10 flex-shrink-0 mt-1">
+                            <div class="w-4 h-4 rounded-full border-2 border-white dark:border-slate-800
+                                @if($event['label'] === 'Completed')
+                                    bg-success-500
+                                @elseif($event['label'] === 'In Progress')
+                                    bg-warning-500
+                                @elseif($event['label'] === 'Problem Analysis')
+                                    bg-primary-500
+                                @elseif($event['label'] === 'Assigned')
+                                    bg-purple-500
+                                @else
+                                    bg-slate-400
+                                @endif
+                            "></div>
+                        </div>
+                        <div class="flex-1 min-w-0 pb-4">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-sm font-semibold text-slate-900 dark:text-white">{{ $event['label'] }}</span>
+                                @if($event['actor'])
+                                <span class="text-xs text-slate-500 dark:text-slate-400">&middot; {{ $event['actor'] }}</span>
+                                @endif
+                            </div>
+                            <div class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{{ $event['timestamp']->format('d M Y, H:i') }}</div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- MAIN CONTENT --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {{-- Left: Description + Comments --}}
+        {{-- Left: Description + Comments + Workflow --}}
         <div class="lg:col-span-2 space-y-6">
             {{-- Description --}}
             <div class="card">
@@ -223,15 +268,15 @@
             </div>
         </div>
 
-        {{-- Right: Sidebar Details --}}
-        <div class="space-y-6">
+        {{-- Right: compact sidebar --}}
+        <div class="space-y-4">
             {{-- Details --}}
             <div class="card">
-                <div class="px-5 py-3 border-b border-slate-100 dark:border-slate-800">
-                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">Details</h3>
+                <div class="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
+                    <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wide">Details</h3>
                 </div>
-                <div class="px-5 py-4">
-                    <dl class="space-y-4 text-sm">
+                <div class="px-4 py-3">
+                    <dl class="space-y-2.5 text-sm">
                         <div class="flex items-center justify-between gap-3">
                             <dt class="text-slate-500 dark:text-slate-400">Status</dt>
                             <dd>
@@ -267,7 +312,7 @@
                         <div class="flex items-center justify-between gap-3">
                             <dt class="text-slate-500 dark:text-slate-400">Assignee</dt>
                             <dd class="min-w-0">
-                                <select onchange="updateTicketAssignee({{ $ticket->id }}, this.value, this)" class="text-xs font-semibold border-0 bg-transparent focus:ring-0 p-0 cursor-pointer text-right text-slate-900 dark:text-white max-w-[160px]">
+                                <select onchange="updateTicketAssignee({{ $ticket->id }}, this.value, this)" class="text-xs font-semibold border-0 bg-transparent focus:ring-0 p-0 cursor-pointer text-right text-slate-900 dark:text-white max-w-[140px]">
                                     <option value="">Unassigned</option>
                                     @foreach($staffUsers ?? [] as $staff)
                                     <option value="{{ $staff->id }}" {{ $ticket->assignee_id == $staff->id ? 'selected' : '' }}>{{ $staff->name }}</option>
@@ -275,81 +320,72 @@
                                 </select>
                             </dd>
                         </div>
+                        @endif
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-slate-500 dark:text-slate-400">Reporter</dt>
+                            <dd class="text-right">
+                                <div class="font-semibold text-slate-900 dark:text-white">{{ $ticket->user->name }}</div>
+                                <div class="text-xs text-slate-400 dark:text-slate-500">{{ $ticket->user->email }}</div>
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+
+            {{-- SLA --}}
+            @if($ticket->sla_priority)
+            <div class="card">
+                <div class="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
+                    <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wide">SLA</h3>
+                </div>
+                <div class="px-4 py-3">
+                    <dl class="space-y-2 text-sm">
                         <div class="flex items-center justify-between gap-3">
-                            <dt class="text-slate-500 dark:text-slate-400">SLA Priority</dt>
+                            <dt class="text-slate-500 dark:text-slate-400">Priority</dt>
                             <dd>
-                                <select onchange="updateTicketSla({{ $ticket->id }}, this.value, this)" class="text-xs font-bold border-0 bg-transparent focus:ring-0 p-0 cursor-pointer text-right capitalize {{ $slaColors[$ticket->sla_priority] ?? 'text-slate-400' }}">
-                                    <option value="">None</option>
-                                    <option value="low" {{ $ticket->sla_priority === 'low' ? 'selected' : '' }}>Low</option>
-                                    <option value="medium" {{ $ticket->sla_priority === 'medium' ? 'selected' : '' }}>Medium</option>
-                                    <option value="high" {{ $ticket->sla_priority === 'high' ? 'selected' : '' }}>High</option>
-                                    <option value="critical" {{ $ticket->sla_priority === 'critical' ? 'selected' : '' }}>Critical</option>
-                                </select>
+                                <span class="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide {{ $slaColors[$ticket->sla_priority] ?? '' }}">{{ $ticket->sla_priority }}</span>
+                            </dd>
+                        </div>
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-slate-500 dark:text-slate-400">Started</dt>
+                            <dd class="font-semibold text-slate-900 dark:text-white text-right">{{ $ticket->sla_started_at?->format('d M Y, H:i') ?? '-' }}</dd>
+                        </div>
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-slate-500 dark:text-slate-400">Deadline</dt>
+                            <dd class="font-semibold text-slate-900 dark:text-white text-right">{{ $ticket->sla_deadline?->format('d M Y, H:i') ?? '-' }}</dd>
+                        </div>
+                        <div class="flex items-center justify-between gap-3">
+                            <dt class="text-slate-500 dark:text-slate-400">Status</dt>
+                            <dd>
+                                @if($slaStatus === 'Met')
+                                <span class="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400">Met</span>
+                                @elseif($slaStatus === 'Breached')
+                                <span class="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-danger-50 text-danger-700 dark:bg-danger-500/15 dark:text-danger-400">Breached</span>
+                                @elseif($slaStatus === 'Active')
+                                <span class="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-primary-50 text-primary-700 dark:bg-primary-500/15 dark:text-primary-400">Active</span>
+                                @else
+                                <span class="text-xs text-slate-400">-</span>
+                                @endif
+                            </dd>
+                        </div>
+                        @if($slaPerformance)
+                        <div class="flex items-center justify-between gap-3">
+                            <dt class="text-slate-500 dark:text-slate-400">Performance</dt>
+                            <dd>
+                                @if($slaPerformance === 'EXCELLENT')
+                                <span class="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400">Excellent</span>
+                                @elseif($slaPerformance === 'NORMAL')
+                                <span class="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-primary-50 text-primary-700 dark:bg-primary-500/15 dark:text-primary-400">Normal</span>
+                                @else
+                                <span class="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-danger-50 text-danger-700 dark:bg-danger-500/15 dark:text-danger-400">Poor</span>
+                                @endif
                             </dd>
                         </div>
                         @endif
                     </dl>
                 </div>
             </div>
-
-            {{-- Reporter --}}
-            <div class="card">
-                <div class="px-5 py-3 border-b border-slate-100 dark:border-slate-800">
-                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">Reporter</h3>
-                </div>
-                <div class="px-5 py-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
-                            {{ strtoupper(substr($ticket->user->name, 0, 2)) }}
-                        </div>
-                        <div>
-                            <div class="text-sm font-semibold text-slate-900 dark:text-white">{{ $ticket->user->name }}</div>
-                            <div class="text-xs text-slate-400 dark:text-slate-500">{{ $ticket->user->email }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Timestamps --}}
-            <div class="card">
-                <div class="px-5 py-3 border-b border-slate-100 dark:border-slate-800">
-                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">Timeline</h3>
-                </div>
-                <div class="px-5 py-4">
-                    <div class="space-y-3 text-sm">
-                        <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-primary-500 flex-shrink-0"></div>
-                            <div>
-                                <div class="text-slate-700 dark:text-slate-300 font-medium">Created</div>
-                                <div class="text-xs text-slate-400 dark:text-slate-500">{{ $ticket->created_at->format('d M Y, H:i') }}</div>
-                            </div>
-                        </div>
-                        @if($ticket->first_response_at)
-                        <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-warning-500 flex-shrink-0"></div>
-                            <div>
-                                <div class="text-slate-700 dark:text-slate-300 font-medium">First Response</div>
-                                <div class="text-xs text-slate-400 dark:text-slate-500">{{ $ticket->first_response_at->format('d M Y, H:i') }}</div>
-                            </div>
-                        </div>
-                        @endif
-                        @if($ticket->completed_at)
-                        <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-success-500 flex-shrink-0"></div>
-                            <div>
-                                <div class="text-slate-700 dark:text-slate-300 font-medium">Completed</div>
-                                <div class="text-xs text-slate-400 dark:text-slate-500">
-                                    {{ $ticket->completed_at->format('d M Y, H:i') }}
-                                    @if($ticket->completedBy)
-                                    &middot; by {{ $ticket->completedBy->name }}
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
+            @endif
         </div>
     </div>
 </div>

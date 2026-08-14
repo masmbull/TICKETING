@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Category;
 use App\Models\SubCategory;
 use App\Models\Department;
+use App\Models\SlaPolicy;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
@@ -233,9 +234,15 @@ class TicketSeeder extends Seeder
             $createdAt = Carbon::now()->subDays($daysAgo)->subHours(rand(0, 8));
             $updatedAt = $createdAt->copy()->addHours(rand(1, 24));
 
+            $slaPolicy = SlaPolicy::where('priority', $data['priority'])->where('is_active', true)->first();
+            $slaStartedAt = $createdAt;
+            $slaDeadline = $slaPolicy ? $createdAt->copy()->addHours($slaPolicy->resolution_hours) : null;
+
             $ticket = Ticket::create(array_merge($data, [
-                'ticket_number' => 'HD-' . $createdAt->format('Ymd') . '-' . str_pad($ticketNumber, 6, '0', STR_PAD_LEFT),
+                'ticket_number' => 'ITSUP-' . $createdAt->format('Ymd') . '-' . str_pad($ticketNumber, 5, '0', STR_PAD_LEFT),
                 'sla_priority'  => $data['priority'],
+                'sla_started_at' => $slaStartedAt,
+                'sla_deadline'   => $slaDeadline,
                 'created_at'    => $createdAt,
                 'updated_at'    => $updatedAt,
             ]));
