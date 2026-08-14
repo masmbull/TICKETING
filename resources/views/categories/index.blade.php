@@ -1,12 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Category Management - MITO IT Helpdesk')
+@section('title', 'Categories - MITO IT Helpdesk')
 
-@push('skeleton')
-<x-loading variant="cards" :count="3" />
-@endpush
-
-@section('content')
 @php
 $categoryData = $categories->map(fn($c) => [
     'id' => $c->id,
@@ -22,265 +17,183 @@ $categoryData = $categories->map(fn($c) => [
     ])->values()->toArray(),
 ])->values()->toArray();
 @endphp
-<div class="space-y-6">
-    <x-page-header title="Category Management" description="Manage ticket categories and subcategories" />
 
+@section('content')
+<div class="space-y-4">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-xl font-bold text-slate-900 dark:text-white">Categories</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Manage ticket categories</p>
+        </div>
+    </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {{-- Add Category Form --}}
         <div class="lg:col-span-1 space-y-4">
-            <div class="card">
-                <div class="p-4 border-b border-slate-100 dark:border-slate-800">
-                    <h2 class="text-sm font-bold text-slate-900 dark:text-white">New Category</h2>
-                </div>
-                <div class="p-4">
-                    <form method="POST" action="{{ route('categories.store') }}" class="space-y-3">
-                        @csrf
-                        <div>
-                            <label for="cat_name" class="form-label form-label-required">Category Name</label>
-                            <input type="text" id="cat_name" name="name" required class="input" placeholder="e.g., Hardware" />
-                        </div>
-                        <div>
-                            <label for="cat_description" class="form-label">Description</label>
-                            <textarea id="cat_description" name="description" rows="2" class="textarea" placeholder="Brief description"></textarea>
-                        </div>
-                        <button type="submit" class="btn-primary btn-sm w-full">Create Category</button>
-                    </form>
-                </div>
+            <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+                <h2 class="text-sm font-semibold text-slate-900 dark:text-white mb-4">New Category</h2>
+                <form method="POST" action="{{ route('categories.store') }}" class="space-y-3">
+                    @csrf
+                    <div>
+                        <input type="text" name="name" required placeholder="Category name" class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white">
+                    </div>
+                    <div>
+                        <textarea name="description" rows="2" placeholder="Description" class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white"></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-2 bg-[#E30613] hover:bg-[#c4050f] text-white text-sm font-medium rounded-lg">Create Category</button>
+                </form>
             </div>
 
-            <div class="card">
-                <div class="p-4 border-b border-slate-100 dark:border-slate-800">
-                    <h2 class="text-sm font-bold text-slate-900 dark:text-white">New Subcategory</h2>
-                </div>
-                <div class="p-4">
-                    <form method="POST" action="{{ route('subcategories.store') }}" class="space-y-3">
-                        @csrf
-                        <div>
-                            <label for="sub_category_id" class="form-label form-label-required">Parent Category</label>
-                            <select id="sub_category_id" name="category_id" required class="select">
-                                <option value="">Select Category</option>
-                                @foreach($allCategories as $category)
-                                <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label for="sub_name" class="form-label form-label-required">Subcategory Name</label>
-                            <input type="text" id="sub_name" name="name" required class="input" placeholder="e.g., Laptop" />
-                        </div>
-                        <div>
-                            <label for="sub_description" class="form-label">Description</label>
-                            <textarea id="sub_description" name="description" rows="2" class="textarea" placeholder="Brief description"></textarea>
-                        </div>
-                        <button type="submit" class="btn-primary btn-sm w-full">Create Subcategory</button>
-                    </form>
-                </div>
+            <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+                <h2 class="text-sm font-semibold text-slate-900 dark:text-white mb-4">New Subcategory</h2>
+                <form method="POST" action="{{ route('subcategories.store') }}" class="space-y-3">
+                    @csrf
+                    <div>
+                        <select name="category_id" required class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white">
+                            <option value="">Select category</option>
+                            @foreach($allCategories as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <input type="text" name="name" required placeholder="Subcategory name" class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white">
+                    </div>
+                    <button type="submit" class="w-full py-2 bg-[#E30613] hover:bg-[#c4050f] text-white text-sm font-medium rounded-lg">Create Subcategory</button>
+                </form>
             </div>
         </div>
 
-        {{-- Category List --}}
         <div class="lg:col-span-2">
-            <div class="card"
+            <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden"
                  x-data="{
-                     categories: {!! htmlspecialchars(json_encode($categoryData), ENT_QUOTES) !!},
+                     categories: {{ json_encode($categoryData) }},
                      search: '',
-                     currentPage: 1,
+                     page: 1,
                      perPage: 5,
                      get filtered() {
-                         const q = this.search.toLowerCase().trim();
+                         const q = this.search.toLowerCase();
                          if (!q) return this.categories;
-                          return this.categories.filter(c => c.name.toLowerCase().includes(q) || (c.description && c.description.toLowerCase().includes(q)));
+                         return this.categories.filter(c => c.name.toLowerCase().includes(q) || (c.description && c.description.toLowerCase().includes(q)));
                      },
-                     get totalPages() { return Math.max(1, Math.ceil(this.filtered.length / this.perPage)); },
+                     get totalPages() { return Math.ceil(this.filtered.length / this.perPage) || 1; },
                      get paginated() {
-                         const start = (this.currentPage - 1) * this.perPage;
+                         const start = (this.page - 1) * this.perPage;
                          return this.filtered.slice(start, start + this.perPage);
-                     },
-                     get showingStart() { return this.filtered.length === 0 ? 0 : (this.currentPage - 1) * this.perPage + 1; },
-                     get showingEnd() { return Math.min(this.currentPage * this.perPage, this.filtered.length); },
-                     prev() { if (this.currentPage > 1) this.currentPage--; },
-                     next() { if (this.currentPage < this.totalPages) this.currentPage++; }
+                     }
                  }">
-                <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
-                    <h2 class="text-sm font-bold text-slate-900 dark:text-white">All Categories</h2>
-                    <input type="text" x-model="search" placeholder="Search categories..." class="input" style="width: 160px;" />
+                <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
+                    <input type="text" x-model="search" placeholder="Search categories..." class="flex-1 px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white">
                 </div>
 
-                <template x-if="paginated.length === 0">
-                    <div class="p-8 text-center">
-                        <svg class="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 11h.01M7 15h.01M7 19h.01M4 7h.01M4 11h.01M4 15h.01M4 19h.01"/></svg>
-                        <h3 class="mt-3 text-sm font-semibold text-slate-900 dark:text-white">No categories found</h3>
-                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Try adjusting your search.</p>
-                    </div>
-                </template>
-
-                <template x-for="category in paginated" :key="category.id">
-                    <div class="border-b border-slate-100 dark:border-slate-800 last:border-b-0">
-                        <div class="px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                            <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full" :class="category.is_active ? 'bg-success-500' : 'bg-slate-300'"></div>
+                <template x-for="cat in paginated" :key="cat.id">
+                    <div class="border-b border-slate-100 dark:border-slate-700">
+                        <div class="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                            <div class="flex items-center gap-3">
+                                <div class="w-2 h-2 rounded-full" :class="cat.is_active ? 'bg-emerald-500' : 'bg-slate-300'"></div>
                                 <div>
-                                    <span class="text-sm font-bold text-slate-900 dark:text-white" x-text="category.name"></span>
-                                    <span class="text-xs text-slate-400 dark:text-slate-500 ml-1.5" x-text="category.slug"></span>
-                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" x-text="category.description" x-show="category.description"></p>
+                                    <p class="text-sm font-medium text-slate-900 dark:text-white" x-text="cat.name"></p>
+                                    <p class="text-xs text-slate-500" x-text="cat.slug"></p>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-[10px] text-slate-400 dark:text-slate-500" x-text="category.subCategories.length + ' sub'"></span>
-                                <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full" :class="category.is_active ? 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'" x-text="category.is_active ? 'Active' : 'Inactive'"></span>
-                                <button @click="openEditCategoryModal(category.id, category.name, category.description, category.is_active)" class="btn-primary btn-xs px-1.5 py-0.5">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs px-2 py-1 rounded" :class="cat.is_active ? 'bg-emerald-500/10 text-emerald-600' : 'bg-slate-100 text-slate-500'" x-text="cat.is_active ? 'Active' : 'Inactive'"></span>
+                                <button @click="openEditCat(cat)" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
+                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
-                                <button x-data="{ show: false }" x-on:click="show = true" class="btn-danger btn-xs px-1.5 py-0.5">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                </button>
-                                <div x-show="show" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50" x-cloak>
-                                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-5">
-                                        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-2">Delete Category</h3>
-                                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Are you sure you want to delete &quot;<span x-text="category.name"></span>&quot;?</p>
-                                        <form :action="'/categories/' + category.id" method="POST" class="inline">
-                                            <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                                            <input type="hidden" name="_method" value="DELETE">
-                                            <div class="flex justify-end gap-2">
-                                                <button type="button" class="btn-outline btn-sm" x-on:click="show = false">Cancel</button>
-                                                <button type="submit" class="btn-danger btn-sm">Delete</button>
-                                            </div>
+                                <form method="POST" action="/categories/ + cat.id" class="inline">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10" onclick="return confirm('Delete?')">
+                                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div x-show="cat.subCategories.length > 0" class="px-4 py-2 bg-slate-50 dark:bg-slate-900/50 ml-6 border-l-2 border-slate-200 dark:border-slate-700 space-y-1">
+                            <template x-for="sub in cat.subCategories" :key="sub.id">
+                                <div class="flex items-center justify-between py-1">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-1.5 h-1.5 rounded-full" :class="sub.is_active ? 'bg-emerald-400' : 'bg-slate-300'"></div>
+                                        <span class="text-xs text-slate-600 dark:text-slate-300" x-text="sub.name"></span>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <button @click="openEditSub(sub)" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-600">
+                                            <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        </button>
+                                        <form method="POST" action="/subcategories/ + sub.id" class="inline">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="p-1 rounded hover:bg-red-50">
+                                                <svg class="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </button>
                                         </form>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-
-                        {{-- Subcategories --}}
-                        <div class="bg-slate-50/50 px-4 py-2 ml-5 border-l-2 border-slate-200 dark:bg-slate-900/50 dark:border-slate-700"
-                             x-show="category.subCategories.length > 0"
-                             x-transition>
-                            <div class="space-y-1.5">
-                                <template x-for="sub in category.subCategories" :key="sub.id">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-1.5">
-                                            <div class="w-1.5 h-1.5 rounded-full" :class="sub.is_active ? 'bg-success-400' : 'bg-slate-300'"></div>
-                                            <span class="text-xs text-slate-700 dark:text-slate-300" x-text="sub.name"></span>
-                                            <span class="text-[10px] text-slate-400 dark:text-slate-500" x-text="sub.slug"></span>
-                                        </div>
-                                        <div class="flex items-center gap-1">
-                                            <span class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full" :class="sub.is_active ? 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'" x-text="sub.is_active ? 'Active' : 'Inactive'"></span>
-                                            <button @click="openEditSubcategoryModal(sub.id, sub.name, sub.is_active)" class="btn-primary btn-xs px-1 py-0.5">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                            </button>
-                                            <button x-data="{ show: false }" x-on:click="show = true" class="btn-danger btn-xs px-1 py-0.5">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                            </button>
-                                            <div x-show="show" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50" x-cloak>
-                                                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-5">
-                                                    <h3 class="text-base font-bold text-slate-900 dark:text-white mb-2">Delete Subcategory</h3>
-                                                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Are you sure you want to delete &quot;<span x-text="sub.name"></span>&quot;?</p>
-                                                    <form :action="'/subcategories/' + sub.id" method="POST" class="inline">
-                                                        <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                                                        <input type="hidden" name="_method" value="DELETE">
-                                                        <div class="flex justify-end gap-2">
-                                                            <button type="button" class="btn-outline btn-sm" x-on:click="show = false">Cancel</button>
-                                                            <button type="submit" class="btn-danger btn-sm">Delete</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                        <div class="bg-slate-50/50 px-4 py-2 ml-5 border-l-2 border-slate-200 dark:bg-slate-900/50 dark:border-slate-700"
-                             x-show="category.subCategories.length === 0"
-                             x-transition>
-                            <p class="text-[10px] text-slate-400 dark:text-slate-500 italic">No subcategories</p>
+                            </template>
                         </div>
                     </div>
                 </template>
 
-                <div class="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <span class="text-[10px] text-slate-400 dark:text-slate-500" x-text="showingStart + ' – ' + showingEnd + ' of ' + filtered.length"></span>
+                <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    <span class="text-xs text-slate-500" x-text="filtered.length + ' categories'"></span>
                     <div class="flex items-center gap-1">
-                        <button @click="prev()" :disabled="currentPage === 1" :class="currentPage === 1 ? 'px-2 py-0.5 text-[10px] text-slate-400 cursor-not-allowed' : 'px-2 py-0.5 text-[10px] text-slate-600 dark:text-slate-300 hover:text-primary-600'" x-text="currentPage === 1 ? 'Previous' : 'Previous'"></button>
-                        <button @click="next()" :disabled="currentPage === totalPages" :class="currentPage === totalPages ? 'px-2 py-0.5 text-[10px] text-slate-400 cursor-not-allowed' : 'px-2 py-0.5 text-[10px] text-slate-600 dark:text-slate-300 hover:text-primary-600'" x-text="currentPage === totalPages ? 'Next' : 'Next'"></button>
+                        <button @click="page--" :disabled="page === 1" class="px-2 py-1 text-xs rounded" :class="page === 1 ? 'text-slate-300' : 'text-slate-600 hover:bg-slate-100'">Previous</button>
+                        <button @click="page++" :disabled="page >= totalPages" class="px-2 py-1 text-xs rounded" :class="page >= totalPages ? 'text-slate-300' : 'text-slate-600 hover:bg-slate-100'">Next</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{{-- Edit Category Modal --}}
-<div id="editCategoryModal" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg w-full max-w-md">
-        <div class="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
-            <h3 class="text-base font-bold text-slate-900 dark:text-white">Edit Category</h3>
-            <button onclick="document.getElementById('editCategoryModal').classList.add('hidden')" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-slate-500 dark:hover:text-slate-300 dark:hover:bg-slate-800 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-        </div>
-        <form id="editCategoryForm" method="POST" class="p-5 space-y-4">
+
+<div id="editCatModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-md">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Edit Category</h3>
+        <form id="editCatForm" method="POST" class="space-y-4">
             @csrf @method('PATCH')
-            <div>
-                <label class="form-label form-label-required">Name</label>
-                <input type="text" name="name" id="edit_category_name" required class="input" />
-            </div>
-            <div>
-                <label class="form-label">Description</label>
-                <textarea name="description" id="edit_category_description" rows="2" class="textarea"></textarea>
-            </div>
-            <div class="flex items-center gap-2">
-                <input type="checkbox" name="is_active" id="edit_category_active" value="1" class="w-4 h-4 text-primary-500 border-slate-300 rounded focus:ring-primary-500/20" />
-                <label class="text-sm text-slate-700 dark:text-slate-300">Active</label>
-            </div>
-            <div class="flex justify-end gap-3 pt-4">
-                <button type="button" onclick="document.getElementById('editCategoryModal').classList.add('hidden')" class="btn-secondary">Cancel</button>
-                <button type="submit" class="btn-primary">Update</button>
+            <input type="text" name="name" id="editCatName" required class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg">
+            <textarea name="description" id="editCatDesc" rows="2" class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg"></textarea>
+            <label class="flex items-center gap-2">
+                <input type="checkbox" name="is_active" id="editCatActive" value="1" class="w-4 h-4 rounded">
+                <span class="text-sm text-slate-600 dark:text-slate-300">Active</span>
+            </label>
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="document.getElementById('editCatModal').classList.add('hidden')" class="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">Cancel</button>
+                <button type="submit" class="px-4 py-2 text-sm bg-[#E30613] text-white rounded-lg">Save</button>
             </div>
         </form>
     </div>
 </div>
 
-{{-- Edit Subcategory Modal --}}
-<div id="editSubcategoryModal" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg w-full max-w-md">
-        <div class="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
-            <h3 class="text-base font-bold text-slate-900 dark:text-white">Edit Subcategory</h3>
-            <button onclick="document.getElementById('editSubcategoryModal').classList.add('hidden')" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-slate-500 dark:hover:text-slate-300 dark:hover:bg-slate-800 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-        </div>
-        <form id="editSubcategoryForm" method="POST" class="p-5 space-y-4">
+<div id="editSubModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-md">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Edit Subcategory</h3>
+        <form id="editSubForm" method="POST" class="space-y-4">
             @csrf @method('PATCH')
-            <div>
-                <label class="form-label form-label-required">Name</label>
-                <input type="text" name="name" id="edit_subcategory_name" required class="input" />
-            </div>
-            <div class="flex items-center gap-2">
-                <input type="checkbox" name="is_active" id="edit_subcategory_active" value="1" class="w-4 h-4 text-primary-500 border-slate-300 rounded focus:ring-primary-500/20" />
-                <label class="text-sm text-slate-700 dark:text-slate-300">Active</label>
-            </div>
-            <div class="flex justify-end gap-3 pt-4">
-                <button type="button" onclick="document.getElementById('editSubcategoryModal').classList.add('hidden')" class="btn-secondary">Cancel</button>
-                <button type="submit" class="btn-primary">Update</button>
+            <input type="text" name="name" id="editSubName" required class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg">
+            <label class="flex items-center gap-2">
+                <input type="checkbox" name="is_active" id="editSubActive" value="1" class="w-4 h-4 rounded">
+                <span class="text-sm text-slate-600 dark:text-slate-300">Active</span>
+            </label>
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="document.getElementById('editSubModal').classList.add('hidden')" class="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">Cancel</button>
+                <button type="submit" class="px-4 py-2 text-sm bg-[#E30613] text-white rounded-lg">Save</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-function openEditCategoryModal(id, name, description, isActive) {
-    document.getElementById('editCategoryForm').action = '/categories/' + id;
-    document.getElementById('edit_category_name').value = name;
-    document.getElementById('edit_category_description').value = description || '';
-    document.getElementById('edit_category_active').checked = isActive === true;
-    document.getElementById('editCategoryModal').classList.remove('hidden');
+function openEditCat(cat) {
+    document.getElementById('editCatForm').action = '/categories/' + cat.id;
+    document.getElementById('editCatName').value = cat.name;
+    document.getElementById('editCatDesc').value = cat.description || '';
+    document.getElementById('editCatActive').checked = cat.is_active;
+    document.getElementById('editCatModal').classList.remove('hidden');
 }
-function openEditSubcategoryModal(id, name, isActive) {
-    document.getElementById('editSubcategoryForm').action = '/subcategories/' + id;
-    document.getElementById('edit_subcategory_name').value = name;
-    document.getElementById('edit_subcategory_active').checked = isActive === true;
-    document.getElementById('editSubcategoryModal').classList.remove('hidden');
+function openEditSub(sub) {
+    document.getElementById('editSubForm').action = '/subcategories/' + sub.id;
+    document.getElementById('editSubName').value = sub.name;
+    document.getElementById('editSubActive').checked = sub.is_active;
+    document.getElementById('editSubModal').classList.remove('hidden');
 }
 </script>
 @endsection

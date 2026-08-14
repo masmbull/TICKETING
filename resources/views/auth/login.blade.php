@@ -1,92 +1,75 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="antialiased">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Sign in - MITO IT Helpdesk</title>
+    <title>Sign In - MITO IT Helpdesk</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script>
         if (localStorage.getItem('theme') !== 'light') { document.documentElement.classList.add('dark'); }
     </script>
+    <style>
+        body { font-family: 'IBM Plex Sans', sans-serif; }
+    </style>
 </head>
-<body class="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center font-sans text-slate-800 dark:text-slate-200 antialiased">
-    <main class="w-full max-w-md px-4 py-10">
-        {{-- Single centered login card --}}
-        <div class="card p-8 sm:p-10">
-            {{-- MITO logo on top --}}
-            <div class="flex flex-col items-center text-center">
-                <div class="w-12 h-12 rounded-2xl bg-[#E30613] shadow-lg shadow-[#E30613]/25 flex items-center justify-center select-none" aria-hidden="true">
-                    <span class="text-white text-xl font-extrabold tracking-tight">M</span>
-                </div>
-                <h1 class="mt-5 text-2xl font-bold text-slate-900 dark:text-white tracking-tight">MITO IT Helpdesk</h1>
-                <p class="mt-1.5 text-sm text-slate-500 dark:text-slate-400">Internal Ticketing System</p>
+<body class="min-h-screen bg-[#0f172a] flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#E30613] to-[#c4050f] text-white font-bold text-2xl shadow-lg shadow-red-500/20 mb-4">M</div>
+            <h1 class="text-2xl font-bold text-white">MITO IT Helpdesk</h1>
+            <p class="text-slate-400 mt-1">Internal Ticketing System</p>
+        </div>
 
-                @if(isset($roleName))
-                <span class="inline-flex items-center mt-4 px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                    Signing in as {{ $roleName }}
-                </span>
-                @endif
-            </div>
-
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 p-8">
             @if($errors->any())
-            <div class="mt-6 p-4 bg-danger-50 dark:bg-danger-500/15 border border-danger-200 dark:border-danger-500/30 rounded-xl" role="alert">
-                <div class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-danger-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <div class="text-sm text-danger-700 dark:text-danger-400">
-                        @foreach ($errors->all() as $error)
-                            <p>{{ $error }}</p>
-                        @endforeach
-                    </div>
-                </div>
+            <div class="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                @foreach ($errors->all() as $error)
+                <p class="text-sm text-red-400">{{ $error }}</p>
+                @endforeach
             </div>
             @endif
 
-            <form method="POST" action="{{ route('login') }}" class="mt-8 space-y-5">
+            <form method="POST" action="{{ route('login') }}" class="space-y-5">
                 @csrf
                 <input type="hidden" name="role" value="{{ $roleSlug ?? '' }}">
 
                 <div>
-                    <label for="email" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Email address</label>
-                    <input id="email" name="email" type="email" value="{{ old('email') }}" required autofocus autocomplete="email"
-                           class="input"
-                           placeholder="you@mito.local">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Email</label>
+                    <input type="email" name="email" required autofocus autocomplete="email"
+                           class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-[#E30613] focus:ring-1 focus:ring-[#E30613]/20 transition-colors"
+                           placeholder="you@company.com">
                 </div>
 
                 <div>
-                    <label for="password" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Password</label>
-                    <input id="password" name="password" type="password" required autocomplete="current-password"
-                           class="input"
-                           placeholder="Enter your password">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Password</label>
+                    <input type="password" name="password" required autocomplete="current-password"
+                           class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-[#E30613] focus:ring-1 focus:ring-[#E30613]/20 transition-colors"
+                           placeholder="••••••••">
                 </div>
 
-                <div class="flex items-center justify-between gap-3">
-                    <label class="flex items-center gap-2 cursor-pointer select-none">
-                        <input type="checkbox" name="remember" class="w-4 h-4 text-[#E30613] border-slate-300 dark:border-slate-600 rounded focus:ring-[#E30613]/20" {{ old('remember') ? 'checked' : '' }}>
-                        <span class="text-sm text-slate-600 dark:text-slate-400">Remember me</span>
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="remember" class="w-4 h-4 rounded border-slate-600 bg-slate-900 text-[#E30613] focus:ring-[#E30613]/20">
+                        <span class="text-sm text-slate-400">Remember me</span>
                     </label>
-
-                    <button type="button" disabled title="Coming soon"
-                            class="text-sm font-medium text-slate-400 dark:text-slate-500 cursor-not-allowed select-none">
-                        Forgot password?
-                    </button>
+                    <a href="{{ route('password.change') }}" class="text-sm text-slate-400 hover:text-white transition-colors">Forgot password?</a>
                 </div>
 
-                <button type="submit" class="btn-primary w-full justify-center items-center gap-2 py-2.5">
+                <button type="submit" class="w-full py-3 bg-[#E30613] hover:bg-[#c4050f] text-white font-semibold rounded-lg transition-colors">
                     Sign in
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                 </button>
             </form>
         </div>
 
-        <p class="mt-8 text-center text-xs text-slate-400 dark:text-slate-500">
-            &copy; {{ date('Y') }} MITO IT Helpdesk &middot; Internal use only
+        <p class="text-center text-slate-500 text-sm mt-6">
+            &copy; {{ date('Y') }} MITO IT Helpdesk
         </p>
-    </main>
+    </div>
 </body>
 </html>

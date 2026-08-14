@@ -42,8 +42,9 @@ class TicketController extends Controller
         $tickets = $query->latest()->paginate(15)->withQueryString();
         $categories = Category::with('subCategories')->where('is_active', true)->orderBy('name')->get();
         $staffUsers = $this->supportUsers();
+        $subCategoriesByCategory = Category::with('subCategories')->get()->mapWithKeys(fn($cat) => [$cat->id => $cat->subCategories->map(fn($sub) => ['id' => $sub->id, 'name' => $sub->name])]);
 
-        return view('tickets.index', compact('tickets', 'categories', 'staffUsers'));
+        return view('tickets.index', compact('tickets', 'categories', 'staffUsers', 'subCategoriesByCategory'));
     }
 
     /**
@@ -87,8 +88,9 @@ class TicketController extends Controller
         $tickets = $query->latest()->paginate(15)->withQueryString();
         $categories = Category::with('subCategories')->where('is_active', true)->orderBy('name')->get();
         $staffUsers = $this->supportUsers();
+        $subCategoriesByCategory = Category::with('subCategories')->get()->mapWithKeys(fn($cat) => [$cat->id => $cat->subCategories->map(fn($sub) => ['id' => $sub->id, 'name' => $sub->name])]);
 
-        return view('tickets.index', compact('tickets', 'categories', 'staffUsers'));
+        return view('tickets.index', compact('tickets', 'categories', 'staffUsers', 'subCategoriesByCategory'));
     }
 
     /**
@@ -133,8 +135,9 @@ class TicketController extends Controller
         $staffUsers = User::whereHas('role', function($q) {
             $q->whereIn('slug', ['admin', 'manager', 'staff']);
         })->orderBy('name')->get();
+        $subCategoriesByCategory = Category::with('subCategories')->get()->mapWithKeys(fn($cat) => [$cat->id => $cat->subCategories->map(fn($sub) => ['id' => $sub->id, 'name' => $sub->name])]);
 
-        return view('tickets.create', compact('categories', 'slaPolicies', 'staffUsers'));
+        return view('tickets.create', compact('categories', 'slaPolicies', 'staffUsers', 'subCategoriesByCategory'));
     }
 
     /**
@@ -217,8 +220,8 @@ class TicketController extends Controller
 
         $ticketNumber = "ITSUP-{$today}-{$newNumber}";
 
-        $slaPolicy = $this->resolveSlaPolicyModel($validated['sla_policy_id'] ?? null, $category, $priority);
-        $slaStartedAt = now();
+         $slaPolicy = $this->resolveSlaPolicyModel($validated['sla_policy_id'] ?? null, $category, $priority);
+        $slaStartedAt = $slaPolicy ? now() : null;
         $slaDeadline = $slaPolicy ? $slaStartedAt->copy()->addHours($slaPolicy->resolution_hours) : null;
 
         $ticket = Ticket::create([
