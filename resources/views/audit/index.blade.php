@@ -11,12 +11,12 @@
     <x-page-header title="Audit Log" description="Record of changes to tickets, users, categories and subcategories" />
 
     {{-- Filters --}}
-    <div class="card p-4">
-        <form method="GET" action="{{ route('audit.index') }}" class="flex flex-wrap items-end gap-3">
+    <div class="card p-3">
+        <form method="GET" action="{{ route('audit.index') }}" class="flex flex-wrap items-end gap-2">
             <div>
                 <label class="form-label">Event</label>
                 <select name="event" class="select">
-                    <option value="">All events</option>
+                    <option value="">All</option>
                     @foreach($events as $ev)
                         <option value="{{ $ev }}" {{ request('event') === $ev ? 'selected' : '' }}>{{ $ev }}</option>
                     @endforeach
@@ -25,7 +25,7 @@
             <div>
                 <label class="form-label">Entity</label>
                 <select name="auditable_type" class="select">
-                    <option value="">All entities</option>
+                    <option value="">All</option>
                     @foreach($types as $type)
                         <option value="{{ $type }}" {{ request('auditable_type') === $type ? 'selected' : '' }}>{{ class_basename($type) }}</option>
                     @endforeach
@@ -33,7 +33,7 @@
             </div>
             <div>
                 <label class="form-label">Search</label>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="event or entity" class="input" />
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="search..." class="input" />
             </div>
             <div>
                 <label class="form-label">From</label>
@@ -43,9 +43,9 @@
                 <label class="form-label">To</label>
                 <input type="date" name="date_to" value="{{ request('date_to') }}" class="input" />
             </div>
-            <div class="flex items-center gap-2">
-                <button type="submit" class="btn-primary">Filter</button>
-                <a href="{{ route('audit.index') }}" class="btn-outline">Reset</a>
+            <div class="flex items-center gap-1.5">
+                <button type="submit" class="btn-primary btn-sm">Filter</button>
+                <a href="{{ route('audit.index') }}" class="btn-outline btn-sm">Reset</a>
             </div>
         </form>
     </div>
@@ -55,23 +55,23 @@
             <table class="w-full text-sm">
                 <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400">
                     <tr>
-                        <th class="text-left font-semibold px-4 py-3">Time</th>
-                        <th class="text-left font-semibold px-4 py-3">Actor</th>
-                        <th class="text-left font-semibold px-4 py-3">Event</th>
-                        <th class="text-left font-semibold px-4 py-3">Entity</th>
-                        <th class="text-left font-semibold px-4 py-3">Details</th>
+                        <th class="text-left font-semibold px-3 py-2.5 text-xs">Time</th>
+                        <th class="text-left font-semibold px-3 py-2.5 text-xs">Actor</th>
+                        <th class="text-left font-semibold px-3 py-2.5 text-xs">Event</th>
+                        <th class="text-left font-semibold px-3 py-2.5 text-xs">Entity</th>
+                        <th class="text-left font-semibold px-3 py-2.5 text-xs">Details</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     @forelse($logs as $log)
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                            <td class="px-3 py-2.5 text-slate-600 dark:text-slate-300 whitespace-nowrap text-xs">
                                 {{ $log->created_at?->format('Y-m-d H:i') ?? '-' }}
                             </td>
-                            <td class="px-4 py-3 text-slate-900 dark:text-white whitespace-nowrap">
+                            <td class="px-3 py-2.5 text-slate-900 dark:text-white whitespace-nowrap text-xs">
                                 {{ $log->user?->name ?? 'System' }}
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap">
+                            <td class="px-3 py-2.5 whitespace-nowrap">
                                 @php
                                     $evClass = match($log->event) {
                                         'created' => 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400',
@@ -81,17 +81,17 @@
                                         default => 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
                                     };
                                 @endphp
-                                <span class="px-2 py-0.5 rounded-full text-xs font-bold {{ $evClass }}">{{ $log->event }}</span>
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold {{ $evClass }}">{{ $log->event }}</span>
                             </td>
-                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                            <td class="px-3 py-2.5 text-slate-600 dark:text-slate-300 whitespace-nowrap text-xs">
                                 {{ class_basename($log->auditable_type) }} #{{ $log->auditable_id }}
                             </td>
-                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
+                            <td class="px-3 py-2.5 text-slate-600 dark:text-slate-300">
                                 @if($log->old_values || $log->new_values)
                                     <div class="space-y-0.5">
                                         @foreach(($log->new_values ?? []) as $key => $value)
                                             @if(!is_array($value))
-                                                <div class="text-xs">
+                                                <div class="text-[10px]">
                                                     <span class="text-slate-400">{{ $key }}:</span>
                                                     <span class="text-slate-400 line-through">{{ $log->old_values[$key] ?? '-' }}</span>
                                                     <span class="text-slate-500 dark:text-slate-400"> → </span>
@@ -100,7 +100,7 @@
                                             @endif
                                         @endforeach
                                         @if(empty($log->new_values) && !empty($log->old_values))
-                                            <div class="text-xs text-slate-400">record removed</div>
+                                            <div class="text-[10px] text-slate-400">removed</div>
                                         @endif
                                     </div>
                                 @else
@@ -110,14 +110,14 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-12 text-center text-slate-500 dark:text-slate-400">No audit entries found.</td>
+                            <td colspan="5" class="px-3 py-8 text-center text-slate-500 dark:text-slate-400 text-sm">No audit entries found.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        <div class="px-4 py-3 border-t border-slate-100 dark:border-slate-800">
+        <div class="px-3 py-2.5 border-t border-slate-100 dark:border-slate-800">
             {{ $logs->withQueryString()->links() }}
         </div>
     </div>

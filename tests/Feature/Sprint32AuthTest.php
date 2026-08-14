@@ -203,7 +203,7 @@ class Sprint32AuthTest extends TestCase
         $html = $response->getContent();
 
         // Stat cards use a horizontal icon + number layout (vertically centered).
-        $this->assertStringContainsString('stat-card flex items-center gap-4', $html);
+        $this->assertStringContainsString('stat-card flex items-center gap-3', $html);
         $this->assertStringContainsString('leading-tight tabular-nums', $html);
     }
 }

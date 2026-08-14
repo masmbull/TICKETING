@@ -23,18 +23,18 @@
 
             {{-- Classification --}}
             <div class="card">
-                <div class="p-6">
-                    <div class="flex items-center gap-3 mb-5">
-                        <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+                <div class="p-5">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
                             <svg class="w-4 h-4 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                         </div>
                         <div>
                             <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Classification</h2>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Help us route your request to the right team</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Help us route your request</p>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label for="category_id" class="form-label form-label-required">Category</label>
                             <select name="category_id" id="category_id" required class="select">
@@ -63,18 +63,18 @@
             @if(in_array($role, ['admin', 'manager', 'staff']))
             {{-- Priority & Assignment --}}
             <div class="card">
-                <div class="p-6">
-                    <div class="flex items-center gap-3 mb-5">
-                        <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+                <div class="p-5">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
                             <svg class="w-4 h-4 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </div>
                         <div>
                             <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Priority & Assignment</h2>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Set urgency and assign to team member</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Set urgency and assign</p>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label for="priority" class="form-label form-label-required">Priority</label>
                             <select name="priority" id="priority" required class="select">
@@ -116,21 +116,21 @@
 
             {{-- Description --}}
             <div class="card">
-                <div class="p-6">
-                    <div class="flex items-center gap-3 mb-5">
-                        <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+                <div class="p-5">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
                             <svg class="w-4 h-4 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
                         </div>
                         <div>
                             <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Description</h2>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Provide as much detail as possible</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Provide detail</p>
                         </div>
                     </div>
 
                     <div>
                         <label for="description" class="form-label form-label-required">Description</label>
-                        <textarea name="description" id="description" rows="6" required class="textarea"
-                                  placeholder="Describe your issue in detail. Include steps to reproduce, error messages, and any relevant information...">{{ old('description') }}</textarea>
+                        <textarea name="description" id="description" rows="5" required class="textarea"
+                                  placeholder="Describe your issue...">{{ old('description') }}</textarea>
                         @error('description')
                             <p class="form-error">{{ $message }}</p>
                         @enderror
@@ -140,14 +140,14 @@
 
             {{-- Attachments --}}
             <div class="card">
-                <div class="p-6">
-                    <div class="flex items-center gap-3 mb-5">
-                        <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+                <div class="p-5">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
                             <svg class="w-4 h-4 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
                         </div>
                         <div>
                             <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Attachments</h2>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Upload screenshots, logs, or relevant files</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Upload files if needed</p>
                         </div>
                     </div>
 
@@ -178,13 +178,13 @@
             </div>
 
             {{-- Actions --}}
-            <div class="flex items-center justify-between pt-2 pb-6">
-                <p class="text-xs text-slate-400 dark:text-slate-500">Fields marked with <span class="text-red-500">*</span> are required</p>
-                <div class="flex items-center gap-3">
-                    <a href="{{ route('tickets.index') }}" class="btn-secondary">Cancel</a>
-                    <button type="submit" class="btn-primary">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                        Submit Ticket
+            <div class="flex items-center justify-between pt-2 pb-4">
+                <p class="text-xs text-slate-400 dark:text-slate-500">Fields marked <span class="text-red-500">*</span> required</p>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('tickets.index') }}" class="btn-secondary btn-sm">Cancel</a>
+                    <button type="submit" class="btn-primary btn-sm">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        Submit
                     </button>
                 </div>
             </div>
