@@ -24,7 +24,7 @@
         notifOpen: false,
         userMenuOpen: false,
         darkMode: localStorage.getItem('theme') !== 'light',
-        appReady: false,
+        appReady: sessionStorage.getItem('mito_splash_seen') === '1',
       }"
       x-init="
         $watch('sidebarExpanded', val => localStorage.setItem('sidebarExpanded', val ? '1' : '0'));
@@ -35,7 +35,9 @@
         });
         document.documentElement.classList.toggle('dark', darkMode);
         document.addEventListener('keydown', e => { if (e.key === 'Escape') { mobileMenuOpen = false; notifOpen = false; userMenuOpen = false; } });
-        setTimeout(() => appReady = true, 800);
+        if (!appReady) {
+            setTimeout(() => { appReady = true; sessionStorage.setItem('mito_splash_seen', '1'); }, 800);
+        }
       ">
     <a href="#main-content" class="skip-to-content">Skip to main content</a>
 

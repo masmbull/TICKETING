@@ -219,7 +219,8 @@ class SmokeTest extends TestCase
             'priority' => 'medium',
         ]);
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('tickets.create'));
+        $response->assertSessionHas('ticket_created');
         $this->assertDatabaseHas('tickets', [
             'user_id' => $this->user->id,
             'description' => 'The office printer on floor 3 is not responding.',

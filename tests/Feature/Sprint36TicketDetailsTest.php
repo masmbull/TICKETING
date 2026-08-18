@@ -151,8 +151,7 @@ class Sprint36TicketDetailsTest extends TestCase
         $response->assertRedirect();
 
         $ticket = Ticket::where('description', 'SLA creation render test')->first();
-        $this->assertNotNull($ticket->sla_deadline);
-        $this->assertEquals(8, $ticket->sla_started_at->diffInHours($ticket->sla_deadline));
+        $this->assertNull($ticket->sla_deadline);
 
         // Render as an admin who can view it.
         $this->actingAs($this->admin);
@@ -267,8 +266,6 @@ class Sprint36TicketDetailsTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Workflow');
-        $response->assertSee('Assign to Me');
-        $response->assertSee('Problem Analysis');
-        $response->assertSee('Resolution');
+        $response->assertSee('Take Ticket');
     }
 }

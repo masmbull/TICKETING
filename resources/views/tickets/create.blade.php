@@ -123,3 +123,13 @@ function fetchSubcategories(categoryId) {
     </form>
 </div>
 @endsection
+
+@push('scripts')
+@if(session('ticket_created'))
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        window.MITO.toast('Ticket Created!', '{{ session("ticket_created") }} created successfully.', 'success');
+    });
+</script>
+@endif
+@endpush

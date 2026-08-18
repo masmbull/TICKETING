@@ -12,6 +12,7 @@ class SlaPolicy extends Model
         'priority',
         'response_hours',
         'resolution_hours',
+        'resolution_days',
         'escalation_enabled',
         'is_active',
     ];

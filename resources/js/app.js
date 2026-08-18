@@ -1,57 +1,90 @@
 import './bootstrap';
+import Swal from 'sweetalert2';
 
 window.MITO = window.MITO || {};
 
-/**
- * Global toast notification helper.
- *
- * Usage: window.MITO.toast('Ticket updated', 'success' | 'error' | 'info')
- */
-window.MITO.toast = function (message, type = 'success') {
-    let container = document.getElementById('mito-toast-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'mito-toast-container';
-        container.className = 'fixed bottom-4 right-4 z-[100] flex flex-col gap-2';
-        document.body.appendChild(container);
+function isDarkMode() {
+    return document.documentElement.classList.contains('dark');
+}
+
+function toastTheme() {
+    if (isDarkMode()) {
+        return {
+            background: '#1e293b',
+            color: '#f1f5f9',
+            titleColor: '#f8fafc',
+            titleText: { color: '#f8fafc' },
+            text: { color: '#cbd5e1' },
+            confirmButtonColor: '#E30613',
+            iconColor: '#10b981',
+            popup: {
+                background: '#1e293b',
+                border: '1px solid #334155',
+                boxShadow: '0 10px 25px -5px rgba(0,0,0,.4)',
+            },
+            timerProgressBarStyle: { background: 'rgba(227,6,19,.6)' },
+        };
     }
-
-    const icons = {
-        success: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-        error: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z',
-        info: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+    return {
+        background: '#ffffff',
+        color: '#334155',
+        titleColor: '#0f172a',
+        text: { color: '#64748b' },
+        confirmButtonColor: '#E30613',
+        iconColor: '#10b981',
+        popup: {
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -4px rgba(0,0,0,.1)',
+        },
+        timerProgressBarStyle: { background: '#E30613' },
     };
-    const accents = {
-        success: '#10b981',
-        error: '#f43f5e',
-        info: '#3b82f6',
-    };
-    const tile = {
-        success: 'bg-emerald-500',
-        error: 'bg-red-500',
-        info: 'bg-blue-500',
-    };
+}
 
-    const toast = document.createElement('div');
-    toast.className = 'toast-item';
-    toast.style.borderLeftColor = accents[type] || accents.info;
-    toast.setAttribute('role', 'status');
-    toast.innerHTML = `
-        <div class="w-8 h-8 rounded-lg ${tile[type] || tile.info} flex items-center justify-center flex-shrink-0">
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${icons[type] || icons.info}"/></svg>
-        </div>
-        <p class="text-sm font-medium text-slate-700 dark:text-slate-200 pr-5">${message}</p>
-        <button type="button" aria-label="Dismiss notification" class="toast-close absolute top-2 right-2 p-1 text-slate-300 hover:text-slate-500 dark:text-slate-600 dark:hover:text-slate-400 transition-colors">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>`;
+/**
+ * Reusable SweetAlert2 toast notification.
+ *
+ * Usage: window.MITO.toast('Ticket created!', 'ITSUP-...')
+ *        window.MITO.toast('Error', 'msg', 'error')
+ */
+window.MITO.toast = function (title, text = '', type = 'success') {
+    const theme = toastTheme();
 
-    container.appendChild(toast);
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: type,
+        title,
+        text,
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+        background: theme.background,
+        color: theme.color,
+        iconColor: theme.iconColor,
+        customClass: {
+            popup: 'mito-swal-popup',
+            title: 'mito-swal-title',
+            htmlContainer: 'mito-swal-text',
+            timerProgressBar: 'mito-swal-progress',
+        },
+        didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+            const popup = toast.closest('.swal2-popup');
+            if (popup) {
+                popup.style.background = theme.popup.background;
+                popup.style.border = theme.popup.border;
+                popup.style.boxShadow = theme.popup.boxShadow;
+            }
+            const titleEl = popup?.querySelector('.swal2-title');
+            if (titleEl) titleEl.style.color = theme.titleColor;
+            const textEl = popup?.querySelector('.swal2-html-container');
+            if (textEl) textEl.style.color = theme.text.color;
+        },
+    });
+};
 
-    const dismiss = () => {
-        if (toast.classList.contains('toast-item-leave')) return;
-        toast.classList.add('toast-item-leave');
-        setTimeout(() => toast.remove(), 200);
-    };
-    toast.querySelector('.toast-close').addEventListener('click', dismiss);
-    setTimeout(dismiss, 3500);
+window.MITO.alertError = function (title, text = '') {
+    Swal.fire({ icon: 'error', title, text, confirmButtonColor: '#E30613' });
 };

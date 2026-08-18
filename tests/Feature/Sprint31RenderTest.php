@@ -34,14 +34,12 @@ class Sprint31RenderTest extends TestCase
         $response = $this->get("/my-tickets/{$ticket->id}");
         $response->assertStatus(200);
         $response->assertSee('Workflow');
-        $response->assertSee('Assign to Me');
-        $response->assertSee('Problem Analysis');
-        $response->assertSee('Resolution');
+        $response->assertSee('Take Ticket');
 
-        // Unassigned ticket visible to staff for Assign to Me.
+        // Unassigned OPEN ticket visible to staff with Take Ticket action.
         $this->actingAs(User::factory()->create(['role_id' => Role::where('slug', 'staff')->value('id')]));
         $response = $this->get("/my-tickets/{$ticket->id}");
         $response->assertStatus(200);
-        $response->assertSee('Assign to Me');
+        $response->assertSee('Take Ticket');
     }
 }

@@ -47,6 +47,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/api/category-priority', [TicketController::class, 'categoryPriority'])->name('api.category-priority');
         Route::patch('/tickets/{id}/assign', [TicketController::class, 'updateAssignee'])->name('tickets.assign');
         Route::post('/tickets/{id}/assign-to-me', [TicketController::class, 'assignToMe'])->name('tickets.assign-me');
+        Route::post('/tickets/{id}/take', [TicketController::class, 'takeTicket'])->name('tickets.take');
+        Route::post('/tickets/{id}/submit-analysis', [TicketController::class, 'submitAnalysis'])->name('tickets.submit-analysis');
+        Route::post('/tickets/{id}/complete', [TicketController::class, 'completeTicket'])->name('tickets.complete');
         Route::patch('/tickets/{id}/priority', [TicketController::class, 'updatePriority'])->name('tickets.priority');
         Route::patch('/tickets/{id}/sla', [TicketController::class, 'updateSla'])->name('tickets.sla');
         Route::patch('/tickets/{id}/status', [TicketController::class, 'updateStatus'])->name('tickets.status.update');
@@ -85,6 +88,8 @@ Route::middleware('auth')->group(function () {
             Route::post('/', [SlaPolicyController::class, 'store'])->name('store');
             Route::patch('/{id}', [SlaPolicyController::class, 'update'])->name('update');
             Route::delete('/{id}', [SlaPolicyController::class, 'destroy'])->name('destroy');
+            Route::post('/mapping', [SlaPolicyController::class, 'storeMapping'])->name('mapping.store');
+            Route::delete('/mapping/{id}', [SlaPolicyController::class, 'destroyMapping'])->name('mapping.destroy');
         });
 
         // Audit Logs (Admin only)

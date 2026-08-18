@@ -106,7 +106,7 @@ class Sprint38WorkflowTest extends TestCase
         $ticket->refresh();
         $this->assertEquals('medium', $ticket->sla_priority);
         $this->assertNotNull($ticket->sla_deadline);
-        $this->assertEquals(24, $ticket->sla_started_at->diffInHours($ticket->sla_deadline));
+        $this->assertEquals(72, $ticket->sla_started_at->diffInHours($ticket->sla_deadline));
     }
 
     public function test_manager_can_set_high_sla(): void
@@ -119,7 +119,7 @@ class Sprint38WorkflowTest extends TestCase
         $response->assertOk();
         $ticket->refresh();
         $this->assertEquals('high', $ticket->sla_priority);
-        $this->assertEquals(8, $ticket->sla_started_at->diffInHours($ticket->sla_deadline));
+        $this->assertEquals(48, $ticket->sla_started_at->diffInHours($ticket->sla_deadline));
     }
 
     public function test_manager_can_set_critical_sla(): void
@@ -132,7 +132,7 @@ class Sprint38WorkflowTest extends TestCase
         $response->assertOk();
         $ticket->refresh();
         $this->assertEquals('critical', $ticket->sla_priority);
-        $this->assertEquals(4, $ticket->sla_started_at->diffInHours($ticket->sla_deadline));
+        $this->assertEquals(24, $ticket->sla_started_at->diffInHours($ticket->sla_deadline));
     }
 
     public function test_admin_can_set_sla(): void

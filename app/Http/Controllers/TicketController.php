@@ -8,6 +8,7 @@ use App\Models\TicketAttachment;
 use App\Models\Category;
 use App\Models\SubCategory;
 use App\Models\User;
+use App\Models\SlaMapping;
 use App\Models\SlaPolicy;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -219,11 +220,6 @@ class TicketController extends Controller
 
         $ticketNumber = "ITSUP-{$today}-{$newNumber}";
 
-         $slaPolicy = $this->resolveSlaPolicyModel($validated['sla_policy_id'] ?? null, $category, $priority);
-        $slaPriority = $slaPolicy ? $slaPolicy->priority : null;
-        $slaStartedAt = $slaPolicy ? now() : null;
-        $slaDeadline = $slaPolicy ? $slaStartedAt->copy()->addHours($slaPolicy->resolution_hours) : null;
-
         $ticketData = [
             'ticket_number'   => $ticketNumber,
             'description'     => $validated['description'],
@@ -233,18 +229,6 @@ class TicketController extends Controller
             'sub_category_id' => $validated['sub_category_id'] ?? null,
             'assignee_id'     => $assigneeId,
         ];
-
-        // Only set priority/SLA fields when a valid policy was found.
-        // Omitting priority lets the DB default ('medium') apply without
-        // explicitly overriding it with a null that would violate NOT NULL.
-        if ($priority !== null) {
-            $ticketData['priority'] = $priority;
-        }
-        if ($slaPriority !== null) {
-            $ticketData['sla_priority']    = $slaPriority;
-            $ticketData['sla_started_at']  = $slaStartedAt;
-            $ticketData['sla_deadline']    = $slaDeadline;
-        }
 
         $ticket = Ticket::create($ticketData);
 
@@ -279,8 +263,8 @@ class TicketController extends Controller
             }
         }
 
-        return redirect()->route('tickets.index')
-            ->with('success', 'Ticket created successfully. Ticket number: ' . $ticket->ticket_number);
+        return redirect()->route('tickets.create')
+            ->with('ticket_created', $ticket->ticket_number);
     }
 
     /**
@@ -333,7 +317,7 @@ class TicketController extends Controller
         abort_unless($user->canManageTickets(), 403, 'Only IT Support or management can change ticket status.');
 
         $validated = $request->validate([
-            'status' => 'required|in:Waiting Confirmation,In Progress,Completed',
+            'status' => 'required|in:In Progress,Waiting Confirmation,Completed',
             'problem_analysis' => 'nullable|string',
             'resolution' => 'nullable|string',
             'assignee_id' => 'nullable|exists:users,id',
@@ -411,6 +395,68 @@ class TicketController extends Controller
         return $this->statusResponse($request, $ticket, $newStatus);
     }
 
+    public function takeTicket(Request $request, string $id)
+    {
+        $user = auth()->user();
+        abort_unless($user->canManageTickets(), 403);
+
+        $ticket = $this->findTicketForUser($id);
+
+        if ($ticket->status === 'Completed') {
+            return $this->validationFailure($request, 'status', 'Completed tickets cannot be taken.');
+        }
+
+        if ($user->isStaff() && $ticket->assignee_id && $ticket->assignee_id !== $user->id) {
+            return $this->validationFailure($request, 'assignee', 'This ticket is already assigned to another support member.');
+        }
+
+        $ticket->update([
+            'assignee_id' => $user->id,
+            'assigned_at' => $ticket->assigned_at ?? now(),
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'assignee_id' => $user->id]);
+        }
+
+        return redirect()->route('tickets.show', $id)
+            ->with('success', 'Ticket taken successfully.');
+    }
+
+    public function submitAnalysis(Request $request, string $id)
+    {
+        $user = auth()->user();
+        abort_unless($user->canManageTickets(), 403);
+
+        $ticket = $this->findTicketForUser($id);
+
+        if ($user->isStaff() && $ticket->assignee_id !== $user->id) {
+            return $this->validationFailure($request, 'status', 'You can only process your own assigned tickets.');
+        }
+
+        if ($ticket->status !== 'Waiting Confirmation') {
+            return $this->validationFailure($request, 'status', 'Only tickets in Waiting Confirmation can be processed.');
+        }
+
+        $validated = $request->validate([
+            'problem_analysis' => 'required|string|min:3',
+        ]);
+
+        $ticket->update([
+            'status' => 'In Progress',
+            'problem_analysis' => $validated['problem_analysis'],
+            'problem_analysis_at' => $ticket->problem_analysis_at ?? now(),
+            'first_response_at' => $ticket->first_response_at ?? now(),
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'status' => 'In Progress']);
+        }
+
+        return redirect()->route('tickets.show', $id)
+            ->with('success', 'Analysis submitted. Ticket is now In Progress.');
+    }
+
     /**
      * Assign a ticket to the current user (Assign to Me).
      *
@@ -477,6 +523,41 @@ class TicketController extends Controller
             ->with('success', 'Ticket assigned to you and moved to In Progress.');
     }
 
+    public function completeTicket(Request $request, string $id)
+    {
+        $user = auth()->user();
+        abort_unless($user->canManageTickets(), 403);
+
+        $ticket = $this->findTicketForUser($id);
+
+        if ($user->isStaff() && $ticket->assignee_id !== $user->id) {
+            return $this->validationFailure($request, 'status', 'You can only complete your own assigned tickets.');
+        }
+
+        if ($ticket->status !== 'In Progress') {
+            return $this->validationFailure($request, 'status', 'Only In Progress tickets can be completed.');
+        }
+
+        $validated = $request->validate([
+            'resolution' => 'required|string|min:3',
+        ]);
+
+        $ticket->update([
+            'status' => 'Completed',
+            'resolution' => $validated['resolution'],
+            'completed_at' => $ticket->completed_at ?? now(),
+            'completed_by' => $ticket->completed_by ?? $user->id,
+            'resolution_at' => $ticket->resolution_at ?? now(),
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'status' => 'Completed']);
+        }
+
+        return redirect()->route('tickets.show', $id)
+            ->with('success', 'Ticket completed successfully.');
+    }
+
     /**
      * Update ticket assignee (API).
      */
@@ -496,6 +577,33 @@ class TicketController extends Controller
             $updates['assigned_at'] = now();
         }
         $ticket->update($updates);
+
+        // Auto-resolve SLA from Category+Subcategory mapping
+        if ($validated['assignee_id'] && !$ticket->sla_priority) {
+            $mapping = SlaMapping::where('category_id', $ticket->category_id)
+                ->where(function ($q) use ($ticket) {
+                    $q->where('sub_category_id', $ticket->sub_category_id)
+                      ->orWhereNull('sub_category_id');
+                })
+                ->where('is_active', true)
+                ->first();
+
+            if ($mapping) {
+                $policy = \App\Models\SlaPolicy::where('priority', $mapping->priority)
+                    ->where('is_active', true)
+                    ->first();
+
+                if ($policy && $policy->resolution_days) {
+                    $startedAt = now();
+                    $ticket->update([
+                        'priority' => $mapping->priority,
+                        'sla_priority' => $mapping->priority,
+                        'sla_started_at' => $startedAt,
+                        'sla_deadline' => $startedAt->copy()->addDays($policy->resolution_days),
+                    ]);
+                }
+            }
+        }
 
         return response()->json(['success' => true]);
     }
@@ -619,7 +727,7 @@ class TicketController extends Controller
                 'priority'       => $newPriority,
                 'sla_priority'   => $newPriority,
                 'sla_started_at' => $startedAt,
-                'sla_deadline'   => $startedAt->copy()->addHours($policy->resolution_hours),
+                'sla_deadline'   => $startedAt->copy()->addDays($policy->resolution_days ?? ceil($policy->resolution_hours / 24)),
             ]);
         } else {
             $ticket->update([
