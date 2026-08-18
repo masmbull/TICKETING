@@ -138,6 +138,42 @@
                             @endif
                         </div>
                     </div>
+                    @if($isManager)
+                    <div x-data="{
+                        slaPriority: '{{ $ticket->sla_priority ?? '' }}',
+                        saving: false,
+                        updateSla() {
+                            this.saving = true;
+                            fetch('{{ route('tickets.sla', $ticket->id) }}', {
+                                method: 'PATCH',
+                                credentials: 'same-origin',
+                                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ sla_priority: this.slaPriority || null })
+                            })
+                            .then(r => { if (!r.ok) return r.json().then(e => Promise.reject(e)); return r.json(); })
+                            .then(d => {
+                                this.saving = false;
+                                window.MITO.toast('SLA updated successfully.', 'success');
+                            })
+                            .catch(e => {
+                                this.saving = false;
+                                window.MITO.toast(e.error || 'Failed to update SLA.', 'error');
+                            });
+                        }
+                    }">
+                        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">SLA Priority</label>
+                        <div class="flex items-center gap-2">
+                            <select x-model="slaPriority" @change="updateSla()" class="flex-1 px-3 py-1.5 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white">
+                                <option value="">No SLA</option>
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                            <svg x-show="saving" class="w-4 h-4 animate-spin text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path d="M12 2v6"/></svg>
+                        </div>
+                    </div>
+                    @endif
                     <div>
                         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Problem Analysis</label>
                         <textarea name="problem_analysis" rows="2"

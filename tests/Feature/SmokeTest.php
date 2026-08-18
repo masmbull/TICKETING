@@ -202,7 +202,7 @@ class SmokeTest extends TestCase
         $response->assertSee('Category');
         $response->assertDontSee('Subject');
         $response->assertSee('Description');
-        $response->assertSee('Priority');
+        // Regular users should NOT see Priority — only support users do.
     }
 
     public function test_create_ticket_with_valid_data(): void

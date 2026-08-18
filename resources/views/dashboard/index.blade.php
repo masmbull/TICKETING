@@ -25,12 +25,6 @@
             <h1 class="text-xl font-bold text-slate-900 dark:text-white">Welcome back, {{ explode(' ', Auth::user()->name)[0] }}</h1>
             <p class="text-sm text-slate-500 dark:text-slate-400">{{ now('Asia/Jakarta')->format('l, d M Y') }}</p>
         </div>
-        @if($role === 'user' || $role === 'staff')
-        <a href="{{ route('tickets.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-[#E30613] hover:bg-[#c4050f] text-white text-sm font-medium rounded-lg transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            New Ticket
-        </a>
-        @endif
     </div>
 
     {{-- KPI Cards --}}

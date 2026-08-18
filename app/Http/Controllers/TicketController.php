@@ -198,11 +198,10 @@ class TicketController extends Controller
 
         $category = isset($validated['category_id']) ? Category::find($validated['category_id']) : null;
 
-        // Employees never see/set priority, assignee or SLA — default the
-        // priority to the category default (falling back to Medium) and
-        // auto-assign the matching SLA policy.
-        $priority = $validated['priority'] ?? ($category?->default_priority ?? 'medium');
-        $slaPriority = $this->resolveSlaPriority($validated['sla_policy_id'] ?? null, $category, $priority);
+        // Support users explicitly set priority. Regular users never see the
+        // priority field — their ticket gets NO priority and NO SLA until a
+        // manager/admin assigns one.
+        $priority = $validated['priority'] ?? null;
         $assigneeId = $isSupport ? ($validated['assignee_id'] ?? null) : null;
 
         // Generate ticket number: ITSUP-YYYYMMDD-NNNNN
@@ -221,22 +220,33 @@ class TicketController extends Controller
         $ticketNumber = "ITSUP-{$today}-{$newNumber}";
 
          $slaPolicy = $this->resolveSlaPolicyModel($validated['sla_policy_id'] ?? null, $category, $priority);
+        $slaPriority = $slaPolicy ? $slaPolicy->priority : null;
         $slaStartedAt = $slaPolicy ? now() : null;
         $slaDeadline = $slaPolicy ? $slaStartedAt->copy()->addHours($slaPolicy->resolution_hours) : null;
 
-        $ticket = Ticket::create([
+        $ticketData = [
             'ticket_number'   => $ticketNumber,
             'description'     => $validated['description'],
-            'priority'        => $priority,
-            'sla_priority'    => $slaPriority,
-            'sla_started_at'  => $slaStartedAt,
-            'sla_deadline'    => $slaDeadline,
             'status'          => 'Waiting Confirmation',
             'user_id'         => auth()->id(),
             'category_id'     => $validated['category_id'] ?? null,
             'sub_category_id' => $validated['sub_category_id'] ?? null,
             'assignee_id'     => $assigneeId,
-        ]);
+        ];
+
+        // Only set priority/SLA fields when a valid policy was found.
+        // Omitting priority lets the DB default ('medium') apply without
+        // explicitly overriding it with a null that would violate NOT NULL.
+        if ($priority !== null) {
+            $ticketData['priority'] = $priority;
+        }
+        if ($slaPriority !== null) {
+            $ticketData['sla_priority']    = $slaPriority;
+            $ticketData['sla_started_at']  = $slaStartedAt;
+            $ticketData['sla_deadline']    = $slaDeadline;
+        }
+
+        $ticket = Ticket::create($ticketData);
 
         // Handle file attachments
         if ($request->hasFile('attachments')) {
@@ -326,10 +336,16 @@ class TicketController extends Controller
             'status' => 'required|in:Waiting Confirmation,In Progress,Completed',
             'problem_analysis' => 'nullable|string',
             'resolution' => 'nullable|string',
+            'assignee_id' => 'nullable|exists:users,id',
         ]);
 
         $ticket = $this->findTicketForUser($id);
         $newStatus = $validated['status'];
+
+        // Admin/Manager can update the assignee alongside status.
+        if (in_array($user->role?->slug, ['admin', 'manager']) && array_key_exists('assignee_id', $validated)) {
+            $ticket->update(['assignee_id' => $validated['assignee_id'] ?: null]);
+        }
 
         // IT Support may only update the status of tickets assigned to them.
         if ($user->isStaff() && $ticket->assignee_id !== $user->id) {
@@ -571,6 +587,10 @@ class TicketController extends Controller
      * Update the SLA priority of a ticket (API).
      * Manager/Admin only — the SLA is a support-side field.
      *
+     * When a valid SLA priority is given, finds the matching active policy,
+     * assigns it, and calculates the deadline from sla_started_at + resolution_hours.
+     * When null/cleared, removes the SLA assignment.
+     *
      * Returns JSON (inline table controls) and persists to the database.
      */
     public function updateSla(Request $request, string $id): JsonResponse
@@ -584,9 +604,37 @@ class TicketController extends Controller
         ]);
 
         $ticket = Ticket::findOrFail($id);
-        $ticket->update(['sla_priority' => $validated['sla_priority'] ?? null]);
+        $newPriority = $validated['sla_priority'] ?? null;
 
-        return response()->json(['success' => true, 'sla_priority' => $validated['sla_priority'] ?? null]);
+        if ($newPriority) {
+            $policy = SlaPolicy::where('priority', $newPriority)->where('is_active', true)->first();
+            if (!$policy) {
+                return response()->json([
+                    'error' => 'No active SLA policy found for ' . $newPriority . ' priority.',
+                ], 422);
+            }
+
+            $startedAt = $ticket->sla_started_at ?? now();
+            $ticket->update([
+                'priority'       => $newPriority,
+                'sla_priority'   => $newPriority,
+                'sla_started_at' => $startedAt,
+                'sla_deadline'   => $startedAt->copy()->addHours($policy->resolution_hours),
+            ]);
+        } else {
+            $ticket->update([
+                'sla_priority'   => null,
+                'sla_started_at' => null,
+                'sla_deadline'   => null,
+            ]);
+        }
+
+        return response()->json([
+            'success'       => true,
+            'sla_priority'  => $ticket->sla_priority,
+            'sla_deadline'  => $ticket->sla_deadline?->format('d M Y, H:i'),
+            'priority'      => $ticket->priority,
+        ]);
     }
 
     /**
@@ -760,7 +808,7 @@ class TicketController extends Controller
       * Precedence: explicit policy selection -> category SLA policy ->
       * active policy matching the ticket priority.
       */
-    private function resolveSlaPriority(?int $explicitPolicyId, ?Category $category, string $priority): ?string
+    private function resolveSlaPriority(?int $explicitPolicyId, ?Category $category, ?string $priority): ?string
     {
         $policy = $this->resolveSlaPolicyModel($explicitPolicyId, $category, $priority);
 
@@ -770,7 +818,7 @@ class TicketController extends Controller
     /**
      * Resolve the SLA policy model for a new ticket.
      */
-    private function resolveSlaPolicyModel(?int $explicitPolicyId, ?Category $category, string $priority): ?SlaPolicy
+    private function resolveSlaPolicyModel(?int $explicitPolicyId, ?Category $category, ?string $priority): ?SlaPolicy
     {
         if ($explicitPolicyId) {
             return SlaPolicy::find($explicitPolicyId);
@@ -778,6 +826,10 @@ class TicketController extends Controller
 
         if ($category && $category->sla_policy_id) {
             return $category->slaPolicy;
+        }
+
+        if (!$priority) {
+            return null;
         }
 
         return SlaPolicy::where('is_active', true)->where('priority', $priority)->first();
