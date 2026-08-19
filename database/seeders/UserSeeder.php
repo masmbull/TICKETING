@@ -61,7 +61,8 @@ class UserSeeder extends Seeder
             ],
         ];
 
-        $password = Hash::make('Admin@123');
+        // 'hashed' cast on User model auto-hashes on save — do NOT Hash::make() here
+        $password = 'Admin@123';
 
         foreach ($users as $userData) {
             $roleSlug  = $userData['role_slug'];

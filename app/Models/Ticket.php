@@ -98,15 +98,32 @@ class Ticket extends Model
 
     public function getSlaStatusAttribute(): string
     {
-        if (!$this->sla_deadline) {
+        if (!$this->sla_deadline || !$this->sla_started_at) {
             return 'No SLA';
         }
 
-        if ($this->status === 'Completed') {
-            return 'Met';
+        if ($this->status !== 'Completed') {
+            return 'Not Evaluated';
         }
 
-        return now()->greaterThan($this->sla_deadline) ? 'Breached' : 'Active';
+        $totalMinutes = $this->sla_started_at->diffInMinutes($this->sla_deadline);
+        if ($totalMinutes <= 0) {
+            return 'Excellent';
+        }
+
+        $elapsedAt = $this->completed_at ?? now();
+        $elapsedMinutes = $this->sla_started_at->diffInMinutes($elapsedAt);
+        $ratio = $elapsedMinutes / $totalMinutes;
+
+        if ($ratio < 0.5) {
+            return 'Excellent';
+        }
+
+        if ($ratio <= 1.0) {
+            return 'Normal';
+        }
+
+        return 'Poor';
     }
 
     public function getSlaPerformanceAttribute(): ?string
@@ -115,14 +132,14 @@ class Ticket extends Model
             return null;
         }
 
-        $slaDuration = $this->sla_started_at->diffInSeconds($this->sla_deadline);
+        $slaMinutes = $this->sla_started_at->diffInMinutes($this->sla_deadline);
 
-        if ($slaDuration <= 0) {
+        if ($slaMinutes <= 0) {
             return null;
         }
 
-        $actualDuration = $this->sla_started_at->diffInSeconds($this->completed_at);
-        $ratio = $actualDuration / $slaDuration;
+        $actualMinutes = $this->sla_started_at->diffInMinutes($this->completed_at);
+        $ratio = $actualMinutes / $slaMinutes;
 
         if ($ratio < 2 / 3) {
             return 'EXCELLENT';

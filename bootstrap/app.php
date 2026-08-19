@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'force.password.change' => \App\Http\Middleware\ForcePasswordChange::class,
             'admin' => \App\Http\Middleware\Admin::class,
+            'manager_or_admin' => \App\Http\Middleware\ManagerOrAdmin::class,
         ]);
 
         // Block the browser from caching authenticated pages so that

@@ -80,7 +80,7 @@
         </div>
 
         <p class="text-center text-xs text-slate-400 dark:text-slate-500 mt-8">
-            &copy; {{ date('Y') }} MITO IT Helpdesk. All rights reserved.
+            &copy; 2026 MITO IT Helpdesk &middot; Built with ingenuity, powered by the resources we have.
         </p>
     </div>
 </body>

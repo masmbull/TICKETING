@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AuditService;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -58,6 +59,8 @@ class ProfileController extends Controller
         $user->update([
             'password' => Hash::make($validated['password']),
         ]);
+
+        AuditService::log('password_changed', $user, [], [], "Password changed by user for {$user->email}");
 
         return redirect()->route('profile.edit')
             ->with('success', 'Password changed successfully.');

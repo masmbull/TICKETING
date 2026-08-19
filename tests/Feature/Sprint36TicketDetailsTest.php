@@ -91,7 +91,7 @@ class Sprint36TicketDetailsTest extends TestCase
         $response->assertSee('Deadline');
         $response->assertSee('Status');
         $response->assertSee('High');
-        $response->assertSee('Active');
+        $response->assertSee('—');
     }
 
     public function test_null_sla_priority_displays_no_sla(): void

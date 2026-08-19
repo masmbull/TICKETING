@@ -14,6 +14,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
+use Illuminate\Http\Response;
+use App\Services\AuditService;
+use App\Notifications\TicketNotification;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class TicketController extends Controller
@@ -49,12 +52,12 @@ class TicketController extends Controller
     }
 
     /**
-     * All tickets view (Admin/Manager only).
+     * All tickets view (Admin/Manager/Staff).
      */
     public function allTickets(Request $request): View
     {
-        if (!in_array(auth()->user()->role?->slug, ['admin', 'manager'])) {
-            abort(403, 'Unauthorized. Only Admin or Manager can view all tickets.');
+        if (!in_array(auth()->user()->role?->slug, ['admin', 'manager', 'staff'])) {
+            abort(403, 'Unauthorized.');
         }
 
         $query = Ticket::with(['category', 'subCategory', 'user', 'assignee']);
@@ -276,10 +279,10 @@ class TicketController extends Controller
 
         // Admin/Manager can see all tickets, others only their own or assigned
         if ($user->isAdmin() || $user->isManager()) {
-            $ticket = Ticket::with(['category', 'subCategory', 'user', 'assignee', 'completedBy', 'comments.user', 'attachments'])
+            $ticket = Ticket::with(['category', 'subCategory', 'user', 'assignee', 'completedBy', 'comments.user', 'comments.attachments', 'attachments'])
                 ->findOrFail($id);
         } else {
-            $ticket = Ticket::with(['category', 'subCategory', 'user', 'assignee', 'completedBy', 'comments.user', 'attachments'])
+            $ticket = Ticket::with(['category', 'subCategory', 'user', 'assignee', 'completedBy', 'comments.user', 'comments.attachments', 'attachments'])
                 ->where(function ($q) use ($user) {
                     $q->where('user_id', $user->id)
                       ->orWhere('assignee_id', $user->id);
@@ -392,6 +395,12 @@ class TicketController extends Controller
 
         $ticket->update($updates);
 
+        foreach ($this->getRelevantUsers($ticket) as $u) {
+            if ($u->id !== auth()->id()) {
+                $u->notify(new TicketNotification('status_changed', $ticket));
+            }
+        }
+
         return $this->statusResponse($request, $ticket, $newStatus);
     }
 
@@ -414,6 +423,8 @@ class TicketController extends Controller
             'assignee_id' => $user->id,
             'assigned_at' => $ticket->assigned_at ?? now(),
         ]);
+
+        $ticket->user?->notify(new TicketNotification('taken', $ticket));
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'assignee_id' => $user->id]);
@@ -448,6 +459,10 @@ class TicketController extends Controller
             'problem_analysis_at' => $ticket->problem_analysis_at ?? now(),
             'first_response_at' => $ticket->first_response_at ?? now(),
         ]);
+
+        AuditService::log('problem_analysis_submitted', $ticket, ['status' => 'Waiting Confirmation'], ['status' => 'In Progress'], "Problem Analysis submitted for {$ticket->ticket_number} by {$user->name}");
+
+        $ticket->user?->notify(new TicketNotification('status_changed', $ticket));
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'status' => 'In Progress']);
@@ -515,6 +530,8 @@ class TicketController extends Controller
 
         $ticket->update($updates);
 
+        AuditService::log('assign_to_me', $ticket, ['assignee_id' => null], ['assignee_id' => $user->id], "Ticket {$ticket->ticket_number} taken via Assign to Me by {$user->name}");
+
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'assignee_id' => $user->id, 'status' => $ticket->status]);
         }
@@ -550,6 +567,14 @@ class TicketController extends Controller
             'resolution_at' => $ticket->resolution_at ?? now(),
         ]);
 
+        AuditService::log('ticket_completed', $ticket, ['status' => 'In Progress'], ['status' => 'Completed'], "Ticket {$ticket->ticket_number} completed by {$user->name}");
+
+        foreach ($this->getRelevantUsers($ticket) as $u) {
+            if ($u->id !== auth()->id()) {
+                $u->notify(new TicketNotification('completed', $ticket));
+            }
+        }
+
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'status' => 'Completed']);
         }
@@ -567,6 +592,8 @@ class TicketController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
+        $user = auth()->user();
+
         $validated = $request->validate([
             'assignee_id' => 'nullable|exists:users,id',
         ]);
@@ -576,9 +603,18 @@ class TicketController extends Controller
         if ($validated['assignee_id'] && !$ticket->assigned_at) {
             $updates['assigned_at'] = now();
         }
+        $oldAssignee = $ticket->assignee_id;
         $ticket->update($updates);
 
-        // Auto-resolve SLA from Category+Subcategory mapping
+        $action = $oldAssignee ? 'reassigned' : 'assigned';
+        AuditService::log($action, $ticket, ['assignee_id' => $oldAssignee], ['assignee_id' => $validated['assignee_id']], "Ticket {$ticket->ticket_number} {$action} by {$user->name}");
+
+        foreach ($this->getRelevantUsers($ticket) as $u) {
+            if ($u->id !== auth()->id()) {
+                $u->notify(new TicketNotification($action, $ticket));
+            }
+        }
+
         if ($validated['assignee_id'] && !$ticket->sla_priority) {
             $mapping = SlaMapping::where('category_id', $ticket->category_id)
                 ->where(function ($q) use ($ticket) {
@@ -594,7 +630,7 @@ class TicketController extends Controller
                     ->first();
 
                 if ($policy && $policy->resolution_days) {
-                    $startedAt = now();
+                    $startedAt = now('Asia/Jakarta');
                     $ticket->update([
                         'priority' => $mapping->priority,
                         'sla_priority' => $mapping->priority,
@@ -622,7 +658,10 @@ class TicketController extends Controller
         ]);
 
         $ticket = Ticket::findOrFail($id);
+        $oldPriority = $ticket->priority;
         $ticket->update(['priority' => $validated['priority']]);
+
+        AuditService::log('priority_changed', $ticket, ['priority' => $oldPriority], ['priority' => $validated['priority']], "Priority changed from {$oldPriority} to {$validated['priority']} for {$ticket->ticket_number}");
 
         return response()->json(['success' => true]);
     }
@@ -633,17 +672,56 @@ class TicketController extends Controller
     public function storeComment(Request $request, string $id): RedirectResponse
     {
         $validated = $request->validate([
-            'comment' => 'required|min:3',
+            'comment'              => 'required_without:attachments|min:3',
+            'attachments'          => 'nullable|array',
+            'attachments.*'        => 'file|max:10240|mimes:png,jpg,jpeg,pdf,zip',
         ]);
 
         $user = auth()->user();
         $ticket = $this->findTicketForUser($id);
 
-        TicketComment::create([
+        $comment = TicketComment::create([
             'ticket_id' => $ticket->id,
             'user_id'   => $user->id,
-            'comment'   => $validated['comment'],
+            'comment'   => $validated['comment'] ?? '',
         ]);
+
+        // Handle file attachments on comment
+        if ($request->hasFile('attachments')) {
+            $privatePath = storage_path('app/private/attachments');
+            if (!is_dir($privatePath)) {
+                mkdir($privatePath, 0755, true);
+            }
+
+            $files = $request->file('attachments');
+            if (!is_array($files)) {
+                $files = [$files];
+            }
+
+            foreach ($files as $file) {
+                $originalName = $file->getClientOriginalName();
+                $extension = strtolower($file->getClientOriginalExtension() ?: 'bin');
+                $mimeType = $file->getMimeType();
+                $fileSize = $file->getSize();
+                $storedName = uniqid() . '_' . time() . '.' . $extension;
+
+                $file->move($privatePath, $storedName);
+
+                TicketAttachment::create([
+                    'ticket_id'         => $ticket->id,
+                    'comment_id'        => $comment->id,
+                    'original_filename' => $originalName,
+                    'stored_filename'   => $storedName,
+                    'mime_type'         => $mimeType,
+                    'file_size'         => $fileSize,
+                ]);
+            }
+        }
+
+        $ticket->user?->notify(new TicketNotification('commented', $ticket, $user->name));
+        if ($ticket->assignee_id && $ticket->assignee_id !== $user->id) {
+            $ticket->assignee->notify(new TicketNotification('commented', $ticket, $user->name));
+        }
 
         // Track first_response_at for staff
         if ($user->isStaff() || $user->isAdmin() || $user->isManager()) {
@@ -657,7 +735,7 @@ class TicketController extends Controller
     }
 
     /**
-     * Download a ticket attachment (ticket owner, assignee, or support).
+     * Download a ticket attachment (forces browser download).
      */
     public function downloadAttachment(string $ticketId, string $attachmentId): BinaryFileResponse
     {
@@ -669,6 +747,26 @@ class TicketController extends Controller
 
         return response()->download($path, $attachment->original_filename, [
             'Content-Type' => $attachment->mime_type ?: 'application/octet-stream',
+        ]);
+    }
+
+    /**
+     * Serve a ticket attachment inline (for image previews in browser).
+     */
+    public function serveAttachment(string $ticketId, string $attachmentId)
+    {
+        $ticket = $this->findTicketForUser($ticketId);
+        $attachment = $ticket->attachments()->findOrFail($attachmentId);
+
+        $path = storage_path('app/private/attachments/' . $attachment->stored_filename);
+        abort_unless(is_file($path), 404, 'Attachment file not found.');
+
+        $isPdf = str_starts_with($attachment->mime_type ?? '', 'application/pdf');
+
+        return response()->file($path, [
+            'Content-Type' => $attachment->mime_type ?: 'application/octet-stream',
+            'Content-Disposition' => $isPdf ? 'inline' : 'attachment',
+            'Cache-Control' => 'private, max-age=86400',
         ]);
     }
 
@@ -722,19 +820,38 @@ class TicketController extends Controller
                 ], 422);
             }
 
-            $startedAt = $ticket->sla_started_at ?? now();
+            $startedAt = $ticket->sla_started_at ?? now('Asia/Jakarta');
+            $oldSlaPriority = $ticket->sla_priority;
+            $days = $policy->resolution_days ?? (int) ceil($policy->resolution_hours / 24);
             $ticket->update([
                 'priority'       => $newPriority,
                 'sla_priority'   => $newPriority,
                 'sla_started_at' => $startedAt,
-                'sla_deadline'   => $startedAt->copy()->addDays($policy->resolution_days ?? ceil($policy->resolution_hours / 24)),
+                'sla_deadline'   => $startedAt->copy()->addDays($days),
             ]);
+
+            AuditService::log('sla_manually_assigned', $ticket, ['sla_priority' => $oldSlaPriority], ['sla_priority' => $newPriority], "SLA priority manually set to {$newPriority} for {$ticket->ticket_number}");
+
+            foreach ($this->getRelevantUsers($ticket) as $u) {
+                if ($u->id !== auth()->id()) {
+                    $u->notify(new TicketNotification('sla_changed', $ticket));
+                }
+            }
         } else {
+            $oldSlaPriority = $ticket->sla_priority;
             $ticket->update([
                 'sla_priority'   => null,
                 'sla_started_at' => null,
                 'sla_deadline'   => null,
             ]);
+
+            AuditService::log('sla_cleared', $ticket, ['sla_priority' => $oldSlaPriority], ['sla_priority' => null], "SLA cleared for {$ticket->ticket_number}");
+
+            foreach ($this->getRelevantUsers($ticket) as $u) {
+                if ($u->id !== auth()->id()) {
+                    $u->notify(new TicketNotification('sla_changed', $ticket));
+                }
+            }
         }
 
         return response()->json([
@@ -882,6 +999,15 @@ class TicketController extends Controller
      * Admin/Manager can access every ticket; everyone else is limited to
      * tickets they reported or are assigned to.
      */
+    private function getRelevantUsers(Ticket $ticket): \Illuminate\Support\Collection
+    {
+        $userIds = collect();
+        if ($ticket->user_id) $userIds->push($ticket->user_id);
+        if ($ticket->assignee_id) $userIds->push($ticket->assignee_id);
+        $userIds->push(auth()->id());
+        return \App\Models\User::whereIn('id', $userIds->unique())->get();
+    }
+
     private function findTicketForUser(string $id): Ticket
     {
         $user = auth()->user();

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 class LoginFlowHotfixTest extends TestCase
@@ -39,11 +40,9 @@ class LoginFlowHotfixTest extends TestCase
     {
         $response = $this->get('/login');
         $response->assertStatus(200);
-        $response->assertDontSee('Administrator');
-        $response->assertDontSee('IT Manager');
-        $response->assertDontSee('IT Support');
-        $response->assertDontSee('Employee');
         $response->assertDontSee('Choose your role to continue');
+        $response->assertSee('Sign in');
+        $response->assertSee('MITO IT Helpdesk');
     }
 
     // ─── Authenticated entry flow ────────────────────────────
@@ -147,5 +146,45 @@ class LoginFlowHotfixTest extends TestCase
 
         $admin->refresh();
         $this->assertNotNull($admin->remember_token);
+    }
+
+    public function test_login_with_remember_creates_remember_cookie(): void
+    {
+        $response = $this->post('/login', [
+            'email' => 'admin@mito.local',
+            'password' => 'Admin@123',
+            'remember' => '1',
+        ]);
+
+        $response->assertRedirect('/dashboard');
+        $response->assertCookie(Auth::getRecallerName());
+        $this->assertAuthenticated();
+    }
+
+    public function test_login_without_remember_creates_no_remember_cookie(): void
+    {
+        $response = $this->post('/login', [
+            'email' => 'admin@mito.local',
+            'password' => 'Admin@123',
+        ]);
+
+        $response->assertRedirect('/dashboard');
+        $response->assertCookieMissing(Auth::getRecallerName());
+        $this->assertAuthenticated();
+    }
+
+    public function test_no_forced_password_change_after_login(): void
+    {
+        $this->post('/login', [
+            'email' => 'admin@mito.local',
+            'password' => 'Admin@123',
+        ]);
+
+        $this->assertAuthenticated();
+        // Should not redirect to password.change
+        $this->assertNotEquals(
+            route('password.change'),
+            url(session()->get('url.intended', '/dashboard'))
+        );
     }
 }

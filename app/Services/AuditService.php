@@ -5,47 +5,82 @@ namespace App\Services;
 use App\Models\AuditLog;
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * Centralized audit logging. Observers call this instead of duplicating
- * audit-record creation across controllers, keeping sensitive-field
- * stripping and request-context capture in one place.
- */
 class AuditService
 {
-    /**
-     * Fields that must never be written to the audit log.
-     */
     protected static array $sensitive = [
         'password',
         'password_confirmation',
         'remember_token',
         'api_token',
+        'session_token',
+        'auth_token',
+        'secret',
+        'api_key',
     ];
 
-    /**
-     * Record an audit entry.
-     *
-     * @param  array<string, mixed>  $old
-     * @param  array<string, mixed>  $new
-     */
-    public static function log(string $event, Model $model, array $old = [], array $new = []): void
+    public static function log(string $event, ?Model $model = null, array $old = [], array $new = [], ?string $description = null): void
     {
+        $auditableType = $model ? get_class($model) : 'system';
+        $auditableId = $model ? $model->getKey() : null;
+        $target = $model ? self::resolveTarget($model) : ($new['target'] ?? null);
+
         AuditLog::create([
-            'user_id'         => auth()->id(),
-            'event'           => $event,
-            'auditable_type'  => get_class($model),
-            'auditable_id'    => $model->getKey(),
-            'old_values'      => self::stripSensitive($old) ?: null,
-            'new_values'      => self::stripSensitive($new) ?: null,
-            'ip_address'      => optional(request())?->ip(),
-            'user_agent'      => optional(request())?->userAgent(),
+            'user_id'      => auth()->id(),
+            'event'        => $event,
+            'auditable_type' => $auditableType,
+            'auditable_id'   => $auditableId,
+            'target'       => $target,
+            'description'  => $description,
+            'old_values'   => self::stripSensitive($old) ?: null,
+            'new_values'   => self::stripSensitive($new) ?: null,
+            'ip_address'   => optional(request())?->ip(),
+            'user_agent'   => optional(request())?->userAgent(),
         ]);
     }
 
-    /**
-     * @param  array<string, mixed>  $values
-     * @return array<string, mixed>
-     */
+    public static function logAuth(string $event, ?string $email, array $extra = [], ?string $description = null): void
+    {
+        AuditLog::create([
+            'user_id'      => auth()->id(),
+            'event'        => $event,
+            'auditable_type' => 'auth',
+            'auditable_id'   => 0,
+            'target'       => $email,
+            'description'  => $description,
+            'old_values'   => null,
+            'new_values'   => self::stripSensitive(array_merge(['email' => $email], $extra)),
+            'ip_address'   => optional(request())?->ip(),
+            'user_agent'   => optional(request())?->userAgent(),
+        ]);
+    }
+
+    protected static function resolveTarget(Model $model): ?string
+    {
+        if ($model instanceof \App\Models\Ticket) {
+            return $model->ticket_number;
+        }
+        if ($model instanceof \App\Models\User) {
+            return $model->email;
+        }
+        if ($model instanceof \App\Models\SlaPolicy) {
+            return $model->name;
+        }
+        if ($model instanceof \App\Models\SlaMapping) {
+            return $model->priority;
+        }
+        if ($model instanceof \App\Models\Category) {
+            return $model->name;
+        }
+        if ($model instanceof \App\Models\SubCategory) {
+            return $model->name;
+        }
+        if ($model instanceof \App\Models\TicketComment) {
+            return 'comment:' . $model->ticket_id;
+        }
+
+        return (string) $model->getKey();
+    }
+
     protected static function stripSensitive(array $values): array
     {
         return collect($values)

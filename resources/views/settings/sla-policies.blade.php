@@ -183,8 +183,21 @@
             </div>
             <div>
                 <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Subcategory (optional — blank = all)</label>
-                <select name="sub_category_id" class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white">
+                <select name="sub_category_id"
+                        x-data="{ subs: [] }"
+                        @category-changed.window="
+                            const catId = $event.detail;
+                            if (!catId) { subs = []; return; }
+                            fetch('/api/categories/' + catId + '/subcategories')
+                                .then(r => r.json())
+                                .then(d => subs = d)
+                                .catch(() => subs = []);
+                        "
+                        class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white">
                     <option value="">All subcategories</option>
+                    <template x-for="sub in subs" :key="sub.id">
+                        <option :value="sub.id" x-text="sub.name"></option>
+                    </template>
                 </select>
             </div>
             <div>

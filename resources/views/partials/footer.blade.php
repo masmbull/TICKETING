@@ -5,7 +5,7 @@
             <span class="font-medium text-slate-700 dark:text-slate-300">v1.0.0</span>
         </div>
         <div class="text-sm text-slate-500 dark:text-slate-400">
-            &copy; {{ date('Y') }} MITO IT Helpdesk. All rights reserved.
+            &copy; 2026 MITO IT Helpdesk &middot; Built with ingenuity, powered by the resources we have.
         </div>
     </div>
 </footer>

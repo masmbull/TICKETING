@@ -108,6 +108,11 @@ class AuthController extends Controller
 
             $user = auth()->user();
 
+            AuditService::logAuth('login_success', $user->email, [
+                'name' => $user->name,
+                'role' => $user->role?->name ?? 'unknown',
+            ], "Login successful for {$user->email}");
+
             // Update last_login_at
             $user->update(['last_login_at' => now()]);
 
@@ -139,6 +144,10 @@ class AuthController extends Controller
             return redirect()->intended('/dashboard');
         }
 
+        AuditService::logAuth('login_failed', $credentials['email'], [
+            'ip' => $request->ip(),
+        ], "Login attempt failed for {$credentials['email']}");
+
         return back()
             ->withErrors([
                 'email' => 'The provided credentials do not match our records.',
@@ -168,6 +177,8 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'force_password_change' => false,
         ]);
+
+        AuditService::log('password_changed', $user, [], [], "Password changed (forced) for {$user->email}");
 
         return redirect('/dashboard')->with('success', 'Password changed successfully.');
     }

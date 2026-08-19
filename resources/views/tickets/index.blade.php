@@ -120,6 +120,15 @@
                                 <option value="{{ $staff->id }}" {{ $ticket->assignee_id == $staff->id ? 'selected' : '' }}>{{ $staff->name }}</option>
                                 @endforeach
                             </select>
+                            @elseif(auth()->user()->isStaff() && !$ticket->assignee_id && $ticket->status === 'Waiting Confirmation')
+                            <form method="POST" action="{{ route('tickets.take', $ticket->id) }}" class="inline" x-data="{ taking: false }" @submit="taking = true">
+                                @csrf
+                                <button type="submit" :disabled="taking"
+                                        class="px-2.5 py-1 text-xs font-medium text-white bg-[#E30613] hover:bg-[#c4050f] rounded transition-all duration-200 disabled:opacity-60">
+                                    <span x-show="!taking">Assign to Me</span>
+                                    <span x-show="taking">Assigning…</span>
+                                </button>
+                            </form>
                             @else
                             <span class="text-sm text-slate-600 dark:text-slate-300">{{ $ticket->assignee->name ?? 'Unassigned' }}</span>
                             @endif

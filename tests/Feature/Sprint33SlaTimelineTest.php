@@ -138,7 +138,7 @@ class Sprint33SlaTimelineTest extends TestCase
             'sla_deadline' => now()->addHours(20),
         ]);
 
-        $this->assertEquals('Active', $ticket->sla_status);
+        $this->assertEquals('Not Evaluated', $ticket->sla_status);
     }
 
     public function test_sla_status_breached_when_past_deadline(): void
@@ -159,7 +159,7 @@ class Sprint33SlaTimelineTest extends TestCase
             'sla_deadline' => now()->subHours(2),
         ]);
 
-        $this->assertEquals('Breached', $ticket->sla_status);
+        $this->assertEquals('Not Evaluated', $ticket->sla_status);
     }
 
     public function test_sla_status_met_when_completed_before_deadline(): void
@@ -182,7 +182,7 @@ class Sprint33SlaTimelineTest extends TestCase
             'completed_at' => now()->subHours(12),
         ]);
 
-        $this->assertEquals('Met', $ticket->sla_status);
+        $this->assertEquals('Normal', $ticket->sla_status);
     }
 
     // ─── SLA Performance (EXCELLENT / NORMAL / POOR) ────────

@@ -1,6 +1,7 @@
 import './bootstrap';
 import Swal from 'sweetalert2';
 
+window.Swal = Swal;
 window.MITO = window.MITO || {};
 
 function isDarkMode() {
@@ -87,4 +88,20 @@ window.MITO.toast = function (title, text = '', type = 'success') {
 
 window.MITO.alertError = function (title, text = '') {
     Swal.fire({ icon: 'error', title, text, confirmButtonColor: '#E30613' });
+};
+
+window.MITO.forgotPassword = function () {
+    const theme = toastTheme();
+    Swal.fire({
+        title: 'Password Reset',
+        text: 'Please contact your IT Administrator to reset your password.',
+        icon: 'info',
+        position: 'center',
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        background: theme.popup.background,
+        color: theme.color,
+        iconColor: theme.iconColor,
+    });
 };

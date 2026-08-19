@@ -24,7 +24,7 @@
         notifOpen: false,
         userMenuOpen: false,
         darkMode: localStorage.getItem('theme') !== 'light',
-        appReady: sessionStorage.getItem('mito_splash_seen') === '1',
+        appReady: false,
       }"
       x-init="
         $watch('sidebarExpanded', val => localStorage.setItem('sidebarExpanded', val ? '1' : '0'));
@@ -35,31 +35,40 @@
         });
         document.documentElement.classList.toggle('dark', darkMode);
         document.addEventListener('keydown', e => { if (e.key === 'Escape') { mobileMenuOpen = false; notifOpen = false; userMenuOpen = false; } });
-        if (!appReady) {
-            setTimeout(() => { appReady = true; sessionStorage.setItem('mito_splash_seen', '1'); }, 800);
+        
+        const dismissSplash = () => {
+            setTimeout(() => {
+                appReady = true;
+                sessionStorage.setItem('mito_splash_seen', '1');
+            }, 500);
+        };
+        if (document.readyState === 'complete') {
+            dismissSplash();
+        } else {
+            window.addEventListener('load', dismissSplash, { once: true });
+            setTimeout(dismissSplash, 800);
         }
       ">
     <a href="#main-content" class="skip-to-content">Skip to main content</a>
 
-    {{-- MITO loading screen: professional branded splash shown until app ready --}}
+    {{-- MITO Splash / Loading Screen --}}
     <div x-show="!appReady" x-cloak
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
-        <div class="flex flex-col items-center gap-6">
-            <div class="relative flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#E30613] to-[#c4050f] text-white font-bold text-2xl shadow-lg shadow-red-500/30">
-                <span>M</span>
-                <span class="absolute -inset-1 rounded-full bg-[#E30613]/20 animate-ping"></span>
+         x-transition:leave="transition ease-out duration-300"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95 pointer-events-none"
+         class="fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4 transition-colors duration-300">
+
+        <div class="relative z-10 flex flex-col items-center gap-5 text-center animate-splash-in">
+            <img src="{{ asset('assets/mito-electronic-removebg-preview-resize.png') }}"
+                 alt="MITO Electronic"
+                 class="h-24 sm:h-32 md:h-40 w-auto max-w-[300px] sm:max-w-[350px] object-contain select-none animate-splash-logo mito-logo-adaptive">
+
+            {{-- Loading Dots --}}
+            <div class="flex items-center gap-2 mt-8 animate-splash-dots" aria-label="Loading...">
+                <span class="splash-dot w-2.5 h-2.5 rounded-full bg-[#E30613]"></span>
+                <span class="splash-dot w-2.5 h-2.5 rounded-full bg-[#E30613]"></span>
+                <span class="splash-dot w-2.5 h-2.5 rounded-full bg-[#E30613]"></span>
             </div>
-            <div class="text-center">
-                <div class="font-bold text-slate-900 dark:text-white text-xl tracking-tight">MITO</div>
-                <div class="text-[10px] text-slate-400 uppercase tracking-widest">IT HELPDESK</div>
-            </div>
-            <div class="w-5 h-5 border-2 border-[#E30613]/20 border-t-[#E30613] rounded-full animate-spin"></div>
         </div>
     </div>
 
@@ -71,17 +80,15 @@
     <div class="min-h-screen flex">
         {{-- SIDEBAR --}}
         <aside x-cloak
-               class="fixed inset-y-0 left-0 z-50 flex flex-col bg-[#0f172a] dark:bg-slate-950 transition-all duration-300 ease-out"
+               class="fixed inset-y-0 left-0 z-50 flex flex-col bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 transition-all duration-300 ease-out"
                :class="mobileMenuOpen ? 'w-72 translate-x-0' : (sidebarExpanded ? 'w-64 -translate-x-full lg:translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0')">
             {{-- Logo Area --}}
-            <div class="h-16 flex items-center px-4 border-b border-slate-800">
+            <div class="h-16 flex items-center px-4 border-b border-slate-200 dark:border-slate-800">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[#E30613] to-[#c4050f] flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-red-500/20 flex-shrink-0">
-                        M
-                    </div>
+                    <img src="{{ asset('assets/mito-electronic-removebg-preview-resize.png') }}" alt="MITO Electronic" class="h-6 w-auto object-contain flex-shrink-0 mito-logo-adaptive">
                     <div x-show="sidebarExpanded || mobileMenuOpen" x-transition class="overflow-hidden">
-                        <div class="font-bold text-white text-lg tracking-tight">MITO</div>
-                        <div class="text-[10px] text-slate-400 uppercase tracking-widest">IT Helpdesk</div>
+                        <div class="font-bold text-slate-900 dark:text-white text-base tracking-tight leading-tight">MITO</div>
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-medium">IT Helpdesk</div>
                     </div>
                 </div>
             </div>
@@ -117,12 +124,21 @@
                         ],
                     ];
 
-                    // Admin gets everything; manager/staff/user get subsets.
-                    if ($role === 'admin') {
-                        $nav = $baseNav;
-                    } elseif ($role === 'manager') {
-                        $nav = [
-                            'link' => $baseNav['link'],
+                     // Admin gets everything; manager/staff/user get subsets.
+                     if ($role === 'admin') {
+                         $nav = $baseNav;
+                         $nav['link'][] = ['label' => 'Reports', 'route' => 'reports.index', 'icon' => 'M9 12h6m-6 4h6m2-12H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2z'];
+                         $nav['section'][] = [
+                             'label' => 'Administration',
+                             'items' => [
+                                 ['label' => 'Audit Logs', 'route' => 'audit.index', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
+                             ],
+                         ];
+                     } elseif ($role === 'manager') {
+                         $nav = [
+                             'link' => array_merge($baseNav['link'], [
+                                 ['label' => 'Reports', 'route' => 'reports.index', 'icon' => 'M9 12h6m-6 4h6m2-12H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2z'],
+                             ]),
                             'section' => [
                                 ['label' => 'Tickets', 'items' => [
                                     ['label' => 'All Tickets', 'route' => 'tickets.all', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'],
@@ -136,34 +152,35 @@
                                 ]],
                             ],
                         ];
-                    } elseif ($role === 'staff') {
-                        $nav = [
-                            'link' => $baseNav['link'],
-                            'section' => [
-                                ['label' => 'Tickets', 'items' => [
-                                    ['label' => 'Assigned', 'route' => 'tickets.assigned', 'icon' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
-                                    ['label' => 'My Tickets', 'route' => 'tickets.index', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
-                                ]],
-                            ],
-                        ];
-                    } else { // user
-                        $nav = [
-                            'link' => $baseNav['link'],
-                            'section' => [
-                                ['label' => 'Tickets', 'items' => [
-                                    ['label' => 'My Tickets', 'route' => 'tickets.index', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
-                                    ['label' => 'Create Ticket', 'route' => 'tickets.create', 'icon' => 'M12 4v16m8-8H4'],
-                                ]],
-                            ],
-                        ];
-                    }
+                     } elseif ($role === 'staff') {
+                         $nav = [
+                             'link' => $baseNav['link'],
+                             'section' => [
+                                 ['label' => 'Tickets', 'items' => [
+                                     ['label' => 'All Tickets', 'route' => 'tickets.all', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'],
+                                     ['label' => 'Assigned', 'route' => 'tickets.assigned', 'icon' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
+                                     ['label' => 'My Tickets', 'route' => 'tickets.index', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
+                                 ]],
+                             ],
+                         ];
+                     } else { // user
+                         $nav = [
+                             'link' => $baseNav['link'],
+                             'section' => [
+                                 ['label' => 'Tickets', 'items' => [
+                                     ['label' => 'My Tickets', 'route' => 'tickets.index', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
+                                     ['label' => 'Create Ticket', 'route' => 'tickets.create', 'icon' => 'M12 4v16m8-8H4'],
+                                 ]],
+                             ],
+                         ];
+                     }
                 @endphp
 
                 {{-- Render top-level links --}}
                 @foreach($nav['link'] as $link)
                     @php $active = request()->routeIs($link['route']); @endphp
                     <a href="{{ route($link['route']) }}"
-                       class="group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 {{ $active ? 'bg-[#E30613]/10 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
+                       class="group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 {{ $active ? 'bg-[#E30613]/10 text-[#E30613] dark:bg-[#E30613]/10 dark:text-white font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800' }}">
                         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $link['icon'] }}"/></svg>
                         <span x-show="sidebarExpanded || mobileMenuOpen" x-transition class="text-sm font-medium whitespace-nowrap">{{ $link['label'] }}</span>
                     </a>
@@ -173,12 +190,12 @@
                 @foreach($nav['section'] as $section)
                     <div class="pt-2">
                         <div x-show="sidebarExpanded || mobileMenuOpen" x-transition class="px-3 mb-2">
-                            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{{ $section['label'] }}</span>
+                            <span class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{{ $section['label'] }}</span>
                         </div>
                         @foreach($section['items'] as $item)
                             @php $active = request()->routeIs($item['route']); @endphp
                             <a href="{{ route($item['route']) }}"
-                               class="group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 {{ $active ? 'bg-[#E30613]/10 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
+                               class="group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 {{ $active ? 'bg-[#E30613]/10 text-[#E30613] dark:bg-[#E30613]/10 dark:text-white font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800' }}">
                                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $item['icon'] }}"/></svg>
                                 <span x-show="sidebarExpanded || mobileMenuOpen" x-transition class="text-sm font-medium whitespace-nowrap">{{ $item['label'] }}</span>
                             </a>
@@ -189,9 +206,9 @@
 
             {{-- Sidebar toggle button --}}
             <button @click="sidebarExpanded = !sidebarExpanded"
-                    class="hidden lg:flex items-center justify-center w-6 h-6 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors absolute -right-3 top-20 border border-slate-600 shadow-lg z-50"
+                    class="hidden lg:flex items-center justify-center w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors absolute -right-3 top-20 border border-slate-300 dark:border-slate-600 shadow-lg z-50"
                     aria-label="Toggle sidebar">
-                <svg class="w-3 h-3 text-slate-300 transition-transform duration-200"
+                <svg class="w-3 h-3 text-slate-600 dark:text-slate-300 transition-transform duration-200"
                      :class="sidebarExpanded ? 'rotate-0' : 'rotate-180'"
                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -201,7 +218,7 @@
         </aside>
 
         {{-- Main Content Area --}}
-        <div class="flex-1 flex flex-col min-h-screen transition-all duration-300 lg:ml-64"
+        <div class="flex-1 flex flex-col min-h-screen transition-all duration-300 lg:ml-64 animate-page-in"
              :class="sidebarExpanded ? 'lg:ml-64' : 'lg:ml-20'">
             {{-- Top Navbar --}}
             <header class="sticky top-0 z-40 h-14 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800 flex items-center px-4 gap-4">
@@ -225,9 +242,11 @@
                             'users.show' => 'User Profile',
                             'categories.index' => 'Categories',
                             'sla-policies.index' => 'SLA Policies',
-                            'settings.index' => 'Settings',
-                            'profile.edit' => 'My Profile',
-                            'audit.index' => 'Audit Logs',
+                             'settings.index' => 'Settings',
+                             'profile.edit' => 'My Profile',
+                             'audit.index' => 'Audit Logs',
+                             'audit.show' => 'Audit Detail',
+                             'reports.index' => 'Staff KPI Report',
                         ];
                     @endphp
                     <h1 class="text-base font-semibold text-slate-900 dark:text-white truncate">{{ $titles[$routeName] ?? 'MITO IT Helpdesk' }}</h1>
@@ -236,14 +255,53 @@
                 <div class="flex items-center gap-2">
                     <button @click="darkMode = !darkMode" class="p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" aria-label="Toggle theme">
                         <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                        <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                        <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
                     </button>
 
-                    <div class="relative">
+                    <div class="relative" x-data="{ notifOpen: false }">
                         <button @click="notifOpen = !notifOpen" class="relative p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                            <span class="absolute top-1 right-1 w-2 h-2 bg-[#E30613] rounded-full"></span>
+                            @php $unreadCount = auth()->user()->unreadNotifications()->count(); @endphp
+                            @if($unreadCount > 0)
+                            <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 rounded-full bg-[#E30613] text-white text-[10px] font-bold leading-none">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
+                            @endif
                         </button>
+                        <div x-show="notifOpen" @click.away="notifOpen = false" x-transition
+                             class="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50"
+                             style="display: none;">
+                            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+                                <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Notifications</h3>
+                                @if($unreadCount > 0)
+                                <form method="POST" action="{{ route('notifications.mark-all-read') }}" class="inline">
+                                    @csrf
+                                    <button type="submit" class="text-xs text-[#E30613] hover:text-[#c4050f] font-medium">Mark all as read</button>
+                                </form>
+                                @endif
+                            </div>
+                            <div class="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700">
+                                @php $notifications = auth()->user()->notifications()->latest()->take(20)->get(); @endphp
+                                @forelse($notifications as $notification)
+                                <form method="POST" action="{{ route('notifications.read', $notification->id) }}" class="block">
+                                    @csrf
+                                    <button type="submit" class="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors {{ $notification->read_at ? '' : 'bg-blue-50/50 dark:bg-blue-900/10' }}">
+                                        <div class="flex items-start gap-3">
+                                            <div class="mt-0.5 w-2 h-2 rounded-full flex-shrink-0 {{ $notification->read_at ? 'bg-transparent' : 'bg-[#E30613]' }}"></div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ $notification->data['title'] ?? 'Notification' }}</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{{ $notification->data['body'] ?? '' }}</p>
+                                                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </form>
+                                @empty
+                                <div class="px-4 py-8 text-center">
+                                    <svg class="w-8 h-8 mx-auto text-slate-300 dark:text-slate-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                                    <p class="text-sm text-slate-400 dark:text-slate-500">No new notifications</p>
+                                </div>
+                                @endforelse
+                            </div>
+                        </div>
                     </div>
 
                     <div class="relative">
@@ -265,7 +323,7 @@
                                 </a>
                                 @if(in_array($user->role?->slug, ['admin', 'manager']))
                                 <a href="{{ route('settings.index') }}" class="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/></svg>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                     Settings
                                 </a>
                                 @endif
@@ -309,10 +367,9 @@
             </main>
 
             <footer class="px-6 py-3 border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
-                <div class="flex items-center justify-between text-xs text-slate-400">
-                    <span>&copy; {{ date('Y') }} MITO IT Helpdesk</span>
-                    <span class="font-mono">v1.0.0</span>
-                </div>
+                <p class="text-center text-xs text-slate-400 dark:text-slate-500">
+                    &copy; 2026 MITO IT Helpdesk &middot; Built with ingenuity, powered by the resources we have.
+                </p>
             </footer>
          </div>
     </div>

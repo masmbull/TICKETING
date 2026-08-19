@@ -23,5 +23,8 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\User::observe(\App\Observers\UserObserver::class);
         \App\Models\Category::observe(\App\Observers\CategoryObserver::class);
         \App\Models\SubCategory::observe(\App\Observers\SubCategoryObserver::class);
+        \App\Models\TicketComment::observe(\App\Observers\TicketCommentObserver::class);
+        \App\Models\SlaPolicy::observe(\App\Observers\SlaPolicyObserver::class);
+        \App\Models\SlaMapping::observe(\App\Observers\SlaMappingObserver::class);
     }
 }

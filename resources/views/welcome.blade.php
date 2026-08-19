@@ -101,10 +101,8 @@
                     </button>
 
                     <!-- Company Logo -->
-                    <div class="w-8 h-8 rounded-lg bg-slate-900 dark:bg-white flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 text-white dark:text-slate-900" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                        </svg>
+                    <div class="h-8 px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
+                        <img src="{{ asset('assets/mito-electronic-removebg-preview-resize.png') }}" alt="MITO Electronic" class="h-5 w-auto object-contain mito-logo-adaptive">
                     </div>
                 </div>
             </div>

@@ -9,6 +9,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SlaPolicyController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -55,6 +56,7 @@ Route::middleware('auth')->group(function () {
         Route::patch('/tickets/{id}/status', [TicketController::class, 'updateStatus'])->name('tickets.status.update');
         Route::get('/api/search', [TicketController::class, 'search'])->name('api.search');
         Route::get('/tickets/{id}/attachments/{attachment}/download', [TicketController::class, 'downloadAttachment'])->name('tickets.attachments.download');
+        Route::get('/tickets/{id}/attachments/{attachment}/serve', [TicketController::class, 'serveAttachment'])->name('tickets.attachments.serve');
         Route::delete('/tickets/{id}/attachments/{attachment}', [TicketController::class, 'destroyAttachment'])->name('tickets.attachments.destroy');
 
         // Assigned Tickets (Staff)
@@ -95,12 +97,41 @@ Route::middleware('auth')->group(function () {
         // Audit Logs (Admin only)
         Route::middleware('admin')->prefix('audit-logs')->name('audit.')->group(function () {
             Route::get('/', [AuditLogController::class, 'index'])->name('index');
+            Route::get('/{log}', [AuditLogController::class, 'show'])->name('show');
+            Route::get('/export/excel', [AuditLogController::class, 'exportExcel'])->name('export.excel');
+            Route::get('/export/csv', [AuditLogController::class, 'exportCsv'])->name('export.csv');
+        });
+
+        // Reports (Manager + Admin)
+        Route::middleware('manager_or_admin')->prefix('reports')->name('reports.')->group(function () {
+            Route::get('/', [ReportController::class, 'index'])->name('index');
+            Route::get('/export/excel', [ReportController::class, 'exportExcel'])->name('export.excel');
+            Route::get('/export/pdf', [ReportController::class, 'exportPdf'])->name('export.pdf');
         });
 
         // Profile
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+
+        // Notifications
+        Route::get('/notifications', fn () => redirect()->route('dashboard'));
+        Route::patch('/notifications/mark-read', function () {
+            auth()->user()->unreadNotifications->markAsRead();
+            return back();
+        })->name('notifications.mark-read');
+        Route::post('/notifications/mark-all-read', function () {
+            auth()->user()->notifications->markAsRead();
+            return back();
+        })->name('notifications.mark-all-read');
+        Route::post('/notifications/{id}/read', function ($id) {
+            $notification = auth()->user()->notifications()->findOrFail($id);
+            $notification->markAsRead();
+            if ($notification->data['url'] ?? null) {
+                return redirect($notification->data['url']);
+            }
+            return back();
+        })->name('notifications.read');
 
         // Settings
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
