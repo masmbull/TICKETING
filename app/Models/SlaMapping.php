@@ -27,4 +27,9 @@ class SlaMapping extends Model
     {
         return $this->belongsTo(SubCategory::class);
     }
+
+    public function policy(): BelongsTo
+    {
+        return $this->belongsTo(SlaPolicy::class, 'priority', 'priority');
+    }
 }
