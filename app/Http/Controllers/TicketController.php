@@ -174,66 +174,125 @@ class TicketController extends Controller
     /**
      * Store a newly created ticket in storage.
      */
-    public function store(Request $request)
-    {
-        // Normalize a single non-array file upload into an array so the
-        // attachments.* validation rules always run and reject bad files.
-        // NOTE: we must read/write the raw Symfony FileBag ($request->files)
-        // BEFORE calling $request->file()/hasFile()/allFiles(), because
-        // Laravel caches the converted files in $convertedFiles and a scalar
-        // entry would otherwise stay scalar, making the 'array' rule fail.
-        $rawAttachment = $request->files->get('attachments');
-        if ($rawAttachment && !is_array($rawAttachment)) {
-            $request->files->set('attachments', [$rawAttachment]);
-        }
+     public function store(Request $request)
+     {
+         // Normalize a single non-array file upload into an array so the
+         // attachments.* validation rules always run and reject bad files.
+         // NOTE: we must read/write the raw Symfony FileBag ($request->files)
+         // BEFORE calling $request->file()/hasFile()/allFiles(), because
+         // Laravel caches the converted files in $convertedFiles and a scalar
+         // entry would otherwise stay scalar, making the 'array' rule fail.
+         $rawAttachment = $request->files->get('attachments');
+         if ($rawAttachment && !is_array($rawAttachment)) {
+             $request->files->set('attachments', [$rawAttachment]);
+         }
 
-        $isSupport = auth()->user()->canManageTickets();
+         $isSupport = auth()->user()->canManageTickets();
 
-        $validated = $request->validate([
-            'category_id'     => 'nullable|exists:categories,id',
-            'sub_category_id' => 'nullable|exists:sub_categories,id',
-            'priority'        => $isSupport ? 'required|in:low,medium,high,critical' : 'nullable|in:low,medium,high,critical',
-            'description'     => 'required',
-            'assignee_id'     => $isSupport ? 'nullable|exists:users,id' : 'nullable',
-            'sla_policy_id'   => 'nullable|exists:sla_policies,id',
-            'attachments'     => 'nullable|array',
-            'attachments.*'   => 'file|max:10240|mimes:png,jpg,jpeg,pdf,zip',
-        ]);
+         $validated = $request->validate([
+             'category_id'     => 'nullable|exists:categories,id',
+             'sub_category_id' => 'nullable|exists:sub_categories,id',
+             'priority'        => $isSupport ? 'required|in:low,medium,high,critical' : 'nullable|in:low,medium,high,critical',
+             'description'     => 'required',
+             'user_id'         => $isSupport ? 'nullable|exists:users,id' : 'nullable',
+             'assignee_id'     => $isSupport ? 'nullable|exists:users,id' : 'nullable',
+             'sla_policy_id'   => 'nullable|exists:sla_policies,id',
+             'attachments'     => 'nullable|array',
+             'attachments.*'   => 'file|max:10240|mimes:png,jpg,jpeg,pdf,zip',
+         ]);
 
-        $category = isset($validated['category_id']) ? Category::find($validated['category_id']) : null;
+         $category = isset($validated['category_id']) ? Category::find($validated['category_id']) : null;
 
-        // Support users explicitly set priority. Regular users never see the
-        // priority field — their ticket gets NO priority and NO SLA until a
-        // manager/admin assigns one.
-        $priority = $validated['priority'] ?? null;
-        $assigneeId = $isSupport ? ($validated['assignee_id'] ?? null) : null;
+         // Support users explicitly set priority. Regular users never see the
+         // priority field — their ticket gets NO priority and NO SLA until a
+         // manager/admin assigns one.
+         $priority = $validated['priority'] ?? null;
+         $assigneeId = $isSupport ? ($validated['assignee_id'] ?? null) : null;
 
-        // Generate ticket number: ITSUP-YYYYMMDD-NNNNN
-        $today = now()->format('Ymd');
-        $lastTicket = Ticket::where('ticket_number', 'like', "ITSUP-{$today}-%")
-            ->orderBy('ticket_number', 'desc')
-            ->first();
+         // Requestor: Staff/Admin can create for another user, otherwise use authenticated user
+         $requestorId = $isSupport && $validated['user_id'] ? $validated['user_id'] : auth()->id();
 
-        if ($lastTicket) {
-            $lastNumber = (int) substr($lastTicket->ticket_number, -5);
-            $newNumber = str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
-        } else {
-            $newNumber = '00001';
-        }
+         // Generate ticket number: ITSUP-YYYYMMDD-NNNNN
+         $today = now()->format('Ymd');
+         $lastTicket = Ticket::where('ticket_number', 'like', "ITSUP-{$today}-%")
+             ->orderBy('ticket_number', 'desc')
+             ->first();
 
-        $ticketNumber = "ITSUP-{$today}-{$newNumber}";
+         if ($lastTicket) {
+             $lastNumber = (int) substr($lastTicket->ticket_number, -5);
+             $newNumber = str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
+         } else {
+             $newNumber = '00001';
+         }
 
-        $ticketData = [
-            'ticket_number'   => $ticketNumber,
-            'description'     => $validated['description'],
-            'status'          => 'Waiting Confirmation',
-            'user_id'         => auth()->id(),
-            'category_id'     => $validated['category_id'] ?? null,
-            'sub_category_id' => $validated['sub_category_id'] ?? null,
-            'assignee_id'     => $assigneeId,
-        ];
+         $ticketNumber = "ITSUP-{$today}-{$newNumber}";
 
-        $ticket = Ticket::create($ticketData);
+         // Handle SLA: Explicit > Auto-mapping > Default (Low)
+         $slaPriority = null;
+         $slaStartedAt = null;
+         $slaDeadline = null;
+
+         // CASE A: Support explicitly selected SLA policy
+         if ($validated['sla_policy_id'] ?? null) {
+             $policy = SlaPolicy::find($validated['sla_policy_id']);
+             if ($policy && $policy->is_active) {
+                 $slaPriority = $policy->priority;
+                 $slaStartedAt = now('Asia/Jakarta');
+                 $slaDeadline = $slaStartedAt->copy()->addDays($policy->resolution_days);
+             }
+         }
+
+         // CASE B: No explicit SLA, try auto-mapping
+         if (!$slaPriority) {
+             $mapping = SlaMapping::where('category_id', $validated['category_id'] ?? null)
+                 ->where(function ($q) use ($validated) {
+                     $q->where('sub_category_id', $validated['sub_category_id'] ?? null)
+                       ->orWhereNull('sub_category_id');
+                 })
+                 ->where('is_active', true)
+                 ->first();
+
+             if ($mapping) {
+                 $policy = SlaPolicy::where('priority', $mapping->priority)
+                     ->where('is_active', true)
+                     ->first();
+
+                 if ($policy && $policy->resolution_days) {
+                     $slaPriority = $mapping->priority;
+                     $slaStartedAt = now('Asia/Jakarta');
+                     $slaDeadline = $slaStartedAt->copy()->addDays($policy->resolution_days);
+                 }
+             }
+         }
+
+         // CASE C: No explicit SLA, no mapping - default to Low (5 business days)
+         if (!$slaPriority) {
+             $defaultPolicy = SlaPolicy::where('priority', 'low')
+                 ->where('is_active', true)
+                 ->first();
+
+             if ($defaultPolicy) {
+                 $slaPriority = 'low';
+                 $slaStartedAt = now('Asia/Jakarta');
+                 $slaDeadline = $slaStartedAt->copy()->addDays($defaultPolicy->resolution_days);
+             }
+         }
+
+         $ticketData = [
+             'ticket_number'   => $ticketNumber,
+             'description'     => $validated['description'],
+             'status'          => 'Waiting Confirmation',
+             'user_id'         => $requestorId,
+             'category_id'     => $validated['category_id'] ?? null,
+             'sub_category_id' => $validated['sub_category_id'] ?? null,
+             'assignee_id'     => $assigneeId,
+             'priority'        => $priority ?? $slaPriority,
+             'sla_priority'    => $slaPriority,
+             'sla_started_at'  => $slaStartedAt,
+             'sla_deadline'    => $slaDeadline,
+         ];
+
+         $ticket = Ticket::create($ticketData);
 
         // Handle file attachments
         if ($request->hasFile('attachments')) {
@@ -415,6 +474,8 @@ class TicketController extends Controller
             return $this->validationFailure($request, 'status', 'Completed tickets cannot be taken.');
         }
 
+        // Staff can only take unassigned tickets or tickets already assigned to them.
+        // Manager/Admin can take any ticket.
         if ($user->isStaff() && $ticket->assignee_id && $ticket->assignee_id !== $user->id) {
             return $this->validationFailure($request, 'assignee', 'This ticket is already assigned to another support member.');
         }
@@ -585,6 +646,8 @@ class TicketController extends Controller
 
     /**
      * Update ticket assignee (API).
+     * CRITICAL: Do NOT overwrite explicitly set SLA with auto-mapping.
+     * Only apply auto-mapping if SLA was NOT already set.
      */
     public function updateAssignee(Request $request, string $id): JsonResponse
     {
@@ -615,6 +678,9 @@ class TicketController extends Controller
             }
         }
 
+        // CRITICAL FIX: Only auto-map SLA if it was NOT already explicitly set.
+        // If sla_priority is already set (either from creation or manual assignment),
+        // NEVER overwrite it with auto-mapping during reassignment.
         if ($validated['assignee_id'] && !$ticket->sla_priority) {
             $mapping = SlaMapping::where('category_id', $ticket->category_id)
                 ->where(function ($q) use ($ticket) {
