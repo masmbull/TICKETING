@@ -17,9 +17,9 @@
 
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden"
          x-data="userSearch({
-             allUsers: @json($users->items()),
-             allRoles: @json($roles),
-             allDepts: @json($departments)
+             allUsers: @js($users->items()),
+             allRoles: @js($roles),
+             allDepts: @js($departments)
          })">
         <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-wrap gap-3">
             <div class="flex flex-wrap gap-2 flex-1">
