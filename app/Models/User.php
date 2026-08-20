@@ -19,6 +19,7 @@ class User extends Authenticatable
         'password',
         'role_id',
         'department_id',
+        'job_title',
         'force_password_change',
         'is_active',
         'last_login_at',

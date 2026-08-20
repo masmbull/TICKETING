@@ -17,7 +17,7 @@
 
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden"
          x-data="userSearch({
-             allUsers: @js($users->items()),
+             allUsers: @js($users),
              allRoles: @js($roles),
              allDepts: @js($departments)
          })">
@@ -52,7 +52,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-                    <template x-for="user in filteredUsers" :key="user.id">
+                    <template x-for="user in paginatedUsers" :key="user.id">
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-3">
@@ -122,6 +122,31 @@
                 </tbody>
             </table>
         </div>
+
+        <template x-if="filteredUsers.length > 0">
+        <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between flex-wrap gap-3">
+            <div class="text-sm text-slate-600 dark:text-slate-400">
+                <span x-text="((currentPage - 1) * itemsPerPage) + 1"></span>
+                <span>–</span>
+                <span x-text="Math.min(currentPage * itemsPerPage, totalResults)"></span>
+                <span>of</span>
+                <span x-text="totalResults"></span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button @click="prevPage()" :disabled="currentPage === 1" :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-100 dark:hover:bg-slate-700'" class="px-3 py-1.5 text-sm rounded-lg text-slate-600 dark:text-slate-300">Previous</button>
+                
+                <template x-for="page in totalPages" :key="page">
+                    <template x-if="(page >= currentPage - 2 && page <= currentPage + 2) || totalPages <= 5">
+                        <button @click="goToPage(page)" :class="currentPage === page ? 'bg-[#E30613] text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'" class="px-3 py-1.5 text-sm rounded-lg">
+                            <span x-text="page"></span>
+                        </button>
+                    </template>
+                </template>
+
+                <button @click="nextPage()" :disabled="currentPage === totalPages" :class="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-100 dark:hover:bg-slate-700'" class="px-3 py-1.5 text-sm rounded-lg text-slate-600 dark:text-slate-300">Next</button>
+            </div>
+        </div>
+        </template>
 
     </div>
 </div>

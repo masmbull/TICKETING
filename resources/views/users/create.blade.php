@@ -74,6 +74,11 @@
                         </select>
                     </div>
 
+                    <div>
+                        <label for="job_title" class="form-label">Job Title</label>
+                        <input type="text" name="job_title" id="job_title" value="{{ old('job_title') }}" class="input" placeholder="e.g. IT Support Specialist" />
+                    </div>
+
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="force_password_change" id="force_password_change" value="1"
                                {{ old('force_password_change') ? 'checked' : '' }}

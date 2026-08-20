@@ -14,29 +14,11 @@ class UserController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = User::with(['role', 'department']);
+        // Load all users for client-side search/filter/pagination
+        $users = User::with(['role', 'department'])
+            ->orderBy('name')
+            ->get();
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('email', 'ilike', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('role')) {
-            $query->where('role_id', $request->role);
-        }
-
-        if ($request->filled('department')) {
-            $query->where('department_id', $request->department);
-        }
-
-        if ($request->filled('status')) {
-            $query->where('is_active', $request->status === 'active');
-        }
-
-        $users = $query->latest()->paginate(15);
         $roles = Role::where('is_active', true)->get();
         $departments = Department::where('is_active', true)->get();
 

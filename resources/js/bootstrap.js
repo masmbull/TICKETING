@@ -16,6 +16,8 @@ window.userSearch = function(config) {
         searchQuery: '',
         filterRole: '',
         filterDept: '',
+        currentPage: 1,
+        itemsPerPage: 15,
 
         get filteredUsers() {
             return this.allUsers
@@ -48,6 +50,39 @@ window.userSearch = function(config) {
                 .sort((a, b) => a.name.localeCompare(b.name)); // A-Z sorting
         },
 
+        get totalPages() {
+            return Math.ceil(this.filteredUsers.length / this.itemsPerPage) || 1;
+        },
+
+        get paginatedUsers() {
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            const end = start + this.itemsPerPage;
+            return this.filteredUsers.slice(start, end);
+        },
+
+        get totalResults() {
+            return this.filteredUsers.length;
+        },
+
+        goToPage(page) {
+            const pageNum = parseInt(page);
+            if (pageNum >= 1 && pageNum <= this.totalPages) {
+                this.currentPage = pageNum;
+            }
+        },
+
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.currentPage++;
+            }
+        },
+
+        prevPage() {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+            }
+        },
+
         getRoleClass(role) {
             if (!role) return 'bg-slate-100 text-slate-600 border border-slate-200';
             
@@ -63,6 +98,7 @@ window.userSearch = function(config) {
             this.searchQuery = '';
             this.filterRole = '';
             this.filterDept = '';
+            this.currentPage = 1;
         }
     }
 };
