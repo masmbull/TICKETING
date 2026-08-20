@@ -102,8 +102,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/export/csv', [AuditLogController::class, 'exportCsv'])->name('export.csv');
         });
 
-        // Reports (Manager + Admin)
-        Route::middleware('manager_or_admin')->prefix('reports')->name('reports.')->group(function () {
+        // Reports (Admin + Manager + Staff)
+        Route::middleware('admin_manager_or_staff')->prefix('reports')->name('reports.')->group(function () {
             Route::get('/', [ReportController::class, 'index'])->name('index');
             Route::get('/export/excel', [ReportController::class, 'exportExcel'])->name('export.excel');
             Route::get('/export/pdf', [ReportController::class, 'exportPdf'])->name('export.pdf');

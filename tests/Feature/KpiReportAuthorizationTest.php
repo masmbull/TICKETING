@@ -76,12 +76,13 @@ class KpiReportAuthorizationTest extends TestCase
         $response->assertSee('KPI Report');
     }
 
-    public function test_staff_cannot_access_kpi_report(): void
+    public function test_staff_can_access_kpi_report(): void
     {
         $this->actingAs($this->staff);
 
         $response = $this->get('/reports');
-        $response->assertForbidden();
+        $response->assertStatus(200);
+        $response->assertSee('KPI Report');
     }
 
     public function test_regular_user_cannot_access_kpi_report(): void
@@ -92,12 +93,12 @@ class KpiReportAuthorizationTest extends TestCase
         $response->assertForbidden();
     }
 
-    public function test_staff_cannot_bypass_with_direct_url(): void
+    public function test_staff_can_access_with_direct_url(): void
     {
         $this->actingAs($this->staff);
 
         $response = $this->get('/reports?staff_id=1&period=this_month');
-        $response->assertForbidden();
+        $response->assertStatus(200);
     }
 
     public function test_user_cannot_bypass_with_direct_url(): void
