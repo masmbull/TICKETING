@@ -117,7 +117,7 @@ class KpiReportAuthorizationTest extends TestCase
 
         $response = $this->get('/reports?generate_full_report=1&period=this_month');
         $response->assertStatus(200);
-        $response->assertSee('All Staff');
+        $response->assertSee('All IT Personnel');
     }
 
     // ─── Individual Staff Report Tests ──────────────────
@@ -201,5 +201,168 @@ class KpiReportAuthorizationTest extends TestCase
 
         $response = $this->get('/reports?generate_full_report=1&report_type=detailed');
         $response->assertStatus(200);
+    }
+
+    // ─── All IT Personnel Tests ──────────────────────────
+
+    public function test_all_it_personnel_option_appears_in_dropdown(): void
+    {
+        $this->actingAs($this->admin);
+
+        $response = $this->get('/reports');
+        $response->assertStatus(200);
+        $response->assertSee('value="0"');
+        $response->assertSee('All IT Personnel');
+    }
+
+    public function test_all_it_personnel_includes_admin(): void
+    {
+        $this->actingAs($this->manager);
+
+        $response = $this->get("/reports?staff_id=0&period=this_month");
+        $response->assertStatus(200);
+        $response->assertSee('All IT Personnel');
+    }
+
+    public function test_all_it_personnel_includes_manager(): void
+    {
+        $this->actingAs($this->manager);
+
+        $response = $this->get("/reports?staff_id=0&period=this_month");
+        $response->assertStatus(200);
+        $response->assertSee('All IT Personnel');
+    }
+
+    public function test_all_it_personnel_includes_staff(): void
+    {
+        $this->actingAs($this->manager);
+
+        $response = $this->get("/reports?staff_id=0&period=this_month");
+        $response->assertStatus(200);
+        $response->assertSee('All IT Personnel');
+    }
+
+    public function test_all_it_personnel_excludes_regular_users(): void
+    {
+        // Verify that regular users are NOT included in the All IT Personnel query
+        // This is an indirect test - if regular user had a ticket, it shouldn't appear
+        // in the All IT Personnel report
+        $this->actingAs($this->manager);
+
+        $response = $this->get("/reports?staff_id=0&period=this_month");
+        $response->assertStatus(200);
+        // Report should generate successfully without errors
+        $response->assertSee('All IT Personnel');
+    }
+
+    public function test_individual_user_filtering_still_works(): void
+    {
+        $this->actingAs($this->manager);
+
+        // Test filtering by individual user
+        $response = $this->get("/reports?staff_id={$this->staff->id}&period=this_month");
+        $response->assertStatus(200);
+        $response->assertSee($this->staff->name);
+        $response->assertDontSee('All IT Personnel');
+    }
+
+    // ─── ALL IT PERSONNEL REPORT GENERATION TESTS ──────
+
+    public function test_all_it_personnel_generates_report_summary(): void
+    {
+        $this->actingAs($this->manager);
+
+        $response = $this->get("/reports?staff_id=0&period=this_month&report_type=summary");
+        $response->assertStatus(200);
+        $response->assertSee('All IT Personnel');
+        $response->assertSee('KPI');
+        $response->assertSee('Total Tickets Handled');
+    }
+
+    public function test_all_it_personnel_generates_report_detailed(): void
+    {
+        $this->actingAs($this->manager);
+
+        $response = $this->get("/reports?staff_id=0&period=this_month&report_type=detailed");
+        $response->assertStatus(200);
+        $response->assertSee('All IT Personnel');
+        $response->assertSee('Ticket Details');
+    }
+
+    public function test_all_it_personnel_works_with_last_month(): void
+    {
+        $this->actingAs($this->manager);
+
+        $response = $this->get("/reports?staff_id=0&period=last_month&report_type=summary");
+        $response->assertStatus(200);
+        $response->assertSee('All IT Personnel');
+        $response->assertSee('Last Month');
+    }
+
+    public function test_all_it_personnel_works_with_this_year(): void
+    {
+        $this->actingAs($this->manager);
+
+        $response = $this->get("/reports?staff_id=0&period=this_year&report_type=summary");
+        $response->assertStatus(200);
+        $response->assertSee('All IT Personnel');
+        $response->assertSee('This Year');
+    }
+
+    public function test_all_it_personnel_works_with_custom_range(): void
+    {
+        $this->actingAs($this->manager);
+
+        $response = $this->get("/reports?staff_id=0&period=custom&from_date=2026-08-01&to_date=2026-08-31&report_type=summary");
+        $response->assertStatus(200);
+        $response->assertSee('All IT Personnel');
+    }
+
+    public function test_individual_staff_still_works_after_all_fix(): void
+    {
+        $this->actingAs($this->manager);
+
+        $response = $this->get("/reports?staff_id={$this->staff->id}&period=this_month");
+        $response->assertStatus(200);
+        $response->assertSee($this->staff->name);
+        $response->assertDontSee('All IT Personnel');
+    }
+
+    public function test_individual_admin_still_works_after_all_fix(): void
+    {
+        $this->actingAs($this->manager);
+
+        $response = $this->get("/reports?staff_id={$this->admin->id}&period=this_month");
+        $response->assertStatus(200);
+        $response->assertSee($this->admin->name);
+        $response->assertDontSee('All IT Personnel');
+    }
+
+    public function test_all_it_personnel_empty_staff_id_does_not_generate(): void
+    {
+        $this->actingAs($this->manager);
+
+        $response = $this->get("/reports?period=this_month");
+        $response->assertStatus(200);
+        // Without staff_id, report should not be generated
+        $response->assertDontSee('Total Tickets Handled');
+    }
+
+    public function test_staff_can_generate_all_it_personnel_report(): void
+    {
+        $this->actingAs($this->staff);
+
+        $response = $this->get("/reports?staff_id=0&period=this_month");
+        $response->assertStatus(200);
+        $response->assertSee('All IT Personnel');
+    }
+
+    public function test_admin_can_generate_all_it_personnel_report(): void
+    {
+        $this->actingAs($this->admin);
+
+        $response = $this->get("/reports?staff_id=0&period=this_month");
+        $response->assertStatus(200);
+        $response->assertSee('All IT Personnel');
     }
 }

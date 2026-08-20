@@ -22,6 +22,7 @@
                     <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Staff</label>
                     <select name="staff_id" class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white">
                         <option value="">Select Staff</option>
+                        <option value="0" {{ request('staff_id') == '0' ? 'selected' : '' }}>All IT Personnel</option>
                         @foreach($staffList as $s)
                         <option value="{{ $s->id }}" {{ (request('staff_id') == $s->id) || ($report && $report['staff']?->id == $s->id) ? 'selected' : '' }}>{{ $s->name }} ({{ ucfirst($s->role?->slug) }})</option>
                         @endforeach
@@ -83,7 +84,7 @@
                 <div>
                     <h2 class="text-lg font-bold text-slate-900 dark:text-white">IT SUPPORT KPI REPORT</h2>
                     <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                        Staff: <span class="font-medium text-slate-700 dark:text-slate-200">{{ $report['staff']->name }}</span>
+                        Staff: <span class="font-medium text-slate-700 dark:text-slate-200">{{ $report['staff']?->name ?? 'All IT Personnel' }}</span>
                         &nbsp;|&nbsp; Period: <span class="font-medium">{{ $report['period_display'] }}</span>
                     </p>
                 </div>

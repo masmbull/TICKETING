@@ -25,7 +25,9 @@ class ReportController extends Controller
         $periodDisplay = $service->periodDisplay();
 
         $report = null;
-        if ($staffId && $staff) {
+        // Generate report if staffId is provided (either specific user or "0" for All IT Personnel)
+        // When staffId="0", $staff will be null (representing All IT Personnel aggregate)
+        if ($staffId !== null && $staffId !== '') {
             $report = [
                 'staff'         => $staff,
                 'period_display' => $periodDisplay,
@@ -59,7 +61,7 @@ class ReportController extends Controller
         $categories = $service->getCategoryBreakdown();
         $tickets = $reportType === 'detailed' ? $service->getDetailedTickets() : null;
 
-        $filename = 'kpi_report_' . ($staff?->name ?? 'unknown') . '_' . now()->format('Ymd_His') . '.xls';
+        $filename = 'kpi_report_' . ($staff?->name ?? 'all_it_personnel') . '_' . now()->format('Ymd_His') . '.xls';
 
         $html = view('reports.export-excel', compact('staff', 'periodDisplay', 'kpi', 'categories', 'tickets', 'reportType'))
             ->render();

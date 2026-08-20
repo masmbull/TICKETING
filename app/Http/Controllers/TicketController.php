@@ -136,12 +136,15 @@ class TicketController extends Controller
     {
         $categories = Category::with('subCategories')->where('is_active', true)->orderBy('name')->get();
         $slaPolicies = \App\Models\SlaPolicy::where('is_active', true)->orderBy('name')->get();
+        // Load all valid users for requestor search (matches User Management dataset)
+        $users = User::with(['role', 'department'])->orderBy('name')->get();
+        // Load support staff only for assignee dropdown
         $staffUsers = User::whereHas('role', function($q) {
             $q->whereIn('slug', ['admin', 'manager', 'staff']);
-        })->orderBy('name')->get();
+        })->where('is_active', true)->orderBy('name')->get();
         $subCategoriesByCategory = Category::with('subCategories')->get()->mapWithKeys(fn($cat) => [$cat->id => $cat->subCategories->map(fn($sub) => ['id' => $sub->id, 'name' => $sub->name])]);
 
-        return view('tickets.create', compact('categories', 'slaPolicies', 'staffUsers', 'subCategoriesByCategory'));
+        return view('tickets.create', compact('categories', 'slaPolicies', 'users', 'staffUsers', 'subCategoriesByCategory'));
     }
 
     /**

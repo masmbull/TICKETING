@@ -84,8 +84,8 @@ Route::middleware('auth')->group(function () {
         Route::patch('/subcategories/{id}', [CategoryController::class, 'updateSubCategory'])->name('subcategories.update');
         Route::delete('/subcategories/{id}', [CategoryController::class, 'destroySubCategory'])->name('subcategories.destroy');
 
-        // SLA Policies (Admin only)
-        Route::middleware('admin')->prefix('settings/sla-policies')->name('sla-policies.')->group(function () {
+        // SLA Policies (Admin & Manager)
+        Route::middleware('manager_or_admin')->prefix('settings/sla-policies')->name('sla-policies.')->group(function () {
             Route::get('/', [SlaPolicyController::class, 'index'])->name('index');
             Route::post('/', [SlaPolicyController::class, 'store'])->name('store');
             Route::patch('/{id}', [SlaPolicyController::class, 'update'])->name('update');

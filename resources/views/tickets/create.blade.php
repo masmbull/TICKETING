@@ -11,7 +11,7 @@
         <h1 class="text-xl font-bold text-slate-900 dark:text-white">Create New Ticket</h1>
     </div>
 
-    <form method="POST" action="{{ route('tickets.store') }}" enctype="multipart/form-data" class="space-y-4">
+    <form method="POST" action="{{ route('tickets.store') }}" enctype="multipart/form-data" class="space-y-4" x-data="createTicketForm()">
         @csrf
 <script>
 function fetchSubcategories(categoryId) {
@@ -92,12 +92,54 @@ function fetchSubcategories(categoryId) {
                 <div class="space-y-3">
                     <div>
                         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Requestor *</label>
-                        <select name="user_id" required class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white">
-                            <option value="">Select requestor...</option>
-                            @foreach($staffUsers ?? [] as $user)
-                            <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }} ({{ $user->email }})</option>
-                            @endforeach
-                        </select>
+                        <div class="relative">
+                            <input
+                                type="text"
+                                x-model="requestorSearch"
+                                @focus="requestorOpen = true"
+                                @keydown.escape="requestorOpen = false"
+                                @keydown.arrow-down.prevent="requestorHighlightedIndex = Math.min(requestorHighlightedIndex + 1, filteredRequestors.length - 1)"
+                                @keydown.arrow-up.prevent="requestorHighlightedIndex = Math.max(requestorHighlightedIndex - 1, -1)"
+                                @keydown.enter.prevent="selectRequestor(filteredRequestors[requestorHighlightedIndex])"
+                                placeholder="Search requestor..."
+                                class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#E30613]/50"
+                                :value="selectedRequestor ? selectedRequestor.name + ' (' + selectedRequestor.email + ')' : requestorSearch">
+                            
+                            <button
+                                type="button"
+                                x-show="selectedRequestor"
+                                @click="clearRequestor"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                            
+                            <input type="hidden" name="user_id" :value="selectedRequestor?.id || ''">
+                            
+                            <div
+                                x-show="requestorOpen && requestorSearch.length > 0"
+                                @click.outside="requestorOpen = false"
+                                x-transition
+                                class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto"
+                                style="display: none;">
+                                <template x-if="filteredRequestors.length === 0">
+                                    <div class="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">No requestor found</div>
+                                </template>
+                                <template x-for="(requestor, index) in filteredRequestors" :key="requestor.id">
+                                    <button
+                                        type="button"
+                                        @click="selectRequestor(requestor)"
+                                        @mouseover="requestorHighlightedIndex = index"
+                                        :class="{
+                                            'bg-slate-100 dark:bg-slate-700/50': requestorHighlightedIndex === index,
+                                            'bg-white dark:bg-slate-800': requestorHighlightedIndex !== index
+                                        }"
+                                        class="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-100 dark:border-slate-700/50 last:border-0">
+                                        <div class="font-medium text-slate-900 dark:text-white" x-text="requestor.name"></div>
+                                        <div class="text-xs text-slate-500 dark:text-slate-400" x-text="requestor.email"></div>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
                         @error('user_id')<span class="text-xs text-red-500">{{ $message }}</span>@enderror
                         <p class="text-xs text-slate-500 mt-1">Who is requesting this support?</p>
                     </div>
@@ -153,6 +195,45 @@ function fetchSubcategories(categoryId) {
 @endsection
 
 @push('scripts')
+<script>
+function createTicketForm() {
+    return {
+        allRequestors: @js($users ?? []),
+        requestorSearch: '',
+        requestorOpen: false,
+        selectedRequestor: null,
+        requestorHighlightedIndex: -1,
+        
+        get filteredRequestors() {
+            if (!this.requestorSearch.trim()) {
+                return this.allRequestors;
+            }
+            const search = this.requestorSearch.toLowerCase();
+            return this.allRequestors.filter(user =>
+                user.name.toLowerCase().includes(search) ||
+                user.email.toLowerCase().includes(search) ||
+                (user.job_title && user.job_title.toLowerCase().includes(search))
+            );
+        },
+        
+        selectRequestor(requestor) {
+            if (!requestor) return;
+            this.selectedRequestor = requestor;
+            this.requestorSearch = '';
+            this.requestorOpen = false;
+            this.requestorHighlightedIndex = -1;
+        },
+        
+        clearRequestor() {
+            this.selectedRequestor = null;
+            this.requestorSearch = '';
+            this.requestorOpen = false;
+            this.requestorHighlightedIndex = -1;
+        }
+    };
+}
+</script>
+
 @if(session('ticket_created'))
 <script>
     document.addEventListener('DOMContentLoaded', function () {

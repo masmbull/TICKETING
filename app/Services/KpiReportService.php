@@ -70,8 +70,22 @@ class KpiReportService
     {
         [$start, $end] = $this->periodRange();
 
-        $query = Ticket::where('assignee_id', $this->staffId)
-            ->where(function ($q) use ($start, $end) {
+        $query = Ticket::query();
+
+        // If staffId is "0" or null, include all IT personnel (admin, manager, staff)
+        if ($this->staffId === 0 || $this->staffId === "0" || $this->staffId === null) {
+            // Get all IT personnel user IDs
+            $itPersonnelIds = User::whereHas('role', function ($q) {
+                $q->whereIn('slug', ['admin', 'manager', 'staff']);
+            })->pluck('id')->toArray();
+
+            $query->whereIn('assignee_id', $itPersonnelIds);
+        } else {
+            // Single staff member
+            $query->where('assignee_id', $this->staffId);
+        }
+
+        $query->where(function ($q) use ($start, $end) {
                 $q->whereBetween('assigned_at', [$start, $end])
                   ->orWhere(function ($qq) use ($start, $end) {
                       $qq->whereNull('assigned_at')
@@ -145,7 +159,8 @@ class KpiReportService
 
     public function getStaff(): ?User
     {
-        if (!$this->staffId) {
+        // If staffId is 0, return null (represents "All IT Personnel")
+        if (!$this->staffId || $this->staffId === 0 || $this->staffId === "0") {
             return null;
         }
 
