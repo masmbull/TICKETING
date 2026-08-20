@@ -1,0 +1,62 @@
+
+  GET|HEAD        / ............................................................ dashboard › DashboardController@index
+  GET|HEAD        audit-logs .................................................. audit.index › AuditLogController@index
+  GET|HEAD        categories ............................................. categories.index › CategoryController@index
+  POST            categories ............................................. categories.store › CategoryController@store
+  GET|HEAD        categories/create .................................... categories.create › CategoryController@create
+  GET|HEAD        categories/{category} .................................... categories.show › CategoryController@show
+  PUT|PATCH       categories/{category} ................................ categories.update › CategoryController@update
+  DELETE          categories/{category} .............................. categories.destroy › CategoryController@destroy
+  GET|HEAD        categories/{category}/edit ............................... categories.edit › CategoryController@edit
+  POST            login ............................................................ login.post › AuthController@login
+  GET|HEAD        login/{role?} ................................................. login › AuthController@showLoginForm
+  POST            logout .............................................................. logout › AuthController@logout
+  POST            notifications/mark-all-read ............... notifications.mark-all-read › UserController@markAllRead
+  POST            notifications/{notification}/read ..................... notifications.read › UserController@markRead
+  GET|HEAD        password/change ............................ password.change › AuthController@showChangePasswordForm
+  POST            password/change ............................... password.change.post › AuthController@changePassword
+  GET|HEAD        profile ...................................................... profile.edit › UserController@profile
+  GET|HEAD        reports ..................................................... reports.index › ReportController@index
+  GET|HEAD        reports/export/excel ........................... reports.export.excel › ReportController@exportExcel
+  GET|HEAD        reports/export/pdf ................................. reports.export.pdf › ReportController@exportPdf
+  GET|HEAD        settings ................................................. settings.index › SettingsController@index
+  GET|HEAD        sla-policies ........................................ sla-policies.index › SlaPolicyController@index
+  POST            sla-policies ........................................ sla-policies.store › SlaPolicyController@store
+  GET|HEAD        sla-policies/create ............................... sla-policies.create › SlaPolicyController@create
+  POST            sla-policies/mapping ................. sla-policies.mapping.store › SlaPolicyController@storeMapping
+  DELETE          sla-policies/mapping/{id} ........ sla-policies.mapping.destroy › SlaPolicyController@destroyMapping
+  GET|HEAD        sla-policies/{sla_policy} ............................. sla-policies.show › SlaPolicyController@show
+  PUT|PATCH       sla-policies/{sla_policy} ......................... sla-policies.update › SlaPolicyController@update
+  DELETE          sla-policies/{sla_policy} ....................... sla-policies.destroy › SlaPolicyController@destroy
+  GET|HEAD        sla-policies/{sla_policy}/edit ........................ sla-policies.edit › SlaPolicyController@edit
+  GET|HEAD        storage/{path} storage.local › vendor/laravel/framework/src/Illuminate/Filesystem/FilesystemService…
+  PUT             storage/{path} storage.local.upload › vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem…
+  POST            subcategories ............................ subcategories.store › CategoryController@storeSubCategory
+  PATCH           subcategories/{id} ..................... subcategories.update › CategoryController@updateSubCategory
+  DELETE          subcategories/{id} ................... subcategories.destroy › CategoryController@destroySubCategory
+  GET|HEAD        tickets ..................................................... tickets.index › TicketController@index
+  POST            tickets ..................................................... tickets.store › TicketController@store
+  GET|HEAD        tickets/all .............................................. tickets.all › TicketController@allTickets
+  GET|HEAD        tickets/assigned ............................... tickets.assigned › TicketController@assignedTickets
+  GET|HEAD        tickets/create ............................................ tickets.create › TicketController@create
+  GET|HEAD        tickets/{ticket} .............................................. tickets.show › TicketController@show
+  PATCH           tickets/{ticket}/assign ........................... tickets.assign › TicketController@updateAssignee
+  GET|HEAD        tickets/{ticket}/attachments/{attachment}/download tickets.downloadAttachment › TicketController@do…
+  GET|HEAD        tickets/{ticket}/attachments/{attachment}/serve tickets.attachments.serve › TicketController@serveA…
+  POST            tickets/{ticket}/comment .................... tickets.comments.store › TicketController@storeComment
+  POST            tickets/{ticket}/complete ....................... tickets.complete › TicketController@completeTicket
+  PATCH           tickets/{ticket}/sla ...................................... tickets.sla › TicketController@updateSla
+  POST            tickets/{ticket}/submit-analysis ......... tickets.submit-analysis › TicketController@submitAnalysis
+  POST            tickets/{ticket}/take ................................... tickets.take › TicketController@takeTicket
+  GET|HEAD        up ..... vendor/laravel/framework/src/Illuminate/Foundation/Configuration/ApplicationBuilder.php:219
+  GET|HEAD        users ........................................................... users.index › UserController@index
+  POST            users ........................................................... users.store › UserController@store
+  GET|HEAD        users/create .................................................. users.create › UserController@create
+  GET|HEAD        users/{user} ...................................................... users.show › UserController@show
+  PUT|PATCH       users/{user} .................................................. users.update › UserController@update
+  DELETE          users/{user} ................................................ users.destroy › UserController@destroy
+  GET|HEAD        users/{user}/edit ................................................. users.edit › UserController@edit
+  POST            users/{user}/toggle-status ....................... users.toggle-status › UserController@toggleStatus
+
+                                                                                                   Showing [58] routes
+
