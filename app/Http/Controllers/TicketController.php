@@ -341,10 +341,10 @@ class TicketController extends Controller
 
         // Admin/Manager can see all tickets, others only their own or assigned
         if ($user->isAdmin() || $user->isManager()) {
-            $ticket = Ticket::with(['category', 'subCategory', 'user', 'assignee', 'completedBy', 'comments.user', 'comments.attachments', 'attachments'])
+            $ticket = Ticket::with(['category', 'subCategory', 'user', 'assignee', 'completedBy', 'comments.user', 'comments.attachments', 'comments.mentions', 'attachments'])
                 ->findOrFail($id);
         } else {
-            $ticket = Ticket::with(['category', 'subCategory', 'user', 'assignee', 'completedBy', 'comments.user', 'comments.attachments', 'attachments'])
+            $ticket = Ticket::with(['category', 'subCategory', 'user', 'assignee', 'completedBy', 'comments.user', 'comments.attachments', 'comments.mentions', 'attachments'])
                 ->where(function ($q) use ($user) {
                     $q->where('user_id', $user->id)
                       ->orWhere('assignee_id', $user->id);
@@ -359,7 +359,18 @@ class TicketController extends Controller
 
         $staffUsers = $this->supportUsers();
 
-        return view('tickets.show', compact('ticket', 'staffUsers'));
+        // Load comments with their mentions for display
+        $ticket->load(['comments' => function ($query) {
+            $query->with('mentions')->orderBy('created_at', 'asc');
+        }]);
+
+        // Lookup map (lowercase name => actual name) for highlighting mentions
+        // in comments that existed before the mention feature was added
+        $mentionableUserNames = User::where('is_active', true)
+            ->pluck('name')
+            ->mapWithKeys(fn ($name) => [strtolower($name) => $name]);
+
+        return view('tickets.show', compact('ticket', 'staffUsers', 'mentionableUserNames'));
     }
 
     /**
@@ -737,6 +748,7 @@ class TicketController extends Controller
 
     /**
      * Store a new comment on a ticket.
+     * Parses mentions (@username) and stores them in comment_mentions table.
      */
     public function storeComment(Request $request, string $id): RedirectResponse
     {
@@ -748,12 +760,33 @@ class TicketController extends Controller
 
         $user = auth()->user();
         $ticket = $this->findTicketForUser($id);
+        $commentText = $validated['comment'] ?? '';
 
-        $comment = TicketComment::create([
-            'ticket_id' => $ticket->id,
-            'user_id'   => $user->id,
-            'comment'   => $validated['comment'] ?? '',
-        ]);
+        // Parse mentions from comment text (@username pattern)
+        $mentionedUserIds = $this->extractMentionedUsers($commentText);
+
+        // Use transaction to ensure comment and mentions are saved together
+        $comment = \DB::transaction(function () use ($ticket, $user, $commentText, $mentionedUserIds) {
+            $comment = TicketComment::create([
+                'ticket_id' => $ticket->id,
+                'user_id'   => $user->id,
+                'comment'   => $commentText,
+            ]);
+
+            // Store unique mentions (avoid duplicates if same user mentioned multiple times)
+            if (!empty($mentionedUserIds)) {
+                $mentionedUsers = User::whereIn('id', array_keys($mentionedUserIds))->get();
+                foreach ($mentionedUsers as $mentionedUser) {
+                    \App\Models\CommentMention::create([
+                        'comment_id'    => $comment->id,
+                        'user_id'       => $mentionedUser->id,
+                        'mentioned_name' => $mentionedUser->name,
+                    ]);
+                }
+            }
+
+            return $comment;
+        });
 
         // Handle file attachments on comment
         if ($request->hasFile('attachments')) {
@@ -787,9 +820,20 @@ class TicketController extends Controller
             }
         }
 
+        // Notify ticket creator and assignee about comment
         $ticket->user?->notify(new TicketNotification('commented', $ticket, $user->name));
         if ($ticket->assignee_id && $ticket->assignee_id !== $user->id) {
             $ticket->assignee->notify(new TicketNotification('commented', $ticket, $user->name));
+        }
+
+        // Notify mentioned users (but not the commenter themselves)
+        if (!empty($mentionedUserIds)) {
+            $mentionedUsers = User::whereIn('id', array_keys($mentionedUserIds))->where('is_active', true)->get();
+            foreach ($mentionedUsers as $mentionedUser) {
+                if ($mentionedUser->id !== $user->id) {
+                    $mentionedUser->notify(new TicketNotification('mentioned', $ticket, $user->name));
+                }
+            }
         }
 
         // Track first_response_at for staff
@@ -801,6 +845,46 @@ class TicketController extends Controller
 
         return redirect()->route('tickets.show', $id)
             ->with('success', 'Comment posted successfully.');
+    }
+
+    /**
+     * Extract mentioned users from comment text.
+     * Looks for @username pattern and returns array of valid user IDs.
+     * Only returns active users to prevent mention spam/security issues.
+     *
+     * @param string $commentText
+     * @return array ['user_id' => count, ...] - prevents duplicate mentions of same user
+     */
+    private function extractMentionedUsers(string $commentText): array
+    {
+        // Match @name pattern - simple approach: @ followed by word chars and spaces
+        // Stops at punctuation or multiple consecutive spaces
+        if (!preg_match_all('/@([\w\s]+)/i', $commentText, $matches)) {
+            return [];
+        }
+
+        $mentionedNames = array_unique($matches[1]); // Remove duplicates
+        $result = [];
+
+        foreach ($mentionedNames as $name) {
+            // Trim whitespace from captured name
+            $name = trim($name);
+            
+            if (empty($name)) {
+                continue;
+            }
+            
+            $mentionedUser = User::where('is_active', true)
+                ->whereRaw('LOWER(name) = LOWER(?)', [$name])
+                ->select('id', 'name')
+                ->first();
+
+            if ($mentionedUser) {
+                $result[$mentionedUser->id] = 1; // Track each user once
+            }
+        }
+
+        return $result;
     }
 
     /**

@@ -25,5 +25,8 @@ yarn-error.log
 # Archive files
 *.7z
 *.zip
-  
+
+# Database backups (sensitive data - never push to repo!)
+/database-backup
+
 .env 

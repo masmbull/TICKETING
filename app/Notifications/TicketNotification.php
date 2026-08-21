@@ -57,6 +57,11 @@ class TicketNotification extends Notification
                 'body' => ($this->extra ?: 'Someone') . " commented on ticket {$ticketNumber}.",
                 'url' => "/my-tickets/{$this->ticket->id}",
             ],
+            'mentioned' => [
+                'title' => 'You were Mentioned',
+                'body' => ($this->extra ?: 'Someone') . " mentioned you in ticket {$ticketNumber}.",
+                'url' => "/my-tickets/{$this->ticket->id}",
+            ],
             'completed' => [
                 'title' => 'Ticket Completed',
                 'body' => "Ticket {$ticketNumber} has been completed.",

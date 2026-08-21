@@ -414,7 +414,40 @@
                                     <span class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ $comment->user->name ?? '-' }}</span>
                                     <span class="text-xs text-slate-400">{{ $comment->created_at->diffForHumans() }}</span>
                                 </div>
-                                <p class="text-sm text-slate-600 dark:text-slate-300 break-words">{{ $comment->comment }}</p>
+                                <p class="text-sm text-slate-600 dark:text-slate-300 break-words">
+                                    @php
+                                        // Escape and highlight mentions
+                                        $displayText = e($comment->comment);
+
+                                        // 1) Mentions from comment_mentions table (new comments)
+                                        $mentions = $comment->mentions()->pluck('mentioned_name')->unique();
+
+                                        // 2) Also parse the raw comment text for @Name patterns matching
+                                        //    active users. This highlights mentions in comments that were
+                                        //    created before the mention feature was introduced.
+                                        //    We check each known user name directly (longest first) to avoid
+                                        //    issues with the greedy regex grabbing too many words.
+                                        $sortedNames = collect($mentionableUserNames)->sortByDesc(fn ($n) => strlen($n));
+                                        foreach ($sortedNames as $actualName) {
+                                            // Look for @Name anywhere in the comment (case-insensitive)
+                                            $escapedSearchName = preg_quote($actualName, '/');
+                                            if (preg_match('/@' . $escapedSearchName . '(?=\s|[.!?;,]|$)/i', $comment->comment)) {
+                                                $mentions = $mentions->push($actualName);
+                                            }
+                                        }
+
+                                        $mentions = $mentions->unique();
+                                        foreach ($mentions as $mentionedName) {
+                                            $escapedName = htmlspecialchars($mentionedName, ENT_QUOTES);
+                                            // Match @name followed by space, punctuation, or end of string
+                                            // (no word boundary for names with spaces)
+                                            $pattern = '/@' . preg_quote($escapedName) . '(?=\s|[.!?;,]|$)/';
+                                            $replacement = '<span class="bg-[#E30613]/10 dark:bg-[#E30613]/20 text-[#E30613] dark:text-[#E30613] font-medium px-1 rounded inline-block">@' . $escapedName . '</span>';
+                                            $displayText = preg_replace($pattern, $replacement, $displayText);
+                                        }
+                                    @endphp
+                                    {!! $displayText !!}
+                                </p>
                                 @if($comment->attachments && $comment->attachments->count() > 0)
                                 <div class="mt-2 flex flex-wrap gap-1.5" x-data="{ lbImg: '', lbOpen: false, cPdfSrc: '', cPdfOpen: false }">
                                     @foreach($comment->attachments as $attachment)
@@ -477,13 +510,54 @@
                     <div class="p-6 text-center"><p class="text-sm text-slate-400">No comments yet</p></div>
                     @endforelse
                 </div>
-                <form method="POST" action="{{ route('tickets.comments.store', $ticket->id) }}" enctype="multipart/form-data" class="p-4 border-t border-slate-200 dark:border-slate-700"
+                <form method="POST" action="{{ route('tickets.comments.store', $ticket->id) }}" enctype="multipart/form-data" class="p-4 border-t border-slate-200 dark:border-slate-700 relative"
                       x-data="commentForm()" @submit="posting = true" @dragover.prevent="dragOver = true" @dragleave.prevent="dragOver = false" @drop.prevent="handleDrop($event)">
                     @csrf
 
-                    <textarea name="comment" x-model="comment" rows="3"
-                              class="w-full px-3 py-2.5 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 resize-y"
-                              placeholder="Type a comment or drop a file here..."></textarea>
+                    <div class="relative" x-ref="commentWrapper">
+                        <!-- Contenteditable editor with mention token support -->
+                        <div x-ref="commentEditor"
+                             contenteditable="true"
+                             role="textbox"
+                             @input="syncEditorContent()"
+                             @keyup="handleEditorKeyup($event)"
+                             @keydown="handleEditorKeydown($event)"
+                             @paste="handlePaste($event)"
+                             @blur="updatePlaceholder()"
+                             @focus="updatePlaceholder()"
+                             class="w-full px-3 py-2.5 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white resize-y min-h-[100px] max-h-96 overflow-y-auto break-words whitespace-pre-wrap"
+                             style="outline: none; word-wrap: break-word; white-space: pre-wrap; position: relative;"></div>
+                        
+                        <!-- Placeholder overlay (only shows when empty) -->
+                        <div x-show="editorEmpty && !editorFocused"
+                             class="absolute top-0 left-0 px-3 py-2.5 text-sm text-slate-400 dark:text-slate-500 pointer-events-none">
+                            Type a comment or drop a file here... (use @name to mention users)
+                        </div>
+                        
+                        <!-- Hidden input to store plain text for form submission -->
+                        <input type="hidden" name="comment" x-ref="commentInput" x-model="plainTextComment" />
+                        
+                        <!-- Mention Autocomplete Dropdown -->
+                        <div x-show="showMentionDropdown" 
+                             class="absolute z-50 mt-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg w-64 max-h-64 overflow-y-auto"
+                             :style="`top: ${dropdownTop}px; left: ${dropdownLeft}px;`"
+                             @click.outside="showMentionDropdown = false">
+                            <template x-if="mentionResults.length === 0">
+                                <div class="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">No users found</div>
+                            </template>
+                            <template x-for="(user, index) in mentionResults" :key="user.id">
+                                <div @click="selectMention(user)"
+                                     :class="{
+                                         'bg-blue-100 dark:bg-blue-900': index === selectedMentionIndex,
+                                         'hover:bg-slate-100 dark:hover:bg-slate-600': index !== selectedMentionIndex
+                                     }"
+                                     class="px-3 py-2.5 cursor-pointer border-b border-slate-100 dark:border-slate-600 last:border-b-0">
+                                    <div class="font-medium text-sm text-slate-900 dark:text-white" x-text="user.name"></div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400" x-text="user.email"></div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
                     @error('comment')<span class="text-xs text-red-500 mt-1 block">{{ $message }}</span>@enderror
 
                     {{-- File input (invisible — keeps files for form submission) --}}
@@ -639,13 +713,48 @@
 <script>
 function commentForm() {
     return {
-        comment: '',
+        // Editor state
+        editorEmpty: true,
+        editorFocused: false,
+        plainTextComment: '',
+        
+        // Files
         fileNames: [],
         posting: false,
         dragOver: false,
+        
+        // Mention dropdown
+        showMentionDropdown: false,
+        mentionResults: [],
+        mentionLoading: false,
+        selectedMentionIndex: -1,
+        dropdownTop: 0,
+        dropdownLeft: 0,
+        
+        // Mention tracking
+        mentionTimeout: null,
+        mentionAbortController: null,
+        lastMentionQuery: '',
+        atSymbolPos: -1,
+        savedRange: null,
+
+        init() {
+            this.updatePlaceholder();
+            
+            // Save range before blur to preserve selection for mention insertion
+            const editor = this.$refs.commentEditor;
+            editor.addEventListener('blur', () => {
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0) {
+                    this.savedRange = sel.getRangeAt(0).cloneRange();
+                }
+            }, true);
+        },
+
         syncFiles() {
             this.fileNames = Array.from(this.$refs.fileInput.files).map(f => f.name);
         },
+
         handleDrop(e) {
             this.dragOver = false;
             const dt = e.dataTransfer;
@@ -658,12 +767,266 @@ function commentForm() {
                 this.syncFiles();
             }
         },
+
         removeFile(idx) {
             const input = this.$refs.fileInput;
             const dt = new DataTransfer();
             Array.from(input.files).filter((_, i) => i !== idx).forEach(f => dt.items.add(f));
             input.files = dt.files;
             this.syncFiles();
+        },
+
+        syncEditorContent() {
+            const editor = this.$refs.commentEditor;
+            this.plainTextComment = editor.innerText || '';
+            this.updatePlaceholder();
+            this.handleEditorKeyup();
+        },
+
+        updatePlaceholder() {
+            const editor = this.$refs.commentEditor;
+            this.editorEmpty = !editor || editor.innerText.trim().length === 0;
+        },
+
+        handleEditorKeyup(e) {
+            this.detectMentionTrigger();
+        },
+
+        handleEditorKeydown(e) {
+            if (!this.showMentionDropdown) return;
+
+            switch(e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    this.selectedMentionIndex = Math.min(this.selectedMentionIndex + 1, this.mentionResults.length - 1);
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    this.selectedMentionIndex = Math.max(this.selectedMentionIndex - 1, -1);
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (this.selectedMentionIndex >= 0 && this.mentionResults[this.selectedMentionIndex]) {
+                        this.selectMention(this.mentionResults[this.selectedMentionIndex]);
+                    }
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    this.closeMentionDropdown();
+                    break;
+            }
+        },
+
+        detectMentionTrigger() {
+            const editor = this.$refs.commentEditor;
+            if (!editor) return;
+
+            const sel = window.getSelection();
+            if (sel.rangeCount === 0) return;
+
+            const range = sel.getRangeAt(0);
+            const preRange = range.cloneRange();
+            preRange.selectNodeContents(editor);
+            preRange.setEnd(range.endContainer, range.endOffset);
+            const textBeforeCursor = preRange.toString();
+
+            // Look for @ symbol
+            const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+            if (lastAtIndex === -1) {
+                this.closeMentionDropdown();
+                return;
+            }
+
+            const afterAt = textBeforeCursor.substring(lastAtIndex + 1);
+            
+            // Check for valid mention query (no spaces, special chars)
+            if (!/^[a-zA-Z0-9_\-\.]*$/.test(afterAt)) {
+                this.closeMentionDropdown();
+                return;
+            }
+
+            if (afterAt.length < 1) {
+                this.closeMentionDropdown();
+                return;
+            }
+
+            this.atSymbolPos = lastAtIndex;
+            
+            if (this.lastMentionQuery !== afterAt) {
+                this.fetchMentionUsers(afterAt);
+            }
+
+            this.updateDropdownPosition();
+        },
+
+        async fetchMentionUsers(query) {
+            if (this.mentionAbortController) {
+                this.mentionAbortController.abort();
+            }
+
+            clearTimeout(this.mentionTimeout);
+
+            this.lastMentionQuery = query;
+            this.mentionLoading = true;
+            this.mentionAbortController = new AbortController();
+
+            this.mentionTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`, {
+                        credentials: 'same-origin',
+                        signal: this.mentionAbortController.signal
+                    });
+
+                    if (!response.ok) {
+                        this.mentionLoading = false;
+                        return;
+                    }
+
+                    const users = await response.json();
+                    
+                    if (this.lastMentionQuery === query) {
+                        this.mentionResults = users;
+                        this.showMentionDropdown = users.length > 0;
+                        this.selectedMentionIndex = -1;
+                        this.mentionLoading = false;
+                    }
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        this.mentionLoading = false;
+                    }
+                }
+            }, 250);
+        },
+
+        closeMentionDropdown() {
+            this.showMentionDropdown = false;
+            this.mentionResults = [];
+            this.lastMentionQuery = '';
+            
+            if (this.mentionAbortController) {
+                this.mentionAbortController.abort();
+                this.mentionAbortController = null;
+            }
+            
+            clearTimeout(this.mentionTimeout);
+        },
+
+        updateDropdownPosition() {
+            const editor = this.$refs.commentEditor;
+            if (!editor) return;
+
+            const sel = window.getSelection();
+            if (sel.rangeCount === 0) return;
+
+            const range = sel.getRangeAt(0).cloneRange();
+            range.collapse(false);
+            const rect = range.getBoundingClientRect();
+            const editorRect = editor.getBoundingClientRect();
+
+            this.dropdownTop = rect.bottom - editorRect.top + 5;
+            this.dropdownLeft = Math.max(0, rect.left - editorRect.left);
+        },
+
+        selectMention(user) {
+            const editor = this.$refs.commentEditor;
+            
+            // Get full current text
+            const fullText = editor.innerText || '';
+            
+            // Use saved range to determine cursor position
+            let range = this.savedRange || window.getSelection().getRangeAt(0);
+            
+            if (!range) {
+                this.closeMentionDropdown();
+                return;
+            }
+
+            // Calculate cursor position from range
+            const preRange = range.cloneRange();
+            preRange.selectNodeContents(editor);
+            preRange.setEnd(range.endContainer, range.endOffset);
+            const textBeforeCursor = preRange.toString();
+            const cursorPos = textBeforeCursor.length;
+
+            // Find @ position before cursor
+            const beforeCursor = fullText.substring(0, cursorPos);
+            const atPos = beforeCursor.lastIndexOf('@');
+            
+            if (atPos === -1) {
+                this.closeMentionDropdown();
+                return;
+            }
+
+            // Build new text: before@ + @name + space + afterMention
+            const beforeAt = fullText.substring(0, atPos);
+            const afterMention = fullText.substring(cursorPos);
+            const newText = beforeAt + '@' + user.name + ' ' + afterMention;
+
+            // Set as plain text first
+            editor.innerText = newText;
+            
+            // Update form field
+            this.plainTextComment = newText;
+
+            // Apply HTML highlighting to the mention
+             this.$nextTick(() => {
+                 let html = editor.innerHTML;
+                 // Match @name followed by space or end of string (lookahead, no word boundary for names with spaces)
+                 const mentionPattern = new RegExp(`(@${user.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(?=\\s|$)`, 'g');
+                 html = html.replace(mentionPattern, '<span class="bg-[#E30613]/10 dark:bg-[#E30613]/20 text-[#E30613] dark:text-[#E30613] font-medium px-1 rounded inline-block">$1</span>');
+                 editor.innerHTML = html;
+                
+                // Position cursor after the mention
+                const targetPos = beforeAt.length + 1 + user.name.length + 1; // @name + space
+                if (editor.firstChild) {
+                    const sel = window.getSelection();
+                    let currentPos = 0;
+                    let found = false;
+                    
+                    function traverse(node) {
+                        if (found) return;
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            const nextPos = currentPos + node.length;
+                            if (targetPos <= nextPos) {
+                                const cursorRange = document.createRange();
+                                cursorRange.setStart(node, Math.min(targetPos - currentPos, node.length));
+                                cursorRange.collapse(true);
+                                sel.removeAllRanges();
+                                sel.addRange(cursorRange);
+                                found = true;
+                                return;
+                            }
+                            currentPos = nextPos;
+                        } else {
+                            for (let child of node.childNodes) {
+                                traverse(child);
+                                if (found) return;
+                            }
+                        }
+                    }
+                    
+                    traverse(editor);
+                    editor.focus();
+                }
+            });
+
+            this.closeMentionDropdown();
+            this.savedRange = null;
+        },
+
+        handlePaste(e) {
+            e.preventDefault();
+            const text = e.clipboardData.getData('text/plain');
+            document.execCommand('insertText', false, text);
+            this.$nextTick(() => {
+                this.syncEditorContent();
+            });
+        },
+
+        escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     }
 }

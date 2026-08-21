@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\Department;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
@@ -117,5 +118,36 @@ class UserController extends Controller
 
         $status = $user->is_active ? 'activated' : 'deactivated';
         return back()->with('success', "User {$status} successfully.");
+    }
+
+    /**
+     * Search active users for mention autocomplete (AJAX).
+     * Filters by name or email, only returns is_active = true users.
+     * Limits results to 10.
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $q = trim((string) $request->input('q'));
+
+        if (mb_strlen($q) < 1) {
+            return response()->json([]);
+        }
+
+        // Use database-agnostic case-insensitive search
+        $users = User::where('is_active', true)
+            ->where(function ($query) use ($q) {
+                $query->whereRaw('LOWER(name) LIKE LOWER(?)', ["%{$q}%"])
+                      ->orWhereRaw('LOWER(email) LIKE LOWER(?)', ["%{$q}%"]);
+            })
+            ->orderBy('name')
+            ->limit(10)
+            ->select('id', 'name', 'email')
+            ->get();
+
+        return response()->json($users->map(fn ($user) => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+        ])->values());
     }
 }

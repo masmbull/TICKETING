@@ -74,6 +74,9 @@ Route::middleware('auth')->group(function () {
             Route::patch('/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
         });
 
+        // User search for mention autocomplete (public to authenticated users)
+        Route::get('/api/users/search', [UserController::class, 'search'])->name('api.users.search');
+
         // Categories
         Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
         Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
