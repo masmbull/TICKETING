@@ -97,13 +97,13 @@ function fetchSubcategories(categoryId) {
                                 type="text"
                                 x-model="requestorSearch"
                                 @focus="requestorOpen = true"
+                                @input="requestorOpen = true; if (selectedRequestor) { selectedRequestor = null; }"
                                 @keydown.escape="requestorOpen = false"
                                 @keydown.arrow-down.prevent="requestorHighlightedIndex = Math.min(requestorHighlightedIndex + 1, filteredRequestors.length - 1)"
                                 @keydown.arrow-up.prevent="requestorHighlightedIndex = Math.max(requestorHighlightedIndex - 1, -1)"
                                 @keydown.enter.prevent="selectRequestor(filteredRequestors[requestorHighlightedIndex])"
                                 placeholder="Search requestor..."
-                                class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#E30613]/50"
-                                :value="selectedRequestor ? selectedRequestor.name + ' (' + selectedRequestor.email + ')' : requestorSearch">
+                                class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#E30613]/50">
                             
                             <button
                                 type="button"
@@ -116,7 +116,7 @@ function fetchSubcategories(categoryId) {
                             <input type="hidden" name="user_id" :value="selectedRequestor?.id || ''">
                             
                             <div
-                                x-show="requestorOpen && requestorSearch.length > 0"
+                                x-show="requestorOpen"
                                 @click.outside="requestorOpen = false"
                                 x-transition
                                 class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto"
@@ -219,7 +219,7 @@ function createTicketForm() {
         selectRequestor(requestor) {
             if (!requestor) return;
             this.selectedRequestor = requestor;
-            this.requestorSearch = '';
+            this.requestorSearch = requestor.name + ' (' + requestor.email + ')';
             this.requestorOpen = false;
             this.requestorHighlightedIndex = -1;
         },
@@ -229,6 +229,12 @@ function createTicketForm() {
             this.requestorSearch = '';
             this.requestorOpen = false;
             this.requestorHighlightedIndex = -1;
+        },
+        
+        handleInput(event) {
+            if (this.selectedRequestor) {
+                this.selectedRequestor = null;
+            }
         }
     };
 }
