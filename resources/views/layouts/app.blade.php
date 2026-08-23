@@ -226,31 +226,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
 
-                <div class="flex-1 min-w-0">
-                    @php
-                        $routeName = request()->route()?->getName() ?? '';
-                        $titles = [
-                            'dashboard' => 'Dashboard',
-                            'tickets.index' => 'My Tickets',
-                            'tickets.all' => 'All Tickets',
-                            'tickets.assigned' => 'Assigned to Me',
-                            'tickets.create' => 'Create Ticket',
-                            'tickets.show' => 'Ticket Details',
-                            'users.index' => 'User Management',
-                            'users.create' => 'Create User',
-                            'users.edit' => 'Edit User',
-                            'users.show' => 'User Profile',
-                            'categories.index' => 'Categories',
-                            'sla-policies.index' => 'SLA Policies',
-                             'settings.index' => 'Settings',
-                             'profile.edit' => 'My Profile',
-                             'audit.index' => 'Audit Logs',
-                             'audit.show' => 'Audit Detail',
-                             'reports.index' => 'Staff KPI Report',
-                        ];
-                    @endphp
-                    <h1 class="text-base font-semibold text-slate-900 dark:text-white truncate">{{ $titles[$routeName] ?? 'MITO IT Helpdesk' }}</h1>
-                </div>
+                <div class="flex-1"></div>
 
                 <div class="flex items-center gap-2">
                     <button @click="darkMode = !darkMode" class="p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" aria-label="Toggle theme">
@@ -267,7 +243,7 @@
                             @endif
                         </button>
                         <div x-show="notifOpen" @click.away="notifOpen = false" x-transition
-                             class="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50"
+                             class="absolute right-0 mt-2 w-80 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50"
                              style="display: none;">
                             <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700">
                                 <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Notifications</h3>
@@ -374,9 +350,10 @@
             </main>
 
             <footer class="px-6 py-3 border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
-                <p class="text-center text-xs text-slate-400 dark:text-slate-500">
-                    &copy; 2026 MITO IT Helpdesk &middot; Built with ingenuity, powered by the resources we have.
-                </p>
+                <div class="text-center space-y-0.5">
+                    <p class="text-xs text-slate-400 dark:text-slate-500">&copy; 2026 MITO IT Helpdesk</p>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500">Built with ingenuity, powered by the resources we have.</p>
+                </div>
             </footer>
          </div>
     </div>

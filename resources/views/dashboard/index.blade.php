@@ -285,43 +285,29 @@
                 <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
                     <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Quick Links</h2>
                 </div>
-                <div class="p-3 flex items-center justify-center gap-2">
-                    <a href="{{ route('tickets.create') }}" title="Create Ticket" class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-lg text-[#E30613] hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
-                        ➕
+                <div class="p-3 flex items-start justify-center gap-5">
+                    <a href="{{ route('tickets.create') }}" title="Create Ticket" class="flex flex-col items-center gap-1.5 w-16 group">
+                        <span class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-[#E30613] group-hover:bg-slate-200 dark:group-hover:bg-slate-600 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        </span>
+                        <span class="text-[11px] font-medium text-slate-600 dark:text-slate-300 text-center leading-tight">New Ticket</span>
                     </a>
                     @if($role === 'admin' || $role === 'manager')
-                    <a href="{{ route('users.index') }}" title="Users" class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-lg text-purple-500 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
-                        👥
+                    <a href="{{ route('users.index') }}" title="Users" class="flex flex-col items-center gap-1.5 w-16 group">
+                        <span class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-purple-500 group-hover:bg-slate-200 dark:group-hover:bg-slate-600 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-3-3h-2m-8 5H4a3 3 0 01-3-3v-1a3 3 0 013-3h2m8-4a4 4 0 11-8 0 4 4 0 018 0zM16 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        </span>
+                        <span class="text-[11px] font-medium text-slate-600 dark:text-slate-300 text-center leading-tight">Users</span>
                     </a>
-                    <a href="{{ route('categories.index') }}" title="Categories" class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-lg text-emerald-500 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
-                        📂
+                    <a href="{{ route('categories.index') }}" title="Categories" class="flex flex-col items-center gap-1.5 w-16 group">
+                        <span class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-emerald-500 group-hover:bg-slate-200 dark:group-hover:bg-slate-600 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+                        </span>
+                        <span class="text-[11px] font-medium text-slate-600 dark:text-slate-300 text-center leading-tight">Categories</span>
                     </a>
                     @endif
                 </div>
             </div>
-
-            {{-- System Info (Admin) --}}
-            @if($role === 'admin' && isset($metadata))
-            <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-                    <h2 class="text-sm font-semibold text-slate-900 dark:text-white">System</h2>
-                </div>
-                <div class="p-4 space-y-2 text-xs">
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">Version</span>
-                        <span class="text-slate-700 dark:text-slate-300 font-mono">{{ $metadata['version'] }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">Laravel</span>
-                        <span class="text-slate-700 dark:text-slate-300 font-mono">{{ $metadata['laravel_version'] }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">PHP</span>
-                        <span class="text-slate-700 dark:text-slate-300 font-mono">{{ $metadata['php_version'] }}</span>
-                    </div>
-                </div>
-            </div>
-            @endif
         </div>
     </div>
 </div>
