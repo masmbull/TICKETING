@@ -213,7 +213,7 @@
                         saving: false,
                         assign() {
                             this.saving = true;
-                            fetch('{{ route('tickets.assign', $ticket->id) }}', {
+                            fetch('/tickets/{{ $ticket->id }}/assign', {
                                 method: 'PATCH',
                                 credentials: 'same-origin',
                                 headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
@@ -300,7 +300,7 @@
                             saving: false,
                             reassign() {
                                 this.saving = true;
-                                fetch('{{ route('tickets.assign', $ticket->id) }}', {
+                                fetch('/tickets/{{ $ticket->id }}/assign', {
                                     method: 'PATCH',
                                     credentials: 'same-origin',
                                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
@@ -334,7 +334,7 @@
                             saving: false,
                             updateSla() {
                                 this.saving = true;
-                                fetch('{{ route('tickets.sla', $ticket->id) }}', {
+                                fetch('/tickets/{{ $ticket->id }}/sla', {
                                     method: 'PATCH',
                                     credentials: 'same-origin',
                                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },

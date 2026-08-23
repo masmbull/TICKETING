@@ -21,6 +21,7 @@ class User extends Authenticatable
         'role_id',
         'department_id',
         'job_title',
+        'phone',
         'force_password_change',
         'is_active',
         'last_login_at',

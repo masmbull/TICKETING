@@ -60,7 +60,7 @@
                     if (t.length < 2) { this.results = { tickets: [], users: [], categories: [] }; this.open = false; return; }
                     const s = this;
                     s.loading = true;
-                    fetch("{{ route('api.search') }}?q=" + encodeURIComponent(t), { headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" } })
+                    fetch("/api/search?q=" + encodeURIComponent(t), { headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json", ...(window.AbortSignal?.timeout ? { signal: AbortSignal.timeout(8000) } : {}) } })
                         .then(r => { if (!r.ok) throw new Error(); return r.json(); })
                         .then(d => { s.results = d; s.open = true; })
                         .catch(() => { s.results = { tickets: [], users: [], categories: [] }; })

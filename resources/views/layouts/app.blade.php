@@ -27,15 +27,17 @@
         appReady: false,
       }"
       x-init="
-        $watch('sidebarExpanded', val => localStorage.setItem('sidebarExpanded', val ? '1' : '0'));
-        $watch('mobileMenuOpen', val => { document.body.style.overflow = val ? 'hidden' : ''; });
-        $watch('darkMode', val => {
-            localStorage.setItem('theme', val ? 'dark' : 'light');
-            document.documentElement.classList.toggle('dark', val);
-        });
-        document.documentElement.classList.toggle('dark', darkMode);
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') { mobileMenuOpen = false; notifOpen = false; userMenuOpen = false; } });
-        
+        try {
+            $watch('sidebarExpanded', val => localStorage.setItem('sidebarExpanded', val ? '1' : '0'));
+            $watch('mobileMenuOpen', val => { document.body.style.overflow = val ? 'hidden' : ''; });
+            $watch('darkMode', val => {
+                localStorage.setItem('theme', val ? 'dark' : 'light');
+                document.documentElement.classList.toggle('dark', val);
+            });
+            document.documentElement.classList.toggle('dark', darkMode);
+            document.addEventListener('keydown', e => { if (e.key === 'Escape') { mobileMenuOpen = false; notifOpen = false; userMenuOpen = false; } });
+        } catch (e) { console.error('App init failed:', e); }
+
         const dismissSplash = () => {
             setTimeout(() => {
                 appReady = true;

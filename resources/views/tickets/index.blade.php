@@ -211,21 +211,21 @@ function updateAssignee(id, value) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
         body: JSON.stringify({ assignee_id: value })
-    }).then(r => r.ok ? location.reload() : alert('Failed'));
+    }).then(r => r.ok ? location.reload() : alert('Failed')).catch(() => alert('Network error. Please try again.'));
 }
 function updatePriority(id, value) {
     fetch(`/tickets/${id}/priority`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
         body: JSON.stringify({ priority: value })
-    }).then(r => r.ok ? location.reload() : alert('Failed'));
+    }).then(r => r.ok ? location.reload() : alert('Failed')).catch(() => alert('Network error. Please try again.'));
 }
 function updateStatus(id, value) {
     fetch(`/tickets/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
         body: JSON.stringify({ status: value })
-    }).then(r => r.ok ? location.reload() : alert('Failed'));
+    }).then(r => r.ok ? location.reload() : alert('Failed')).catch(() => alert('Network error. Please try again.'));
 }
 </script>
 @endif
