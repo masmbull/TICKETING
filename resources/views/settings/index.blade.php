@@ -38,37 +38,6 @@
             </div>
         </div>
 
-        {{-- Change Password --}}
-        <div class="card">
-            <div class="p-5 border-b border-slate-100 dark:border-slate-800">
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Security</h3>
-            </div>
-            <div class="p-5">
-                <form method="POST" action="{{ route('profile.update') }}" class="space-y-4">
-                    @csrf
-                    @method('PUT')
-                    <input type="hidden" name="name" value="{{ auth()->user()->name }}">
-                    <input type="hidden" name="email" value="{{ auth()->user()->email }}">
-                    <div>
-                        <label for="current_password" class="form-label">Current Password</label>
-                        <input type="password" name="current_password" id="current_password" class="input" placeholder="Enter current password" />
-                    </div>
-                    <div>
-                        <label for="password" class="form-label">New Password</label>
-                        <input type="password" name="password" id="password" class="input" placeholder="Enter new password" />
-                    </div>
-                    <div>
-                        <label for="password_confirmation" class="form-label">Confirm New Password</label>
-                        <input type="password" name="password_confirmation" id="password_confirmation" class="input" placeholder="Confirm new password" />
-                    </div>
-                    <button type="submit" class="btn-primary">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                        Change Password
-                    </button>
-                </form>
-            </div>
-        </div>
-
         {{-- Admin Shortcuts --}}
         @if(auth()->user()->isAdmin())
         <div class="card">
