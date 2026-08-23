@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UserSeeder extends Seeder
 {
@@ -62,7 +63,10 @@ class UserSeeder extends Seeder
         ];
 
         // 'hashed' cast on User model auto-hashes on save — do NOT Hash::make() here
-        $password = 'Admin@123';
+        // SECURITY: never seed a shared/known password (old value was a fixed
+        // string that also existed in git history). Random per run, local/test
+        // only. Printed once below for local login convenience.
+        $password = Str::random(16);
 
         foreach ($users as $userData) {
             $roleSlug  = $userData['role_slug'];
@@ -85,5 +89,7 @@ class UserSeeder extends Seeder
                 ])
             );
         }
+
+        $this->command?->info("Seeded users password for THIS RUN ONLY: {$password}");
     }
 }

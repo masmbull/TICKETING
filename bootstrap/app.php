@@ -11,6 +11,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Trust Cloudflare proxies in front of production so scheme/host
+        // detection (and secure-cookie logic) works behind TLS termination.
+        $middleware->trustProxies(at: '*');
+
+        // Baseline security headers on every response (nosniff, frame
+        // protection, referrer policy, and HSTS when serving HTTPS).
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
         $middleware->alias([
             'force.password.change' => \App\Http\Middleware\ForcePasswordChange::class,
             'admin' => \App\Http\Middleware\Admin::class,

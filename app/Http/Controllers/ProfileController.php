@@ -60,6 +60,9 @@ class ProfileController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
+        // New session ID after a credential change prevents session fixation.
+        $request->session()->regenerate();
+
         AuditService::log('password_changed', $user, [], [], "Password changed by user for {$user->email}");
 
         return redirect()->route('profile.edit')

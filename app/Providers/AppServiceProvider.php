@@ -19,6 +19,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Production sits behind TLS (Cloudflare); force generated URLs to
+        // https so cookies/redirects are never downgraded. Local dev keeps HTTP.
+        if ($this->app->environment('production')) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         \App\Models\Ticket::observe(\App\Observers\TicketObserver::class);
         \App\Models\User::observe(\App\Observers\UserObserver::class);
         \App\Models\Category::observe(\App\Observers\CategoryObserver::class);

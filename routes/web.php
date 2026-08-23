@@ -21,7 +21,9 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('welcome');
 Route::get('/login/{role?}', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
+Route::post('/login', [AuthController::class, 'login'])
+    ->middleware('throttle:5,1')
+    ->name('login.attempt');
 
 // Authenticated routes
 Route::middleware('auth')->group(function () {

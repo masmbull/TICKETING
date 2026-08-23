@@ -730,6 +730,12 @@ class TicketController extends Controller
 
     /**
      * Update ticket priority (API).
+     *
+     * ACCEPTED BUSINESS RULE (security review): IT Support staff work the
+     * shared queue — they may browse and take any unassigned ticket — so they
+     * are intentionally allowed to set priority on any ticket, same as
+     * admin/manager. Do not scope this to own tickets without a product
+     * decision; the role gate below is the intended authorization.
      */
     public function updatePriority(Request $request, string $id): JsonResponse
     {

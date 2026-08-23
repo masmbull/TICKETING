@@ -148,7 +148,7 @@ class AuditLogController extends Controller
             $handle = fopen('php://output', 'w');
             fputcsv($handle, ['Timestamp', 'Actor', 'Action', 'Module', 'Target', 'Description', 'Old Values', 'New Values', 'IP Address']);
             foreach ($logs as $log) {
-                fputcsv($handle, [
+                $row = [
                     $log->created_at?->format('Y-m-d H:i:s') ?? '',
                     $log->user?->name ?? 'System',
                     self::eventLabel($log->event),
@@ -158,7 +158,8 @@ class AuditLogController extends Controller
                     $this->flattenValues($log->old_values),
                     $this->flattenValues($log->new_values),
                     $log->ip_address ?? '',
-                ]);
+                ];
+                fputcsv($handle, array_map(fn ($v) => $this->sanitizeCsvValue((string) $v), $row));
             }
             fclose($handle);
         });
@@ -167,6 +168,17 @@ class AuditLogController extends Controller
         $response->headers->set('Content-Disposition', "attachment; filename={$filename}");
 
         return $response;
+    }
+
+    /**
+     * Neutralize CSV formula injection: cells starting with = + - @ are
+     * prefixed with an apostrophe so Excel/Sheets treat them as text.
+     */
+    private function sanitizeCsvValue(string $value): string
+    {
+        return isset($value[0]) && in_array($value[0], ['=', '+', '-', '@'], true)
+            ? "'" . $value
+            : $value;
     }
 
     protected function applyFilters($query, Request $request): void

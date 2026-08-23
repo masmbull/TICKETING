@@ -14,13 +14,22 @@ use App\Services\AuditService;
 class AuthController extends Controller
 {
     /**
+     * Uniform failure message for every rejected login (bad credentials,
+     * inactive account, wrong role) so responses cannot be used to enumerate
+     * valid accounts or their status.
+     */
+    private const GENERIC_LOGIN_ERROR = 'These credentials do not match our records.';
+
+    /**
      * Role-specific login configuration.
+     *
+     * NOTE: no account emails here — credential hints must never be rendered
+     * on the production login page (user enumeration / targeted brute force).
      */
     private array $roles = [
         'admin' => [
             'slug' => 'admin',
             'name' => 'Administrator',
-            'email' => 'admin@mito.local',
             'color' => 'bg-purple-600',
             'hoverColor' => 'hover:bg-purple-700',
             'textColor' => 'text-purple-600',
@@ -28,7 +37,6 @@ class AuthController extends Controller
         'manager' => [
             'slug' => 'manager',
             'name' => 'IT Manager',
-            'email' => 'manager.it@mito.local',
             'color' => 'bg-blue-600',
             'hoverColor' => 'hover:bg-blue-700',
             'textColor' => 'text-blue-600',
@@ -36,7 +44,6 @@ class AuthController extends Controller
         'support' => [
             'slug' => 'support',
             'name' => 'IT Support',
-            'email' => 'shohibul@mito.local',
             'color' => 'bg-green-600',
             'hoverColor' => 'hover:bg-green-700',
             'textColor' => 'text-green-600',
@@ -44,7 +51,6 @@ class AuthController extends Controller
         'employee' => [
             'slug' => 'employee',
             'name' => 'Employee',
-            'email' => 'daniel@mito.local',
             'color' => 'bg-amber-600',
             'hoverColor' => 'hover:bg-amber-700',
             'textColor' => 'text-amber-600',
@@ -81,7 +87,6 @@ class AuthController extends Controller
             'roleColor' => $config['color'],
             'roleHoverColor' => $config['hoverColor'],
             'roleTextColor' => $config['textColor'],
-            'demoEmail' => $config['email'],
         ]);
     }
 
@@ -120,7 +125,7 @@ class AuthController extends Controller
             if (!$user->is_active) {
                 Auth::logout();
                 return back()->withErrors([
-                    'email' => 'Your account has been deactivated. Please contact administrator.',
+                    'email' => self::GENERIC_LOGIN_ERROR,
                 ])->withInput($request->only('email', 'remember'));
             }
 
@@ -130,7 +135,7 @@ class AuthController extends Controller
                 if ($role && $user->role_id !== $role->id) {
                     Auth::logout();
                     return back()->withErrors([
-                        'email' => "This account does not have the {$role->name} role.",
+                        'email' => self::GENERIC_LOGIN_ERROR,
                     ])->withInput($request->only('email', 'remember'));
                 }
             }
@@ -150,7 +155,7 @@ class AuthController extends Controller
 
         return back()
             ->withErrors([
-                'email' => 'The provided credentials do not match our records.',
+                'email' => self::GENERIC_LOGIN_ERROR,
             ])
             ->withInput($request->only('email', 'remember'));
     }
@@ -177,6 +182,9 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'force_password_change' => false,
         ]);
+
+        // New session ID after a credential change prevents session fixation.
+        $request->session()->regenerate();
 
         AuditService::log('password_changed', $user, [], [], "Password changed (forced) for {$user->email}");
 
