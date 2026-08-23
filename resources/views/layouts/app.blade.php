@@ -14,43 +14,79 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script>
         if (localStorage.getItem('theme') !== 'light') { document.documentElement.classList.add('dark'); }
+
+        // Alpine layout component. All initialization lives in this function so a
+        // parse/runtime error can never leave the splash screen stuck: Alpine
+        // expressions must stay simple (no top-level try/catch), while plain
+        // JavaScript here may use full error handling.
+        function appLayout() {
+            return {
+                sidebarExpanded: false,
+                mobileMenuOpen: false,
+                notifOpen: false,
+                userMenuOpen: false,
+                darkMode: true,
+                appReady: false,
+
+                dismissSplash() {
+                    setTimeout(() => {
+                        try {
+                            sessionStorage.setItem('mito_splash_seen', '1');
+                        } catch (e) {
+                            // Storage unavailable (private mode/blocked cookies) — never fatal.
+                        }
+                        this.appReady = true;
+                    }, 500);
+                },
+
+                scheduleSplashDismissal() {
+                    // Independent triggers; first one wins, repeats are harmless.
+                    if (document.readyState === 'complete') {
+                        this.dismissSplash();
+                    } else {
+                        window.addEventListener('load', () => this.dismissSplash(), { once: true });
+                        setTimeout(() => this.dismissSplash(), 800);
+                    }
+                },
+
+                init() {
+                    document.addEventListener('keydown', e => {
+                        if (e.key === 'Escape') {
+                            this.mobileMenuOpen = false;
+                            this.notifOpen = false;
+                            this.userMenuOpen = false;
+                        }
+                    });
+
+                    try {
+                        this.sidebarExpanded = localStorage.getItem('sidebarExpanded') === '1';
+                        this.darkMode = localStorage.getItem('theme') !== 'light';
+                        document.documentElement.classList.toggle('dark', this.darkMode);
+
+                        this.$watch('sidebarExpanded', val => {
+                            try { localStorage.setItem('sidebarExpanded', val ? '1' : '0'); } catch (e) {}
+                        });
+                        this.$watch('mobileMenuOpen', val => {
+                            document.body.style.overflow = val ? 'hidden' : '';
+                        });
+                        this.$watch('darkMode', val => {
+                            try { localStorage.setItem('theme', val ? 'dark' : 'light'); } catch (e) {}
+                            document.documentElement.classList.toggle('dark', val);
+                        });
+                    } catch (e) {
+                        console.error('App layout init failed:', e);
+                    } finally {
+                        this.scheduleSplashDismissal(); // guaranteed even on init failure
+                    }
+                },
+            };
+        }
     </script>
     @stack('styles')
 </head>
 <body class="bg-slate-100 dark:bg-slate-900 min-h-screen font-['IBM_Plex_Sans'] text-slate-800 dark:text-slate-200"
-      x-data="{
-        sidebarExpanded: localStorage.getItem('sidebarExpanded') === '1',
-        mobileMenuOpen: false,
-        notifOpen: false,
-        userMenuOpen: false,
-        darkMode: localStorage.getItem('theme') !== 'light',
-        appReady: false,
-      }"
-      x-init="
-        try {
-            $watch('sidebarExpanded', val => localStorage.setItem('sidebarExpanded', val ? '1' : '0'));
-            $watch('mobileMenuOpen', val => { document.body.style.overflow = val ? 'hidden' : ''; });
-            $watch('darkMode', val => {
-                localStorage.setItem('theme', val ? 'dark' : 'light');
-                document.documentElement.classList.toggle('dark', val);
-            });
-            document.documentElement.classList.toggle('dark', darkMode);
-            document.addEventListener('keydown', e => { if (e.key === 'Escape') { mobileMenuOpen = false; notifOpen = false; userMenuOpen = false; } });
-        } catch (e) { console.error('App init failed:', e); }
-
-        const dismissSplash = () => {
-            setTimeout(() => {
-                appReady = true;
-                sessionStorage.setItem('mito_splash_seen', '1');
-            }, 500);
-        };
-        if (document.readyState === 'complete') {
-            dismissSplash();
-        } else {
-            window.addEventListener('load', dismissSplash, { once: true });
-            setTimeout(dismissSplash, 800);
-        }
-      ">
+      x-data="appLayout()"
+      x-init="init()">
     <a href="#main-content" class="skip-to-content">Skip to main content</a>
 
     {{-- MITO Splash / Loading Screen --}}
