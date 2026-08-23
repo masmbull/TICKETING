@@ -137,11 +137,15 @@ class TicketController extends Controller
         $categories = Category::with('subCategories')->where('is_active', true)->orderBy('name')->get();
         $slaPolicies = \App\Models\SlaPolicy::where('is_active', true)->orderBy('name')->get();
         // Load all valid users for requestor search (matches User Management dataset)
-        $users = User::with(['role', 'department'])->orderBy('name')->get();
+        $users = User::with(['role', 'department'])
+            ->withoutTrashed()
+            ->orderBy('name')->get();
         // Load support staff only for assignee dropdown
         $staffUsers = User::whereHas('role', function($q) {
             $q->whereIn('slug', ['admin', 'manager', 'staff']);
-        })->where('is_active', true)->orderBy('name')->get();
+        })->where('is_active', true)
+            ->withoutTrashed()
+            ->orderBy('name')->get();
         $subCategoriesByCategory = Category::with('subCategories')->get()->mapWithKeys(fn($cat) => [$cat->id => $cat->subCategories->map(fn($sub) => ['id' => $sub->id, 'name' => $sub->name])]);
 
         return view('tickets.create', compact('categories', 'slaPolicies', 'users', 'staffUsers', 'subCategoriesByCategory'));
@@ -197,7 +201,7 @@ class TicketController extends Controller
              'sub_category_id' => 'nullable|exists:sub_categories,id',
              'priority'        => $isSupport ? 'required|in:low,medium,high,critical' : 'nullable|in:low,medium,high,critical',
              'description'     => 'required',
-             'user_id'         => $isSupport ? 'nullable|exists:users,id' : 'nullable',
+             'user_id'         => $isSupport ? 'required|exists:users,id' : 'nullable',
              'assignee_id'     => $isSupport ? 'nullable|exists:users,id' : 'nullable',
              'sla_policy_id'   => 'nullable|exists:sla_policies,id',
              'attachments'     => 'nullable|array',

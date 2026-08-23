@@ -11,7 +11,7 @@
         <h1 class="text-xl font-bold text-slate-900 dark:text-white">Create New Ticket</h1>
     </div>
 
-    <form method="POST" action="{{ route('tickets.store') }}" enctype="multipart/form-data" class="space-y-4" x-data="createTicketForm()">
+    <form method="POST" action="{{ route('tickets.store') }}" enctype="multipart/form-data" class="space-y-4" x-data="createTicketForm()" @submit="validateRequestor($event)">
         @csrf
 <script>
 function fetchSubcategories(categoryId) {
@@ -95,6 +95,7 @@ function fetchSubcategories(categoryId) {
                         <div class="relative">
                             <input
                                 type="text"
+                                data-requestor-input
                                 x-model="requestorSearch"
                                 @focus="requestorOpen = true"
                                 @input="requestorOpen = true; if (selectedRequestor) { selectedRequestor = null; }"
@@ -114,6 +115,7 @@ function fetchSubcategories(categoryId) {
                             </button>
                             
                             <input type="hidden" name="user_id" :value="selectedRequestor?.id || ''">
+                            <p x-show="requestorError" x-cloak class="mt-1 text-xs font-medium text-red-600 dark:text-red-400">Please select a requestor before submitting.</p>
                             
                             <div
                                 x-show="requestorOpen"
@@ -199,10 +201,23 @@ function fetchSubcategories(categoryId) {
 function createTicketForm() {
     return {
         allRequestors: @js($users ?? []),
+        isSupport: @json(auth()->user()->canManageTickets()),
         requestorSearch: '',
         requestorOpen: false,
         selectedRequestor: null,
         requestorHighlightedIndex: -1,
+        requestorError: false,
+        
+        validateRequestor(event) {
+            if (this.isSupport && !this.selectedRequestor) {
+                this.requestorError = true;
+                event.preventDefault();
+                document.querySelector('[data-requestor-input]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+            this.requestorError = false;
+            return true;
+        },
         
         get filteredRequestors() {
             if (!this.requestorSearch.trim()) {
@@ -220,6 +235,14 @@ function createTicketForm() {
             if (!requestor) return;
             this.selectedRequestor = requestor;
             this.requestorSearch = requestor.name + ' (' + requestor.email + ')';
+            this.requestorOpen = false;
+            this.requestorHighlightedIndex = -1;
+            this.requestorError = false;
+        },
+        
+        clearRequestor() {
+            this.selectedRequestor = null;
+            this.requestorSearch = '';
             this.requestorOpen = false;
             this.requestorHighlightedIndex = -1;
         },

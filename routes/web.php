@@ -65,12 +65,15 @@ Route::middleware('auth')->group(function () {
         // User Management (Admin only)
         Route::middleware('admin')->prefix('users')->name('users.')->group(function () {
             Route::get('/', [UserController::class, 'index'])->name('index');
+            Route::get('/trashed', [UserController::class, 'trashed'])->name('trashed');
             Route::get('/create', [UserController::class, 'create'])->name('create');
             Route::post('/', [UserController::class, 'store'])->name('store');
             Route::get('/{id}', [UserController::class, 'show'])->name('show');
             Route::get('/{id}/edit', [UserController::class, 'edit'])->name('edit');
             Route::patch('/{id}', [UserController::class, 'update'])->name('update');
             Route::delete('/{id}', [UserController::class, 'destroy'])->name('destroy');
+            Route::patch('/{id}/restore', [UserController::class, 'restore'])->name('restore');
+            Route::delete('/{id}/force', [UserController::class, 'forceDelete'])->name('force');
             Route::patch('/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
         });
 

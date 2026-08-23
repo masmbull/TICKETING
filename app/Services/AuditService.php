@@ -21,7 +21,9 @@ class AuditService
     public static function log(string $event, ?Model $model = null, array $old = [], array $new = [], ?string $description = null): void
     {
         $auditableType = $model ? get_class($model) : 'system';
-        $auditableId = $model ? $model->getKey() : null;
+        // ponytail: auditable_id is NOT NULL; system rows use 0 like logAuth().
+        // Migrate column to nullable + index on (event) when history matters.
+        $auditableId = $model ? $model->getKey() : 0;
         $target = $model ? self::resolveTarget($model) : ($new['target'] ?? null);
 
         AuditLog::create([
