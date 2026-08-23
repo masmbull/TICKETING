@@ -122,17 +122,4 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Demo Mode
-    |--------------------------------------------------------------------------
-    |
-    | When enabled, force password change is disabled and all users are
-    | seeded with the default password (Admin@123) on every migrate:fresh.
-    |
-    */
-
-    'demo_mode' => env('DEMO_MODE', false),
-
 ];

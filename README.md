@@ -165,8 +165,6 @@ php artisan serve
 
 The application will be available at `http://127.0.0.1:8000`.
 
-**Demo Credentials:** See [DEMO_USERS.md](DEMO_USERS.md)
-
 ## Folder Structure
 
 ```
@@ -200,7 +198,6 @@ app/
 │   └── Unit/                      # Unit tests
 ├── CONTRIBUTING.md                # Contribution guidelines
 ├── CHANGELOG.md                   # Version history
-├── DEMO_USERS.md                  # Demo credentials
 ├── LICENSE.md                     # MIT License
 └── README.md                      # This file
 ```
@@ -319,7 +316,6 @@ Potential enhancements for v1.1+:
 
 - [Contributing Guidelines](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
-- [Demo Users](DEMO_USERS.md)
 - [License](LICENSE.md)
 
 ## Contributing
