@@ -181,7 +181,7 @@ function fetchSubcategories(categoryId) {
                 <svg class="w-8 h-8 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01.008-4.912M7 16a4 4 0 01.008-4.912m0 0a4 4 0 018.008 0M7 16a4 4 0 018.008 0m0 0a4 4 0 01.008-4.912m0 0a4 4 0 018.008 0M7 16a4 4 0 018.008 0m0 0a4 4 0 01.008-4.912m0 0a4 4 0 018.008 0"/></svg>
                 <p class="text-sm text-slate-500 mt-2">Drop files or click to upload</p>
                 <p class="text-xs text-slate-400 mt-1">PNG, JPG, PDF, ZIP (max 10MB)</p>
-                <input type="file" name="attachments[]" multiple id="attachments" class="hidden" accept=".png,.jpg,.jpeg,.pdf,.zip">
+                <input type="file" name="attachments[]" multiple id="attachments" class="hidden" accept=".png,.jpg,.jpeg,.pdf,.zip,image/png,image/jpeg,application/pdf,application/zip">
             </div>
         </div>
 
