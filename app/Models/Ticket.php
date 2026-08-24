@@ -154,18 +154,40 @@ class Ticket extends Model
 
     public function getTimelineAttribute(): array
     {
-        $events = [];
+        // Deterministic tie-breaker when two events share the exact same
+        // timestamp: canonical business workflow order. Assignment starts
+        // work; Problem Analysis is a phase inside In Progress.
+        $ranks = [
+            'Ticket Created' => 0,
+            'Assigned' => 1,
+            'In Progress' => 2,
+            'Problem Analysis' => 3,
+            'Resolution' => 4,
+            'Re-opened' => 5,
+            'Completed' => 6,
+        ];
 
-        $events[] = [
+        $events = [[
             'label' => 'Ticket Created',
             'timestamp' => $this->created_at,
             'actor' => $this->user?->name,
-        ];
+        ]];
 
         if ($this->assigned_at) {
             $events[] = [
                 'label' => 'Assigned',
                 'timestamp' => $this->assigned_at,
+                'actor' => $this->assignee?->name,
+            ];
+        }
+
+        // Anchor In Progress to the assignment moment (assignment is what
+        // moves Waiting Confirmation -> In Progress), never to the later
+        // analysis save.
+        if ($this->status === 'In Progress' || $this->status === 'Completed') {
+            $events[] = [
+                'label' => 'In Progress',
+                'timestamp' => $this->assigned_at ?? $this->problem_analysis_at ?? $this->created_at,
                 'actor' => $this->assignee?->name,
             ];
         }
@@ -178,14 +200,6 @@ class Ticket extends Model
             ];
         }
 
-        if ($this->status === 'In Progress' || $this->status === 'Completed') {
-            $events[] = [
-                'label' => 'In Progress',
-                'timestamp' => $this->problem_analysis_at ?? $this->assigned_at ?? $this->created_at,
-                'actor' => $this->assignee?->name,
-            ];
-        }
-
         if ($this->resolution_at) {
             $events[] = [
                 'label' => 'Resolution',
@@ -194,13 +208,35 @@ class Ticket extends Model
             ];
         }
 
-        if ($this->completed_at) {
+        // Reopen cycles live in the audit trail: replay every explicit
+        // completion/reopen event so history survives on the timeline.
+        $cycleLogs = AuditLog::where('auditable_type', Ticket::class)
+            ->where('auditable_id', $this->id)
+            ->whereIn('event', ['ticket_completed', 'ticket_reopened'])
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get();
+
+        if ($cycleLogs->isNotEmpty()) {
+            foreach ($cycleLogs as $log) {
+                $events[] = [
+                    'label' => $log->event === 'ticket_reopened' ? 'Re-opened' : 'Completed',
+                    'timestamp' => $log->created_at,
+                    'actor' => $log->user?->name, // ponytail: N+1 per cycle row; fine at reopen counts seen in practice
+                ];
+            }
+        } elseif ($this->completed_at) {
+            // Legacy tickets completed before explicit audit events existed.
             $events[] = [
                 'label' => 'Completed',
                 'timestamp' => $this->completed_at,
                 'actor' => $this->completedBy?->name,
             ];
         }
+
+        usort($events, fn (array $a, array $b) =>
+            [$a['timestamp']->getTimestamp(), $ranks[$a['label']]]
+                <=> [$b['timestamp']->getTimestamp(), $ranks[$b['label']]]);
 
         return $events;
     }

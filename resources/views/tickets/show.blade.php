@@ -27,26 +27,9 @@
     $validPriorities = ['low', 'medium', 'high', 'critical'];
     $hasSla = !is_null($ticket->sla_deadline) && !is_null($ticket->sla_started_at) && in_array($ticket->sla_priority, $validPriorities);
 
-    // Don't call timeline in view as it may trigger expensive SLA calculations
-    $timeline = [];
-    if (!empty($ticket->created_at)) {
-        $timeline[] = ['label' => 'Ticket Created', 'timestamp' => $ticket->created_at, 'actor' => $ticket->user?->name];
-    }
-    if (!empty($ticket->assigned_at)) {
-        $timeline[] = ['label' => 'Assigned', 'timestamp' => $ticket->assigned_at, 'actor' => $ticket->assignee?->name];
-    }
-    if (!empty($ticket->problem_analysis_at)) {
-        $timeline[] = ['label' => 'Problem Analysis', 'timestamp' => $ticket->problem_analysis_at, 'actor' => $ticket->assignee?->name];
-    }
-    if ($isInProgress || $isCompleted) {
-        $timeline[] = ['label' => 'In Progress', 'timestamp' => $ticket->problem_analysis_at ?? $ticket->assigned_at ?? $ticket->created_at, 'actor' => $ticket->assignee?->name];
-    }
-    if (!empty($ticket->resolution_at)) {
-        $timeline[] = ['label' => 'Resolution', 'timestamp' => $ticket->resolution_at, 'actor' => $ticket->assignee?->name];
-    }
-    if (!empty($ticket->completed_at)) {
-        $timeline[] = ['label' => 'Completed', 'timestamp' => $ticket->completed_at, 'actor' => $ticket->completedBy?->name];
-    }
+    // Single source of truth: the model assembles and chronologically sorts
+    // lifecycle events (including reopen cycles replayed from audit logs).
+    $timeline = $ticket->timeline;
 
     $metaParts = array_filter([
         $ticket->category->name ?? 'Uncategorized',

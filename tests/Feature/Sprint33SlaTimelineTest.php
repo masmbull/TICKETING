@@ -699,6 +699,9 @@ class Sprint33SlaTimelineTest extends TestCase
             'resolution_at' => now()->subHours(12),
             'completed_at' => now()->subHours(6),
         ]);
+        // created_at is not mass-assignable; set it explicitly.
+        $ticket->created_at = now()->subDays(3);
+        $ticket->save();
 
         $timeline = $ticket->timeline;
         $labels = array_column($timeline, 'label');
@@ -706,8 +709,8 @@ class Sprint33SlaTimelineTest extends TestCase
         $this->assertEquals([
             'Ticket Created',
             'Assigned',
-            'Problem Analysis',
             'In Progress',
+            'Problem Analysis',
             'Resolution',
             'Completed',
         ], $labels);

@@ -486,11 +486,11 @@ class TicketController extends Controller
         if ($newStatus === 'Completed') {
             $updates['problem_analysis'] = $analysis;
             $updates['resolution'] = $resolution;
-            $updates['completed_at'] = $ticket->completed_at ?? now();
+            // Latest completion wins: completing again after a re-open
+            // refreshes these; earlier cycles stay in audit_logs.
+            $updates['completed_at'] = now();
             $updates['completed_by'] = $user->id;
-            if (!$ticket->resolution_at) {
-                $updates['resolution_at'] = now();
-            }
+            $updates['resolution_at'] = now();
         }
 
         $ticket->update($updates);
@@ -691,20 +691,21 @@ class TicketController extends Controller
             'resolution' => 'required|string|min:3',
         ]);
 
+        // Detect a re-completion BEFORE updating: completed_at is about to be
+        // refreshed to the latest completion time, so its previous value is
+        // the marker for the "previously reopened" note in the email.
+        $wasPreviouslyCompleted = filled($ticket->completed_at);
+
         $ticket->update([
             'status' => 'Completed',
             'resolution' => $validated['resolution'],
-            'completed_at' => $ticket->completed_at ?? now(),
-            'completed_by' => $ticket->completed_by ?? $user->id,
-            'resolution_at' => $ticket->resolution_at ?? now(),
+            // Latest completion wins; earlier cycles remain in audit_logs.
+            'completed_at' => now(),
+            'completed_by' => $user->id,
+            'resolution_at' => now(),
         ]);
 
         AuditService::log('ticket_completed', $ticket, ['status' => 'In Progress'], ['status' => 'Completed'], "Ticket {$ticket->ticket_number} completed by {$user->name}");
-
-        // A ticket completed again after a re-open keeps its first
-        // completed_at; that pre-existing value is the marker for the
-        // "previously reopened" note in the completion email.
-        $wasPreviouslyCompleted = filled($ticket->completed_at);
 
         foreach ($this->getRelevantUsers($ticket) as $u) {
             if ($u->id !== auth()->id()) {
