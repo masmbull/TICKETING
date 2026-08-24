@@ -599,7 +599,7 @@
                     @error('comment')<span class="text-xs text-red-500 mt-1 block">{{ $message }}</span>@enderror
 
                     {{-- File input (invisible — keeps files for form submission) --}}
-                    <input type="file" name="attachments[]" multiple accept="image/png,image/jpeg,application/pdf,application/zip"
+                    <input type="file" name="attachments[]" multiple accept=".png,.jpg,.jpeg,.pdf,.zip,image/png,image/jpeg,application/pdf,application/zip"
                            class="absolute opacity-0 w-0 h-0 pointer-events-none"
                            x-ref="fileInput"
                            @change="syncFiles()">
@@ -629,6 +629,7 @@
                         <p class="text-sm font-medium" :class="dragOver ? 'text-[#E30613]' : 'text-slate-500 dark:text-slate-400'">Attach File (optional)</p>
                         <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">PNG, JPG, PDF, or ZIP</p>
                     </div>
+                    <p x-show="fileError" x-cloak class="mt-2 text-xs text-red-500" aria-live="polite" x-text="fileError"></p>
 
                     <div class="flex justify-end mt-3">
                         <button type="submit" :disabled="posting" class="px-4 py-2 text-sm font-medium text-white bg-[#E30613] hover:bg-[#c4050f] rounded-lg transition-all duration-200 disabled:opacity-60 flex items-center gap-2">
@@ -780,6 +781,7 @@ function commentForm() {
         
         // Files
         fileNames: [],
+        fileError: '',
         posting: false,
         dragOver: false,
         
@@ -811,21 +813,34 @@ function commentForm() {
             }, true);
         },
 
+        // Frontend whitelist mirrors the backend mimes:png,jpg,jpeg,pdf,zip rule.
+        isAllowed(file) {
+            return ['png', 'jpg', 'jpeg', 'pdf', 'zip'].includes(file.name.split('.').pop().toLowerCase());
+        },
+
+        applyFiles(fileList) {
+            const ok = Array.from(fileList).filter(f => this.isAllowed(f));
+            this.fileError = ok.length < fileList.length
+                ? 'Unsupported file type. Allowed: PNG, JPG, PDF, ZIP.'
+                : '';
+            const dt = new DataTransfer();
+            ok.forEach(f => dt.items.add(f));
+            this.$refs.fileInput.files = dt.files;
+            this.fileNames = ok.map(f => f.name);
+        },
+
         syncFiles() {
-            this.fileNames = Array.from(this.$refs.fileInput.files).map(f => f.name);
+            this.applyFiles(this.$refs.fileInput.files);
         },
 
         handleDrop(e) {
             this.dragOver = false;
             const dt = e.dataTransfer;
-            if (dt.files.length) {
-                const input = this.$refs.fileInput;
-                const merged = new DataTransfer();
-                for (const f of input.files) merged.items.add(f);
-                for (const f of dt.files) merged.items.add(f);
-                input.files = merged.files;
-                this.syncFiles();
-            }
+            if (!dt.files.length) return;
+            const merged = new DataTransfer();
+            Array.from(this.$refs.fileInput.files).forEach(f => merged.items.add(f));
+            Array.from(dt.files).forEach(f => merged.items.add(f));
+            this.applyFiles(merged.files);
         },
 
         removeFile(idx) {
