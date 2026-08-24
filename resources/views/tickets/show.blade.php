@@ -728,8 +728,6 @@
                 </div>
                 <div class="p-4 sm:p-5">
                     <ol class="relative">
-                        {{-- Connector: 1px hairline behind the markers --}}
-                        <span class="absolute left-[13px] top-3 bottom-3 w-px bg-slate-200 dark:bg-slate-700" aria-hidden="true"></span>
                         @php $reopenCycles = 0; @endphp
                         @foreach($timeline as $event)
                             @php
@@ -739,16 +737,19 @@
                                 $icon = $timelineIcons[$event['label']] ?? 'M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75';
                             @endphp
 
-                            @if($isReopen)
-                            {{-- Lifecycle cycle divider — count derived from event sequence --}}
-                            <li class="relative z-10 flex items-center gap-3 py-1" aria-hidden="true">
-                                <span class="h-px flex-1 bg-gradient-to-r from-transparent via-orange-200 to-orange-200 dark:via-orange-900/50 dark:to-orange-900/50"></span>
-                                <span class="text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap text-orange-600/90 dark:text-orange-400/90">Reopen Cycle @if($reopenCycles > 1){{ $reopenCycles }}@endif</span>
-                                <span class="h-px flex-1 bg-gradient-to-l from-transparent via-orange-200 to-orange-200 dark:via-orange-900/50 dark:to-orange-900/50"></span>
-                            </li>
-                            @endif
-
-                            <li class="relative pb-5 last:pb-0">
+                            <li class="relative pb-5 {{ $loop->last ? 'pb-0' : '' }}">
+                                {{-- Lifecycle cycle divider — overlays the rail in this row's top gap --}}
+                                @if($isReopen)
+                                <div class="absolute -top-[22px] left-0 right-0 z-10 flex items-center gap-3" aria-hidden="true">
+                                    <span class="h-px flex-1 bg-gradient-to-r from-transparent via-orange-200 to-orange-200 dark:via-orange-900/50 dark:to-orange-900/50"></span>
+                                    <span class="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap text-orange-600/90 ring-1 ring-orange-100 dark:bg-slate-800 dark:text-orange-400/90 dark:ring-orange-900/40">Reopen Cycle @if($reopenCycles > 1){{ $reopenCycles }}@endif</span>
+                                    <span class="h-px flex-1 bg-gradient-to-l from-transparent via-orange-200 to-orange-200 dark:via-orange-900/50 dark:to-orange-900/50"></span>
+                                </div>
+                                @endif
+                                {{-- Rail segment: starts at this marker's center (16px), ends exactly at the next marker's center --}}
+                                @unless($loop->last)
+                                <span class="absolute left-[13px] top-4 h-full w-0.5 rounded-full bg-slate-200 dark:bg-slate-700" aria-hidden="true"></span>
+                                @endunless
                                 <div class="flex items-start gap-3">
                                     {{-- Marker: icon chip, ring matches card background --}}
                                     <span class="relative z-10 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ring-4 ring-white dark:ring-slate-800 {{ $marker }}">
