@@ -332,6 +332,13 @@ class TicketController extends Controller
             }
         }
 
+        // Graph email to the requestor when a support user creates a ticket on
+        // their behalf. Self-created tickets skip the email (creator already
+        // knows); send failures are handled inside GraphMailChannel.
+        if ($isSupport && $requestorId !== auth()->id()) {
+            User::find($requestorId)?->notify(new TicketNotification('created', $ticket));
+        }
+
         return redirect()->route('tickets.create')
             ->with('ticket_created', $ticket->ticket_number);
     }

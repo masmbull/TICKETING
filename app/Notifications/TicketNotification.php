@@ -5,7 +5,7 @@ namespace App\Notifications;
 use App\Models\Ticket;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\DatabaseMessage;
+use Illuminate\Support\Str;
 
 class TicketNotification extends Notification
 {
@@ -19,7 +19,16 @@ class TicketNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return match ($this->event) {
+            // Creation had no bell notification before Graph integration;
+            // keeping it that way means graph-mail only.
+            'created'   => [GraphMailChannel::class],
+            // Bell behavior preserved; Graph email added alongside.
+            'completed' => ['database', GraphMailChannel::class],
+            // Mention email moved from SMTP/Brevo to Graph; bell untouched.
+            'mentioned' => ['database', GraphMailChannel::class],
+            default     => ['database'],
+        };
     }
 
     public function toArray(object $notifiable): array
@@ -78,5 +87,67 @@ class TicketNotification extends Notification
     public function toDatabase(object $notifiable): array
     {
         return $this->toArray($notifiable);
+    }
+
+    /**
+     * Microsoft Graph email payload. Returning null skips sending silently.
+     * Replaces the old SMTP/Brevo toMail() for the events that carry email;
+     * Brevo config itself is untouched for any other system mail.
+     */
+    public function toGraphMail(object $notifiable): ?array
+    {
+        $ticket = $this->ticket;
+        $number = $ticket->ticket_number;
+        $link = route('tickets.show', $ticket->id);
+        $title = (string) ($ticket->description ?: $number);
+
+        return match ($this->event) {
+            'created' => [
+                'subject' => "[MITO Ticketing] Ticket #{$number} Created",
+                'html' => $this->buildHtml([
+                    "Ticket <strong>#{$number}</strong> has been created.",
+                    'Title: '.e($title),
+                    'Requestor: '.e($ticket->user?->name ?? '-'),
+                    'Status: '.e($ticket->status),
+                    'Created: '.optional($ticket->created_at)->format('Y-m-d H:i'),
+                    'Description: '.e(Str::limit($title, 300)),
+                ], $link),
+            ],
+
+            // Only the requestor gets the completion email, even when other
+            // relevant users receive the bell notification.
+            'completed' => $notifiable->getAuthIdentifier() === $ticket->user_id ? [
+                'subject' => "[MITO Ticketing] Ticket #{$number} Completed",
+                'html' => $this->buildHtml([
+                    "Ticket <strong>#{$number}</strong> has been completed.",
+                    'Title: '.e($title),
+                    'Status: Completed',
+                    'Completed: '.optional($ticket->completed_at ?? $ticket->updated_at)->format('Y-m-d H:i'),
+                ], $link),
+            ] : null,
+
+            'mentioned' => [
+                'subject' => "[MITO Ticketing] You were mentioned in ticket #{$number}",
+                'html' => $this->buildHtml([
+                    e($this->extra ?: 'Someone')." mentioned you in ticket <strong>#{$number}</strong>.",
+                    'Comment: <br>'.nl2br(e((string) $ticket->comments()->latest('id')->value('comment'))),
+                ], $link),
+            ],
+
+            default => null,
+        };
+    }
+
+    private function buildHtml(array $lines, string $link): string
+    {
+        $body = '';
+        foreach ($lines as $line) {
+            $body .= '<p style="margin:0 0 8px">'.$line.'</p>';
+        }
+
+        return '<div style="font-family:Arial,sans-serif;font-size:14px;color:#222">'
+            .$body
+            .'<p><a href="'.e($link).'">View Ticket</a></p>'
+            .'</div>';
     }
 }

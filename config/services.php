@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    'microsoft-graph' => [
+        'tenant_id' => env('MS_GRAPH_TENANT_ID'),
+        'client_id' => env('MS_GRAPH_CLIENT_ID'),
+        'client_secret' => env('MS_GRAPH_CLIENT_SECRET'),
+        'mail_from' => env('MS_GRAPH_MAIL_FROM', 'itsupport@mito.co.id'),
+        // Optional local override when PHP has no system CA store
+        // (e.g. Windows dev boxes). Leave unset in production.
+        'ca_bundle' => env('MS_GRAPH_CA_BUNDLE'),
+    ],
+
 ];
