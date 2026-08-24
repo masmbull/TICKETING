@@ -194,13 +194,13 @@ class Sprint43SlaStatusStaffTest extends TestCase
         $response->assertStatus(422);
     }
 
-    public function test_assign_to_me_keeps_status_waiting_confirmation(): void
+    public function test_assign_to_me_moves_status_to_in_progress(): void
     {
         $ticket = $this->makeTicket();
         $this->actingAs($this->staff);
         $this->postJson(route('tickets.take', $ticket->id));
         $ticket->refresh();
-        $this->assertEquals('Waiting Confirmation', $ticket->status);
+        $this->assertEquals('In Progress', $ticket->status);
     }
 
     public function test_assignment_creates_timeline_entry(): void
@@ -222,6 +222,6 @@ class Sprint43SlaStatusStaffTest extends TestCase
         $this->patchJson(route('tickets.assign', $ticket->id), ['assignee_id' => $this->staff->id]);
         $ticket->refresh();
         $this->assertEquals($this->staff->id, $ticket->assignee_id);
-        $this->assertEquals('Waiting Confirmation', $ticket->status);
+        $this->assertEquals('In Progress', $ticket->status);
     }
 }

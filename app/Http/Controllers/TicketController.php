@@ -288,11 +288,15 @@ class TicketController extends Controller
          $ticketData = [
              'ticket_number'   => $ticketNumber,
              'description'     => $validated['description'],
-             'status'          => 'Waiting Confirmation',
+             'status'          => $assigneeId ? 'In Progress' : 'Waiting Confirmation',
              'user_id'         => $requestorId,
              'category_id'     => $validated['category_id'] ?? null,
              'sub_category_id' => $validated['sub_category_id'] ?? null,
              'assignee_id'     => $assigneeId,
+             // Assignment at creation time already starts the SLA clock above;
+             // it must also mark the workflow timestamps.
+             'assigned_at'        => $assigneeId ? now() : null,
+             'first_response_at'  => $assigneeId ? now() : null,
              'priority'        => $priority ?? $slaPriority,
              'sla_priority'    => $slaPriority,
              'sla_started_at'  => $slaStartedAt,
@@ -424,6 +428,18 @@ class TicketController extends Controller
         }
 
         if ($ticket->status === $newStatus) {
+            // Editing the problem analysis while already In Progress must save
+            // it without changing the status (no transition, no notification).
+            if ($newStatus === 'In Progress' && $request->filled('problem_analysis')) {
+                $analysisUpdate = trim((string) $request->input('problem_analysis'));
+                if ($analysisUpdate !== '') {
+                    $updates = ['problem_analysis' => $analysisUpdate];
+                    if (!$ticket->problem_analysis_at) {
+                        $updates['problem_analysis_at'] = now();
+                    }
+                    $ticket->update($updates);
+                }
+            }
             return $this->statusResponse($request, $ticket, $newStatus);
         }
 
@@ -479,9 +495,14 @@ class TicketController extends Controller
 
         $ticket->update($updates);
 
+        // Completion is a transition into Completed: the requestor gets the
+        // Graph completion email (via TicketNotification 'completed'), other
+        // relevant users keep their bell notification. All other transitions
+        // keep the existing status_changed bell.
+        $completionEvent = $newStatus === 'Completed' ? 'completed' : 'status_changed';
         foreach ($this->getRelevantUsers($ticket) as $u) {
             if ($u->id !== auth()->id()) {
-                $u->notify(new TicketNotification('status_changed', $ticket));
+                $u->notify(new TicketNotification($completionEvent, $ticket));
             }
         }
 
@@ -505,10 +526,18 @@ class TicketController extends Controller
             return $this->validationFailure($request, 'assignee', 'This ticket is already assigned to another support member.');
         }
 
-        $ticket->update([
+        // Taking a Waiting Confirmation ticket is an assignment -> In Progress.
+        $updates = [
             'assignee_id' => $user->id,
             'assigned_at' => $ticket->assigned_at ?? now(),
-        ]);
+        ];
+        if ($ticket->status === 'Waiting Confirmation') {
+            $updates['status'] = 'In Progress';
+            if (!$ticket->first_response_at) {
+                $updates['first_response_at'] = now();
+            }
+        }
+        $ticket->update($updates);
 
         $ticket->user?->notify(new TicketNotification('taken', $ticket));
 
@@ -531,31 +560,49 @@ class TicketController extends Controller
             return $this->validationFailure($request, 'status', 'You can only process your own assigned tickets.');
         }
 
-        if ($ticket->status !== 'Waiting Confirmation') {
-            return $this->validationFailure($request, 'status', 'Only tickets in Waiting Confirmation can be processed.');
+        // Analysis belongs to the working phase: it may be submitted while
+        // Waiting Confirmation (legacy path, transitions to In Progress) or
+        // updated while already In Progress without changing the status.
+        if (!in_array($ticket->status, ['Waiting Confirmation', 'In Progress'], true)) {
+            return $this->validationFailure($request, 'status', 'Problem analysis can only be filled while the ticket is Waiting Confirmation or In Progress.');
         }
 
         $validated = $request->validate([
             'problem_analysis' => 'required|string|min:3',
         ]);
 
-        $ticket->update([
-            'status' => 'In Progress',
+        $wasWaitingConfirmation = $ticket->status === 'Waiting Confirmation';
+
+        $updates = [
             'problem_analysis' => $validated['problem_analysis'],
             'problem_analysis_at' => $ticket->problem_analysis_at ?? now(),
-            'first_response_at' => $ticket->first_response_at ?? now(),
-        ]);
+        ];
 
-        AuditService::log('problem_analysis_submitted', $ticket, ['status' => 'Waiting Confirmation'], ['status' => 'In Progress'], "Problem Analysis submitted for {$ticket->ticket_number} by {$user->name}");
+        if ($wasWaitingConfirmation) {
+            $updates['status'] = 'In Progress';
+            if (!$ticket->first_response_at) {
+                $updates['first_response_at'] = now();
+            }
+        }
 
-        $ticket->user?->notify(new TicketNotification('status_changed', $ticket));
+        $ticket->update($updates);
+
+        AuditService::log('problem_analysis_submitted', $ticket, ['status' => $wasWaitingConfirmation ? 'Waiting Confirmation' : 'In Progress'], ['status' => $ticket->status], "Problem Analysis submitted for {$ticket->ticket_number} by {$user->name}");
+
+        // Bell only for the actual status transition; editing the analysis of
+        // an In Progress ticket must not spam notifications.
+        if ($wasWaitingConfirmation) {
+            $ticket->user?->notify(new TicketNotification('status_changed', $ticket));
+        }
 
         if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'status' => 'In Progress']);
+            return response()->json(['success' => true, 'status' => $ticket->status]);
         }
 
         return redirect()->route('tickets.show', $id)
-            ->with('success', 'Analysis submitted. Ticket is now In Progress.');
+            ->with('success', $wasWaitingConfirmation
+                ? 'Analysis submitted. Ticket is now In Progress.'
+                : 'Problem analysis updated.');
     }
 
     /**
@@ -586,11 +633,10 @@ class TicketController extends Controller
             return $this->validationFailure($request, 'assignee', 'This ticket is already assigned to another IT Support member.');
         }
 
-        // Moving the ticket to In Progress requires a problem analysis.
+        // Assignment no longer requires a problem analysis; the analysis is
+        // filled while the ticket is In Progress. Any provided analysis is
+        // still stored.
         $analysis = trim((string) ($request->input('problem_analysis') ?? $ticket->problem_analysis ?? ''));
-        if ($ticket->status !== 'In Progress' && $analysis === '') {
-            return $this->validationFailure($request, 'problem_analysis', 'Problem analysis is required before you can take this ticket.');
-        }
 
         $updates = [
             'assignee_id' => $user->id,
@@ -655,9 +701,18 @@ class TicketController extends Controller
 
         AuditService::log('ticket_completed', $ticket, ['status' => 'In Progress'], ['status' => 'Completed'], "Ticket {$ticket->ticket_number} completed by {$user->name}");
 
+        // A ticket completed again after a re-open keeps its first
+        // completed_at; that pre-existing value is the marker for the
+        // "previously reopened" note in the completion email.
+        $wasPreviouslyCompleted = filled($ticket->completed_at);
+
         foreach ($this->getRelevantUsers($ticket) as $u) {
             if ($u->id !== auth()->id()) {
-                $u->notify(new TicketNotification('completed', $ticket));
+                $u->notify(new TicketNotification(
+                    'completed',
+                    $ticket,
+                    $wasPreviouslyCompleted ? 'This ticket was previously reopened and has been completed again.' : null
+                ));
             }
         }
 
@@ -667,6 +722,47 @@ class TicketController extends Controller
 
         return redirect()->route('tickets.show', $id)
             ->with('success', 'Ticket completed successfully.');
+    }
+
+    /**
+     * Re-open a Completed ticket.
+     *
+     * Business rules (Sprint: ticket lifecycle):
+     *   - Only Completed tickets can be reopened; the ticket returns to
+     *     In Progress with the SAME ticket id (no new ticket, no history loss).
+     *   - Resolution and problem analysis are preserved so the assignee can
+     *     edit them again.
+     *   - SLA fields (sla_started_at / sla_deadline / sla_priority) are NOT
+     *     touched: the SLA clock keeps running from its original start.
+     *   - NO notification is sent — neither Graph email nor bell. Only the
+     *     audit log records the transition.
+     */
+    public function reopenTicket(Request $request, string $id)
+    {
+        $user = auth()->user();
+        abort_unless($user->canManageTickets(), 403);
+
+        $ticket = $this->findTicketForUser($id);
+
+        if ($ticket->status !== 'Completed') {
+            return $this->validationFailure($request, 'status', 'Only Completed tickets can be reopened.');
+        }
+
+        // Staff may only reopen tickets assigned to them (same rule as completing).
+        if ($user->isStaff() && $ticket->assignee_id !== $user->id) {
+            return $this->validationFailure($request, 'status', 'You can only reopen your own assigned tickets.');
+        }
+
+        $ticket->update(['status' => 'In Progress']);
+
+        AuditService::log('ticket_reopened', $ticket, ['status' => 'Completed'], ['status' => 'In Progress'], "Ticket {$ticket->ticket_number} reopened by {$user->name}");
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'status' => 'In Progress']);
+        }
+
+        return redirect()->route('tickets.show', $id)
+            ->with('success', 'Ticket reopened. It is back In Progress and the resolution can be updated.');
     }
 
     /**
@@ -692,6 +788,13 @@ class TicketController extends Controller
             $updates['assigned_at'] = now();
         }
         $oldAssignee = $ticket->assignee_id;
+        // Business rule: assigning a Waiting Confirmation ticket starts work.
+        if ($validated['assignee_id'] && $ticket->status === 'Waiting Confirmation') {
+            $updates['status'] = 'In Progress';
+            if (!$ticket->first_response_at) {
+                $updates['first_response_at'] = now();
+            }
+        }
         $ticket->update($updates);
 
         $action = $oldAssignee ? 'reassigned' : 'assigned';

@@ -109,13 +109,13 @@ class Sprint41FinalWorkflowTest extends TestCase
         $this->assertEquals($riyanto->id, $ticket->assignee_id);
     }
 
-    public function test_manager_assignment_keeps_waiting_confirmation(): void
+    public function test_manager_assignment_moves_to_in_progress(): void
     {
         $ticket = $this->makeTicket(['status' => 'Waiting Confirmation']);
         $this->actingAs($this->manager);
         $this->patchJson(route('tickets.assign', $ticket->id), ['assignee_id' => $this->staff->id]);
         $ticket->refresh();
-        $this->assertEquals('Waiting Confirmation', $ticket->status);
+        $this->assertEquals('In Progress', $ticket->status);
     }
 
     public function test_assignment_generates_audit_log(): void
@@ -156,13 +156,13 @@ class Sprint41FinalWorkflowTest extends TestCase
         $this->assertEquals($this->staff->id, $ticket->assignee_id);
     }
 
-    public function test_take_ticket_does_not_change_status(): void
+    public function test_take_ticket_moves_to_in_progress(): void
     {
         $ticket = $this->makeTicket(['status' => 'Waiting Confirmation']);
         $this->actingAs($this->staff);
         $this->postJson(route('tickets.take', $ticket->id));
         $ticket->refresh();
-        $this->assertEquals('Waiting Confirmation', $ticket->status);
+        $this->assertEquals('In Progress', $ticket->status);
     }
 
     // ─── 13-22: Staff workflow ───────────────────────────────

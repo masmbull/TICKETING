@@ -53,6 +53,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/tickets/{id}/take', [TicketController::class, 'takeTicket'])->name('tickets.take');
         Route::post('/tickets/{id}/submit-analysis', [TicketController::class, 'submitAnalysis'])->name('tickets.submit-analysis');
         Route::post('/tickets/{id}/complete', [TicketController::class, 'completeTicket'])->name('tickets.complete');
+        Route::post('/tickets/{id}/reopen', [TicketController::class, 'reopenTicket'])->name('tickets.reopen');
         Route::patch('/tickets/{id}/priority', [TicketController::class, 'updatePriority'])->name('tickets.priority');
         Route::patch('/tickets/{id}/sla', [TicketController::class, 'updateSla'])->name('tickets.sla');
         Route::patch('/tickets/{id}/status', [TicketController::class, 'updateStatus'])->name('tickets.status.update');

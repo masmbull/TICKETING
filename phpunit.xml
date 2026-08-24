@@ -24,11 +24,11 @@
         <env name="CACHE_STORE" value="array"/>
         <env name="DB_CONNECTION" value="pgsql"/>
         <env name="DB_DATABASE" value="ticketing_test"/>
-        <!-- Tests must never hit Microsoft Graph: blank credentials make the
-             service fail fast and GraphMailChannel swallows the error. -->
-        <env name="MS_GRAPH_TENANT_ID" value=""/>
-        <env name="MS_GRAPH_CLIENT_ID" value=""/>
-        <env name="MS_GRAPH_CLIENT_SECRET" value=""/>
+        <!-- DUMMY Graph credentials: Http::fake() in the mail tests intercepts
+             every outbound call, so tests can never send a real email. -->
+        <env name="MS_GRAPH_TENANT_ID" value="testing-tenant"/>
+        <env name="MS_GRAPH_CLIENT_ID" value="testing-client-id"/>
+        <env name="MS_GRAPH_CLIENT_SECRET" value="testing-client-secret"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>

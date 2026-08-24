@@ -513,8 +513,10 @@ class SmokeTest extends TestCase
         ]);
     }
 
-    public function test_assign_to_me_requires_analysis(): void
+    public function test_assign_to_me_no_longer_requires_analysis(): void
     {
+        // Lifecycle patch: assignment starts work immediately; the problem
+        // analysis is filled while the ticket is In Progress.
         $this->actingAs($this->staff);
 
         $category = Category::first();
@@ -530,8 +532,10 @@ class SmokeTest extends TestCase
 
         $response = $this->postJson("/tickets/{$ticket->id}/assign-to-me", []);
 
-        $response->assertStatus(422);
-        $response->assertJsonPath('errors.problem_analysis', 'Problem analysis is required before you can take this ticket.');
+        $response->assertOk();
+        $ticket->refresh();
+        $this->assertEquals($this->staff->id, $ticket->assignee_id);
+        $this->assertEquals('In Progress', $ticket->status);
     }
 
     public function test_assign_to_me_rejects_ticket_assigned_to_other_staff(): void

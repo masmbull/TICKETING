@@ -172,7 +172,7 @@
             </div>
 
             {{-- WORKFLOW CARD --}}
-            @if($canManage && !$isCompleted)
+            @if($canManage)
             <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
                 <div class="px-4 py-2.5 border-b border-slate-200 dark:border-slate-700">
                     <h2 class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Workflow</h2>
@@ -266,9 +266,24 @@
                     {{-- IN PROGRESS + ASSIGNED TO ME → Complete Ticket --}}
                     @if($isInProgress && $isMyTicket)
                     <div class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Problem Analysis</label>
-                            <p class="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 whitespace-pre-wrap">{{ $ticket->problem_analysis ?? '—' }}</p>
+                        {{-- Problem Analysis stays editable while In Progress;
+                             saving it must not change the status. --}}
+                        <div x-data="{ savingAnalysis: false }">
+                            <form method="POST" action="{{ route('tickets.status.update', $ticket->id) }}" @submit="savingAnalysis = true">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="status" value="In Progress">
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Problem Analysis</label>
+                                <textarea name="problem_analysis" rows="3"
+                                          class="w-full px-3 py-1.5 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 resize-y"
+                                          placeholder="Describe your analysis/diagnosis…">{{ old('problem_analysis', $ticket->problem_analysis) }}</textarea>
+                                @error('problem_analysis')<span class="text-xs text-red-500">{{ $message }}</span>@enderror
+                                <button type="submit" :disabled="savingAnalysis"
+                                        class="w-full mt-2 px-3 py-1.5 text-xs font-medium text-white bg-slate-600 hover:bg-slate-500 rounded-lg transition-all disabled:opacity-50 flex items-center justify-center gap-1">
+                                    <span x-show="!savingAnalysis">Save Analysis</span>
+                                    <span x-show="savingAnalysis">Saving…</span>
+                                </button>
+                            </form>
                         </div>
                         <form method="POST" action="{{ route('tickets.complete', $ticket->id) }}" x-data="{ submitting: false }" @submit="submitting = true">
                             @csrf
@@ -287,6 +302,25 @@
                                 <span x-show="submitting">Completing…</span>
                             </button>
                         </form>
+                    </div>
+                    @endif
+
+                    {{-- COMPLETED → Re-open Ticket (no email, SLA keeps running) --}}
+                    @if($isCompleted)
+                    <div class="bg-amber-50 dark:bg-amber-500/10 rounded-lg p-4 border border-amber-200 dark:border-amber-900/30">
+                        <p class="text-sm text-amber-700 dark:text-amber-300 mb-3">This ticket is completed. Re-opening returns it to In Progress so the resolution can be updated. The SLA clock is not reset and no email is sent.</p>
+                        <div x-data="{ reopening: false }">
+                            <form method="POST" action="{{ route('tickets.reopen', $ticket->id) }}" @submit="reopening = true">
+                                @csrf
+                                <button type="submit" :disabled="reopening"
+                                        class="w-full px-4 py-2.5 bg-[#E30613] hover:bg-[#c4050f] text-white text-sm font-semibold rounded-lg transition-all duration-200 hover:brightness-110 active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2">
+                                    <svg x-show="!reopening" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    <span x-show="!reopening">Re-open Ticket</span>
+                                    <svg x-show="reopening" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path d="M12 2v6"/></svg>
+                                    <span x-show="reopening">Re-opening…</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                     @endif
 

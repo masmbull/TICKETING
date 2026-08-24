@@ -120,7 +120,7 @@ class Sprint40WorkflowTest extends TestCase
         $this->actingAs($this->staff);
         $this->postJson(route('tickets.take', $ticket->id));
         $ticket->refresh();
-        $this->assertEquals('Waiting Confirmation', $ticket->status);
+        $this->assertEquals('In Progress', $ticket->status);
     }
 
     // ─── 7: Staff cannot assign to another user ──────────────
@@ -184,7 +184,8 @@ class Sprint40WorkflowTest extends TestCase
         $this->postJson(route('tickets.take', $ticket->id));
         $ticket->refresh();
         $this->assertEquals($this->manager->id, $ticket->assignee_id);
-        $this->assertEquals('Waiting Confirmation', $ticket->status);
+        // Assignment now starts work: take moves the ticket to In Progress.
+        $this->assertEquals('In Progress', $ticket->status);
     }
 
     // ─── 12-15: Manager can set SLA ──────────────────────────

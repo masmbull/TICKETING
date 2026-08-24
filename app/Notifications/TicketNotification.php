@@ -115,15 +115,22 @@ class TicketNotification extends Notification
             ],
 
             // Only the requestor gets the completion email, even when other
-            // relevant users receive the bell notification.
+            // relevant users receive the bell notification. The report carries
+            // the latest analysis/resolution so a re-completed ticket shows
+            // current data; subject stays a plain completion subject.
             'completed' => $notifiable->getAuthIdentifier() === $ticket->user_id ? [
                 'subject' => "[MITO Ticketing] Ticket #{$number} Completed",
-                'html' => $this->buildHtml([
+                'html' => $this->buildHtml(array_values(array_filter([
                     "Ticket <strong>#{$number}</strong> has been completed.",
                     'Title: '.e($title),
+                    'Requestor: '.e($ticket->user?->name ?? '-'),
+                    'Assignee: '.e($ticket->assignee?->name ?? 'Unassigned'),
                     'Status: Completed',
+                    $this->extra ? e($this->extra) : '',
+                    'Problem Analysis: <br>'.nl2br(e((string) $ticket->problem_analysis)),
+                    'Resolution: <br>'.nl2br(e((string) $ticket->resolution)),
                     'Completed: '.optional($ticket->completed_at ?? $ticket->updated_at)->format('Y-m-d H:i'),
-                ], $link),
+                ])), $link),
             ] : null,
 
             'mentioned' => [
