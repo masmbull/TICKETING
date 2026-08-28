@@ -4,6 +4,17 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MITO Ticketing System</title>
+    {{-- Social/SEO meta — needed for WhatsApp/Telegram/Teams link previews --}}
+    <link rel="icon" type="image/png" href="{{ asset('assets/mito-electronic-removebg-preview-resize.png') }}">
+    <meta property="og:site_name" content="MITO IT Helpdesk">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="MITO Ticketing System">
+    <meta property="og:description" content="Internal Ticketing System — MITO IT Helpdesk. Submit and track your IT support tickets.">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:image" content="{{ url('assets/mito-electronic.png') }}">
+    <meta property="og:image:width" content="435">
+    <meta property="og:image:height" content="441">
+    <meta name="twitter:card" content="summary">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">

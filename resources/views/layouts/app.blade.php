@@ -8,6 +8,17 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>@yield('title', 'Dashboard')</title>
+    {{-- Social/SEO meta — needed for WhatsApp/Telegram/Teams link previews --}}
+    <link rel="icon" type="image/png" href="{{ asset('assets/mito-electronic-removebg-preview-resize.png') }}">
+    <meta property="og:site_name" content="MITO IT Helpdesk">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="@yield('title', 'Dashboard')">
+    <meta property="og:description" content="Internal Ticketing System — MITO IT Helpdesk. Submit and track your IT support tickets.">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:image" content="{{ url('assets/mito-electronic.png') }}">
+    <meta property="og:image:width" content="435">
+    <meta property="og:image:height" content="441">
+    <meta name="twitter:card" content="summary">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
