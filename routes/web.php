@@ -9,6 +9,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SlaPolicyController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\SecurityInsightController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
@@ -109,6 +110,16 @@ Route::middleware('auth')->group(function () {
             Route::get('/{log}', [AuditLogController::class, 'show'])->name('show');
             Route::get('/export/excel', [AuditLogController::class, 'exportExcel'])->name('export.excel');
             Route::get('/export/csv', [AuditLogController::class, 'exportCsv'])->name('export.csv');
+        });
+
+        // Security Insights (Admin only)
+        Route::middleware('admin')->prefix('security-insights')->name('security-insights.')->group(function () {
+            Route::get('/', [SecurityInsightController::class, 'index'])->name('index');
+            Route::get('/export/csv', [SecurityInsightController::class, 'exportCsv'])->name('export.csv');
+            Route::get('/{insight}', [SecurityInsightController::class, 'show'])->name('show');
+            Route::patch('/{insight}/archive', [SecurityInsightController::class, 'archive'])->name('archive');
+            Route::patch('/{insight}/restore', [SecurityInsightController::class, 'restore'])->name('restore');
+            Route::delete('/{insight}', [SecurityInsightController::class, 'destroy'])->name('destroy');
         });
 
         // Reports (Admin + Manager + Staff)
