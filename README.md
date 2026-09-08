@@ -1,132 +1,372 @@
-# MITO IT Helpdesk
+<div align="center">
 
-IT Helpdesk Ticketing System built with Laravel 12.
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:050505,50:450000,100:8B0000&height=220&section=header&text=MITO%20IT%20HELPDESK&fontSize=46&fontColor=ffffff&fontAlignY=38&desc=Enterprise%20IT%20Support%20Platform&descAlignY=60&descSize=18&animation=twinkling" width="100%">
 
-**Current Version:** `v1.0.0` ✅ **RELEASED**  
-**Last Updated:** 19 Aug 2026
+<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=700&size=21&duration=2500&pause=700&color=FF3B30&center=true&vCenter=true&width=800&height=50&lines=TICKET+MANAGEMENT;SLA+MONITORING;OPERATIONAL+VISIBILITY;AUDIT+%26+ACCOUNTABILITY;BUILT+FOR+MITO+ELECTRONIC" alt="MITO IT Helpdesk">
 
-## Project Overview
+<br><br>
 
-MITO IT Helpdesk is an enterprise-grade IT helpdesk ticketing system designed to streamline the management of IT support requests within the organization. The system provides a centralized platform for employees to submit, track, and resolve IT issues efficiently.
+<img src="https://img.shields.io/badge/STATUS-PRODUCTION%20READY-00C853?style=for-the-badge&logoColor=white">
+<img src="https://img.shields.io/badge/VERSION-v1.0.0-8B0000?style=for-the-badge">
+<img src="https://img.shields.io/badge/LARAVEL-12-FF2D20?style=for-the-badge&logo=laravel&logoColor=white">
+<img src="https://img.shields.io/badge/PHP-8.5-777BB4?style=for-the-badge&logo=php&logoColor=white">
+<img src="https://img.shields.io/badge/POSTGRESQL-18-4169E1?style=for-the-badge&logo=postgresql&logoColor=white">
 
-## Release Status
+<br><br>
 
-### v1.0.0 - Production Ready ✅
+<img src="https://img.shields.io/badge/56%2B-TESTS%20PASSING-success?style=flat-square">
+<img src="https://img.shields.io/badge/UBUNTU-24.04-E95420?style=flat-square&logo=ubuntu&logoColor=white">
+<img src="https://img.shields.io/badge/NGINX-PRODUCTION-009639?style=flat-square&logo=nginx&logoColor=white">
+<img src="https://img.shields.io/badge/TIMEZONE-ASIA%2FJAKARTA-212121?style=flat-square">
 
-**Release Date:** 19 Aug 2026  
-**Status:** STABLE - Ready for production deployment
+<br><br>
 
-#### Core Features Implemented
+**MITO ELECTRONIC · IT SUPPORT**
 
-✅ **User Management**
-- Authentication (Login, Remember Me, Forgot Password)
-- Role-based access control (Admin, Manager, Staff, User)
-- User profile management
-- Password management
+`v1.0.0` · `Production Release` · `19 August 2026`
 
-✅ **Ticket Management**
-- Create tickets with categories & subcategories
-- Ticket assignment (Manager/Admin)
-- Assign to Me (Staff self-assignment)
-- Problem Analysis field (required for workflow)
-- Resolution/Resolution field (required for completion)
-- Ticket status workflow: Waiting → In Progress → Completed
-- Comment system with attachments
-- Full audit trail of all changes
+</div>
 
-✅ **SLA Management**
-- 4 priority levels: Critical (1 day), High (2 days), Medium (3 days), Low (5 days)
-- Automatic deadline calculation (Mon-Fri, 08:30-17:30 WIB)
-- SLA performance tracking: Excellent/Normal/Poor
+---
+
+# 🎫 MITO IT HELPDESK
+
+> **Enterprise IT Support & Ticket Management Platform**
+
+MITO IT Helpdesk is an internal enterprise platform built to centralize
+IT support operations — from ticket submission and assignment to SLA
+monitoring, resolution, reporting, notifications, and audit tracking.
+
+### 🎯 Mission
+
+**Every IT request should be trackable, accountable, measurable, and auditable.**
+
+---
+
+# ⚡ SYSTEM OVERVIEW
+
+```text
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║                    MITO IT HELPDESK                              ║
+║                                                                  ║
+║              ENTERPRISE SUPPORT OPERATIONS                        ║
+║                                                                  ║
+║   ┌──────────┐      ┌──────────┐      ┌──────────┐              ║
+║   │  USERS   │ ───► │ TICKETS  │ ───► │   IT     │              ║
+║   └──────────┘      └──────────┘      └────┬─────┘              ║
+║                                             │                    ║
+║                    ┌────────────────────────┼───────┐            ║
+║                    │                        │       │            ║
+║                    ▼                        ▼       ▼            ║
+║                  SLA                    REPORTS   AUDIT          ║
+║                    │                        │       │            ║
+║                    └────────────────────────┴───────┘            ║
+║                                                                  ║
+║                     ● SYSTEM ONLINE                              ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+---
+
+# ✨ CORE FEATURES
+
+| Module | Capabilities |
+|:---|:---|
+| 🎫 **Ticket Management** | Create, assign, track, comment, resolve & complete |
+| ⏱️ **SLA Management** | Priority-based SLA, deadlines & business hours |
+| 👥 **User Management** | Authentication, profiles & RBAC |
+| 🔔 **Notifications** | Assignment, status, comments, SLA & completion |
+| 📊 **Reports & KPI** | Statistics, KPI reports & Excel export |
+| 📝 **Audit Trail** | Complete activity tracking |
+| 🎨 **Modern UI** | Responsive + Light / Dark theme |
+| 🌏 **Localization** | Asia/Jakarta · WIB |
+
+---
+
+# 🔄 TICKET LIFECYCLE
+
+```text
+                    ┌───────────────────────┐
+                    │                       │
+                    │     👤 EMPLOYEE       │
+                    │     CREATE TICKET     │
+                    │                       │
+                    └───────────┬───────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │                       │
+                    │  ⏳ WAITING           │
+                    │     CONFIRMATION      │
+                    │                       │
+                    └───────────┬───────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │                       │
+                    │  👨‍💻 ASSIGNED         │
+                    │                       │
+                    └───────────┬───────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │                       │
+                    │  ⚙️ IN PROGRESS       │
+                    │                       │
+                    └───────────┬───────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │                       │
+                    │  🔍 PROBLEM ANALYSIS │
+                    │                       │
+                    └───────────┬───────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │                       │
+                    │  🛠️ RESOLUTION        │
+                    │                       │
+                    └───────────┬───────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │                       │
+                    │  ✅ COMPLETED         │
+                    │                       │
+                    └───────────────────────┘
+```
+
+---
+
+# ⏱️ SLA ENGINE
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│                       SLA PRIORITY                            │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│ 🔴 CRITICAL    ████████████████████        1 DAY             │
+│ 🟠 HIGH        ███████████████             2 DAYS            │
+│ 🟡 MEDIUM      ██████████                  3 DAYS            │
+│ 🟢 LOW         █████                       5 DAYS            │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Business Schedule
+
+```text
+TIMEZONE        Asia/Jakarta (WIB)
+WORKING DAYS    Monday – Friday
+BUSINESS HOURS  08:30 – 17:30
+```
+
+### SLA Capabilities
+
+- Automatic deadline calculation
+- Business-hour aware calculation
+- Working-day calculation
 - Category-based SLA mapping
-- Manual SLA override (Manager/Admin)
+- Manager/Admin manual override
+- SLA performance classification
+- Excellent / Normal / Poor performance
 
-✅ **Dashboard & Reports**
-- Role-based dashboards (Admin, Manager, Staff, User)
-- KPI metrics and statistics
-- KPI Reports with Excel export
-- Audit Logs with full activity tracking
-- Recent tickets timeline
+---
 
-✅ **Notifications**
-- Real-time notification system
-- Notification bell with unread count
-- Event-based notifications:
-  - Ticket assignment
-  - Status changes
-  - Comments
-  - SLA changes
-  - Ticket completion
-- Mark as read / Mark all as read
-- Direct navigation to ticket
+# 👥 ROLE-BASED ACCESS
 
-✅ **User Interface**
-- Light/Dark theme support
-- MITO Electronic branding
-- Splash screen with loading animation
-- Responsive design (Mobile, Tablet, Desktop)
-- Sidebar navigation
-- Global footer with timezone info
-- Professional dashboard layout
+| Role | Responsibility |
+|:---|:---|
+| 👑 **Admin** | Full system administration |
+| 🧑‍💼 **Manager** | Ticket management, assignment & reporting |
+| 🛠️ **Staff** | Ticket handling & resolution |
+| 👤 **User** | Ticket submission & tracking |
 
-✅ **Localization**
-- Timezone: Asia/Jakarta (WIB)
-- Business hours: Mon-Fri, 08:30-17:30
+---
 
-#### Test Coverage
+# 🔔 NOTIFICATION ENGINE
 
-- 56+ automated tests passing
-- Feature tests for all major workflows
-- SLA calculation tests
-- Notification tests
-- Audit log tests
-- Authentication tests
+```text
+                         ┌─────────────────┐
+                         │   TICKET EVENT  │
+                         └────────┬────────┘
+                                  │
+              ┌───────────────────┼───────────────────┐
+              │                   │                   │
+              ▼                   ▼                   ▼
+        🎯 ASSIGNMENT       🔄 STATUS CHANGE     💬 COMMENT
+              │                   │                   │
+              └───────────────────┼───────────────────┘
+                                  │
+                                  ▼
+                         ┌─────────────────┐
+                         │ 🔔 NOTIFICATION │
+                         └────────┬────────┘
+                                  │
+                                  ▼
+                         ┌─────────────────┐
+                         │ 🎫 TICKET       │
+                         └─────────────────┘
+```
 
-## Technology Stack
+Supported events:
+
+- Ticket assignment
+- Status changes
+- Comments
+- SLA changes
+- Ticket completion
+
+---
+
+# 📊 DASHBOARD & REPORTING
+
+### Dashboard Metrics
+
+- Total tickets
+- Open tickets
+- In-progress tickets
+- Completed tickets
+- SLA performance
+- Recent activity
+- Ticket trends
+- Operational KPIs
+
+### KPI Reports
+
+- Date-range filtering
+- Detail-level filtering
+- SLA metrics
+- Ticket metrics
+- Excel export
+- Audit Logs
+- Ticket timeline
+
+---
+
+# 🏗️ SYSTEM ARCHITECTURE
+
+```text
+                         ┌─────────────────┐
+                         │      USERS      │
+                         └────────┬────────┘
+                                  │
+                                  ▼
+                    ┌─────────────────────────┐
+                    │       LARAVEL 12        │
+                    ├─────────────────────────┤
+                    │                         │
+                    │  Authentication         │
+                    │  RBAC                   │
+                    │  Ticket Management      │
+                    │  SLA Engine             │
+                    │  Notifications          │
+                    │  Reporting              │
+                    │  Audit Logging          │
+                    │                         │
+                    └────────────┬────────────┘
+                                 │
+                                 ▼
+                    ┌─────────────────────────┐
+                    │      POSTGRESQL 18      │
+                    └─────────────────────────┘
+
+             PRODUCTION INFRASTRUCTURE
+
+        Ubuntu 24.04  ──►  Nginx  ──►  PHP 8.5
+```
+
+---
+
+# 🛠️ TECHNOLOGY STACK
 
 | Layer | Technology |
-|-------|-----------|
-| **Framework** | Laravel 12 |
-| **Language** | PHP 8.5 |
-| **Database** | PostgreSQL 18 |
-| **Frontend** | Vite + Node.js LTS |
-| **Development** | Native Windows |
-| **Production** | Ubuntu 24.04 + Nginx |
-| **Testing** | PHPUnit |
-| **Build** | Vite v6 |
+|:---|:---|
+| Framework | Laravel 12 |
+| Language | PHP 8.5 |
+| Database | PostgreSQL 18 |
+| Frontend Build | Vite 6 |
+| Runtime | Node.js LTS |
+| Frontend | JavaScript + Alpine.js |
+| Web Server | Nginx |
+| Production OS | Ubuntu 24.04 |
+| Testing | PHPUnit |
+| Development | Native Windows |
 
-## Development Requirements
+---
 
-- **PHP** >= 8.2
-- **Composer** 2.x
-- **PostgreSQL** 18
-- **Node.js** LTS
-- **Git**
+# 📁 PROJECT STRUCTURE
 
-## Installation
+```text
+TICKETING/
+│
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   └── Middleware/
+│   ├── Models/
+│   ├── Services/
+│   ├── Notifications/
+│   ├── Observers/
+│   └── Providers/
+│
+├── bootstrap/
+├── config/
+├── database/
+│   ├── migrations/
+│   └── seeders/
+│
+├── docs/
+├── public/
+│
+├── resources/
+│   ├── css/
+│   ├── js/
+│   └── views/
+│
+├── routes/
+├── scripts/
+├── storage/
+│
+├── tests/
+│   ├── Feature/
+│   └── Unit/
+│
+├── CONTRIBUTING.md
+├── CHANGELOG.md
+├── LICENSE.md
+└── README.md
+```
 
-### 1. Clone the Repository
+---
+
+# 🚀 INSTALLATION
+
+## 1. Clone Repository
 
 ```bash
 git clone https://github.com/masmbull/TICKETING.git
 cd TICKETING
 ```
 
-### 2. Install Dependencies
+## 2. Install Dependencies
 
 ```bash
 composer install
 npm install
 ```
 
-### 3. Environment Configuration
+## 3. Configure Environment
 
 ```bash
 cp .env.example .env
 php artisan key:generate
 ```
 
-Update the `.env` file with your database credentials:
+Configure PostgreSQL:
 
 ```env
 DB_CONNECTION=pgsql
@@ -135,204 +375,265 @@ DB_PORT=5432
 DB_DATABASE=ticketing
 DB_USERNAME=postgres
 DB_PASSWORD=your_password
+
 APP_TIMEZONE=Asia/Jakarta
 ```
 
-### 4. Create Database
+## 4. Create Database
 
 ```bash
 psql -U postgres -c "CREATE DATABASE ticketing;"
 ```
 
-### 5. Run Migrations
+## 5. Run Migrations
 
 ```bash
 php artisan migrate
 php artisan db:seed
 ```
 
-### 6. Build Frontend Assets
+## 6. Build Frontend
 
 ```bash
 npm run build
 ```
 
-### 7. Start Development Server
+## 7. Start Development Server
 
 ```bash
 php artisan serve
 ```
 
-The application will be available at `http://127.0.0.1:8000`.
+Application:
 
-## Folder Structure
-
-```
-app/
-├── app/                           # Application code
-│   ├── Http/                      # HTTP layer
-│   │   ├── Controllers/           # Controllers (Ticket, Auth, etc.)
-│   │   └── Middleware/            # Middleware
-│   ├── Models/                    # Eloquent models
-│   ├── Services/                  # Business logic services
-│   ├── Notifications/             # Notification classes
-│   ├── Observers/                 # Eloquent observers
-│   └── Providers/                 # Service providers
-├── assets/                        # Static assets
-├── bootstrap/                     # Framework bootstrap
-├── config/                        # Configuration files
-├── database/                      # Migrations & seeders
-│   ├── migrations/                # DB migrations
-│   └── seeders/                   # Database seeders
-├── docs/                          # Documentation
-├── public/                        # Public assets (CSS, JS, images)
-├── resources/                     # Views and assets
-│   ├── css/                       # CSS (Tailwind)
-│   ├── js/                        # JavaScript (Alpine.js)
-│   └── views/                     # Blade templates
-├── routes/                        # Route definitions
-├── scripts/                       # Development scripts
-├── storage/                       # Application storage
-├── tests/                         # Automated tests
-│   ├── Feature/                   # Feature tests
-│   └── Unit/                      # Unit tests
-├── CONTRIBUTING.md                # Contribution guidelines
-├── CHANGELOG.md                   # Version history
-├── LICENSE.md                     # MIT License
-└── README.md                      # This file
+```text
+http://127.0.0.1:8000
 ```
 
-## Usage Examples
+---
 
-### Create a Ticket (End User)
+# 🧪 TESTING
 
-1. Log in as user
-2. Click "Create Ticket"
-3. Select Category & Subcategory
-4. Enter Description & Priority
-5. Submit - Ticket created with status "Waiting Confirmation"
-
-### Assign a Ticket (Manager)
-
-1. Log in as manager
-2. Go to "All Tickets"
-3. Click ticket → "Assign To"
-4. Select staff member → Assign
-5. Optional: Set SLA priority
-
-### Resolve a Ticket (Staff)
-
-1. Log in as staff
-2. Go to "Assigned" tickets
-3. Click ticket → "Take Ticket" (if unassigned)
-4. Enter "Problem Analysis" → "In Progress"
-5. Enter "Resolution" → "Completed"
-
-### View Reports (Admin/Manager)
-
-1. Log in as admin/manager
-2. Go to "Reports" → "KPI Reports"
-3. Select date range and detail level
-4. Export to Excel if needed
-
-## API Routes
-
-Key endpoints available (all authenticated):
-
-```
-GET  /dashboard              # Dashboard
-GET  /tickets                # My tickets
-GET  /tickets/assigned       # Assigned tickets (Staff)
-GET  /tickets/all            # All tickets (Manager/Admin)
-GET  /tickets/create         # Create form
-POST /tickets                # Store ticket
-GET  /tickets/{id}           # Show ticket details
-PATCH /tickets/{id}          # Update ticket status
-POST /tickets/{id}/comments  # Add comment
-GET  /reports                # KPI reports
-GET  /audit-logs             # Audit logs
-```
-
-## Testing
-
-Run automated tests:
+Run all tests:
 
 ```bash
 php artisan test
 ```
 
-Run specific test suite:
+Run a specific suite:
 
 ```bash
 php artisan test --filter=Sprint40
+```
+
+Run a specific feature test:
+
+```bash
 php artisan test tests/Feature/TicketWorkflowTest
 ```
 
-## Database Schema
+### Current Test Status
 
-Key tables:
-- `users` - User accounts
-- `tickets` - Support tickets
-- `ticket_comments` - Comments on tickets
-- `notifications` - User notifications
-- `audit_logs` - Activity audit trail
-- `sla_policies` - SLA configuration
-- `sla_category_mappings` - Category to SLA mapping
+```text
+╔════════════════════════════════════════════════════╗
+║                                                    ║
+║              AUTOMATED TEST SUITE                  ║
+║                                                    ║
+║                 ✓ 56+ PASSING                      ║
+║                                                    ║
+║       ████████████████████████████████             ║
+║                                                    ║
+║                 SYSTEM STABLE                      ║
+║                                                    ║
+╚════════════════════════════════════════════════════╝
+```
 
-## Security
+Coverage includes:
 
-- Password hashing with bcrypt
-- CSRF protection on forms
-- SQL injection protection
-- XSS protection
-- Role-based authorization
-- Audit logging of sensitive operations
-- No sensitive data in logs
+- Authentication
+- Ticket workflows
+- SLA calculations
+- Notifications
+- Audit logging
+- Major ticket operations
 
-## Performance
+---
 
-- Database query optimization with eager loading
-- View caching for production
-- Frontend asset minification (Vite)
+# 📡 KEY ROUTES
+
+| Method | Endpoint | Description |
+|:---:|:---|:---|
+| `GET` | `/dashboard` | Dashboard |
+| `GET` | `/tickets` | My tickets |
+| `GET` | `/tickets/assigned` | Assigned tickets |
+| `GET` | `/tickets/all` | All tickets |
+| `GET` | `/tickets/create` | Create ticket |
+| `POST` | `/tickets` | Store ticket |
+| `GET` | `/tickets/{id}` | Ticket details |
+| `PATCH` | `/tickets/{id}` | Update ticket |
+| `POST` | `/tickets/{id}/comments` | Add comment |
+| `GET` | `/reports` | KPI reports |
+| `GET` | `/audit-logs` | Audit logs |
+
+---
+
+# 💡 USAGE
+
+### 👤 End User
+
+```text
+LOGIN
+  ↓
+CREATE TICKET
+  ↓
+CATEGORY & SUBCATEGORY
+  ↓
+DESCRIPTION & PRIORITY
+  ↓
+SUBMIT
+  ↓
+⏳ WAITING CONFIRMATION
+```
+
+### 🧑‍💼 Manager
+
+```text
+LOGIN
+  ↓
+ALL TICKETS
+  ↓
+OPEN TICKET
+  ↓
+ASSIGN TO
+  ↓
+SELECT STAFF
+  ↓
+ASSIGN
+```
+
+### 🛠️ Staff
+
+```text
+LOGIN
+  ↓
+ASSIGNED TICKETS
+  ↓
+TAKE TICKET
+  ↓
+PROBLEM ANALYSIS
+  ↓
+RESOLUTION
+  ↓
+✅ COMPLETED
+```
+
+---
+
+# 🗄️ DATABASE
+
+### Core Tables
+
+| Table | Purpose |
+|:---|:---|
+| `users` | User accounts |
+| `tickets` | Support tickets |
+| `ticket_comments` | Ticket comments |
+| `notifications` | User notifications |
+| `audit_logs` | Activity audit trail |
+| `sla_policies` | SLA configuration |
+| `sla_category_mappings` | Category → SLA mapping |
+
+---
+
+# 🔐 SECURITY
+
+- 🔒 Password hashing with bcrypt
+- 🛡️ CSRF protection
+- 🧱 SQL injection protection
+- 🧼 XSS protection
+- 👥 Role-based authorization
+- 📝 Audit logging
+- 🚫 Sensitive data protection in logs
+
+---
+
+# ⚡ PERFORMANCE
+
+- Database query optimization
+- Eager loading
+- Database indexes
+- View caching
+- Vite asset optimization
+- Frontend asset minification
 - Lazy loading of heavy components
-- Database indexes on frequently queried columns
 
-## Known Issues
+---
 
-None reported in v1.0.0
+# 🌏 LOCALIZATION
 
-## Roadmap (Future Versions)
+```text
+TIMEZONE        Asia/Jakarta
+DISPLAY         WIB
+WORKING DAYS    Monday – Friday
+BUSINESS HOURS  08:30 – 17:30
+```
 
-Potential enhancements for v1.1+:
-- Mobile app
-- Integration with external ticketing systems
-- Advanced reporting dashboards
-- Automated ticket assignment
-- Escalation workflows
-- Custom fields
-- API documentation
+---
 
-## Documentation
+# 🗺️ ROADMAP
+
+### v1.1+
+
+- 📱 Mobile application
+- 🔌 External ticketing integrations
+- 📊 Advanced reporting dashboards
+- 🤖 Automated ticket assignment
+- 🚨 Escalation workflows
+- 🧩 Custom ticket fields
+- 📚 API documentation
+
+---
+
+# 📚 DOCUMENTATION
 
 - [Contributing Guidelines](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
 - [License](LICENSE.md)
 
-## Contributing
+---
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
+# 🤝 CONTRIBUTING
 
-## Support
+Contributions and improvements are welcome.
 
-For issues, questions, or suggestions, please open an issue on [GitHub](https://github.com/masmbull/TICKETING/issues).
+Please review `CONTRIBUTING.md` before submitting changes.
 
-## License
-
-This project is open-sourced software licensed under the [MIT license](LICENSE.md).
+For bugs, questions, or suggestions, open an issue in the repository.
 
 ---
 
-**Developed by:** MITO Team  
-**Repository:** https://github.com/masmbull/TICKETING  
-**Version:** v1.0.0  
-**Last Updated:** 19 Aug 2026
+<div align="center">
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:050505,50:8B0000,100:050505&height=140&section=footer&animation=twinkling" width="100%">
+
+<br>
+
+# 🛠️ MITO IT HELPDESK
+
+### Built for IT. Designed for Operations.
+
+<br>
+
+<img src="https://img.shields.io/badge/MITO-ELECTRONIC-8B0000?style=for-the-badge">
+
+<br><br>
+
+**MITO Electronic · IT Support**
+
+`v1.0.0` · `Production Ready`
+
+<br><br>
+
+<sub>Internal IT Helpdesk Platform</sub>
+
+</div>
