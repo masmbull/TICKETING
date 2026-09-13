@@ -290,9 +290,9 @@
                         <span class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-[#E30613] group-hover:bg-slate-200 dark:group-hover:bg-slate-600 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         </span>
-                        <span class="text-[11px] font-medium text-slate-600 dark:text-slate-300 text-center leading-tight">New Ticket</span>
+                        <span class="text-[11px] font-medium text-slate-600 dark:text-slate-300 text-center leading-tight">Create Ticket</span>
                     </a>
-                    @if($role === 'admin' || $role === 'manager')
+                    @if(!in_array($role, ['user', 'employee']))
                     <a href="{{ route('users.index') }}" title="Users" class="flex flex-col items-center gap-1.5 w-16 group">
                         <span class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-purple-500 group-hover:bg-slate-200 dark:group-hover:bg-slate-600 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-3-3h-2m-8 5H4a3 3 0 01-3-3v-1a3 3 0 013-3h2m8-4a4 4 0 11-8 0 4 4 0 018 0zM16 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>

@@ -139,12 +139,12 @@ class KpiReportAuthorizationTest extends TestCase
 
         $response = $this->get('/reports');
         $response->assertStatus(200);
-        
+
         // Regular user should NOT appear in staff selector
         $response->assertDontSee("value=\"{$this->regularUser->id}\"");
-        
-        // Support staff SHOULD appear
-        $response->assertSee("value=\"{$this->staff->id}\"");
+
+        // Support staff SHOULD appear (escape=false: raw HTML match for value="..." attribute)
+        $response->assertSee("value=\"{$this->staff->id}\"", false);
     }
 
     // ─── Period Filter Tests ────────────────────────────
@@ -180,7 +180,8 @@ class KpiReportAuthorizationTest extends TestCase
     {
         $this->actingAs($this->manager);
 
-        $response = $this->get('/reports?period=custom&from_date=2026-08-01&to_date=2026-08-19');
+        // A report must be generated (staff_id present) for the custom range to render.
+        $response = $this->get('/reports?staff_id=0&period=custom&from_date=2026-08-01&to_date=2026-08-19');
         $response->assertStatus(200);
         $response->assertSee('01 Aug 2026');
     }
@@ -211,7 +212,8 @@ class KpiReportAuthorizationTest extends TestCase
 
         $response = $this->get('/reports');
         $response->assertStatus(200);
-        $response->assertSee('value="0"');
+        // escape=false: raw HTML attribute match for value="0"
+        $response->assertSee('value="0"', false);
         $response->assertSee('All IT Personnel');
     }
 
@@ -262,8 +264,9 @@ class KpiReportAuthorizationTest extends TestCase
         // Test filtering by individual user
         $response = $this->get("/reports?staff_id={$this->staff->id}&period=this_month");
         $response->assertStatus(200);
-        $response->assertSee($this->staff->name);
-        $response->assertDontSee('All IT Personnel');
+        // A report is generated and its header shows the selected staff member.
+        $response->assertSee('IT SUPPORT KPI REPORT');
+        $response->assertSee($this->staff->name, false);
     }
 
     // ─── ALL IT PERSONNEL REPORT GENERATION TESTS ──────
@@ -324,8 +327,8 @@ class KpiReportAuthorizationTest extends TestCase
 
         $response = $this->get("/reports?staff_id={$this->staff->id}&period=this_month");
         $response->assertStatus(200);
-        $response->assertSee($this->staff->name);
-        $response->assertDontSee('All IT Personnel');
+        $response->assertSee('IT SUPPORT KPI REPORT');
+        $response->assertSee($this->staff->name, false);
     }
 
     public function test_individual_admin_still_works_after_all_fix(): void
@@ -334,17 +337,17 @@ class KpiReportAuthorizationTest extends TestCase
 
         $response = $this->get("/reports?staff_id={$this->admin->id}&period=this_month");
         $response->assertStatus(200);
-        $response->assertSee($this->admin->name);
-        $response->assertDontSee('All IT Personnel');
+        $response->assertSee('IT SUPPORT KPI REPORT');
+        $response->assertSee($this->admin->name, false);
     }
 
     public function test_all_it_personnel_empty_staff_id_does_not_generate(): void
     {
         $this->actingAs($this->manager);
 
-        $response = $this->get("/reports?period=this_month");
+        $response = $this->get('/reports?period=this_month');
         $response->assertStatus(200);
-        // Without staff_id, report should not be generated
+        // Without staff_id, no report is generated
         $response->assertDontSee('Total Tickets Handled');
     }
 

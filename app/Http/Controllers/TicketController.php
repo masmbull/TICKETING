@@ -30,8 +30,8 @@ class TicketController extends Controller
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('ticket_number', 'ILIKE', "%{$search}%")
-                  ->orWhere('description', 'ILIKE', "%{$search}%");
+                $q->whereLike('ticket_number', "%{$search}%")
+                  ->orWhereLike('description', "%{$search}%");
             });
         }
 
@@ -64,15 +64,15 @@ class TicketController extends Controller
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('ticket_number', 'ILIKE', "%{$search}%")
-                  ->orWhere('description', 'ILIKE', "%{$search}%")
+                $q->whereLike('ticket_number', "%{$search}%")
+                  ->orWhereLike('description', "%{$search}%")
                   ->orWhereHas('user', function ($qq) use ($search) {
-                      $qq->where('name', 'ILIKE', "%{$search}%")
-                         ->orWhere('email', 'ILIKE', "%{$search}%");
+                      $qq->whereLike('name', "%{$search}%")
+                         ->orWhereLike('email', "%{$search}%");
                   })
                   ->orWhereHas('assignee', function ($qq) use ($search) {
-                      $qq->where('name', 'ILIKE', "%{$search}%")
-                         ->orWhere('email', 'ILIKE', "%{$search}%");
+                      $qq->whereLike('name', "%{$search}%")
+                         ->orWhereLike('email', "%{$search}%");
                   });
             });
         }
@@ -106,10 +106,10 @@ class TicketController extends Controller
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('ticket_number', 'ILIKE', "%{$search}%")
-                  ->orWhere('description', 'ILIKE', "%{$search}%")
+                $q->whereLike('ticket_number', "%{$search}%")
+                  ->orWhereLike('description', "%{$search}%")
                   ->orWhereHas('user', function ($qq) use ($search) {
-                      $qq->where('name', 'ILIKE', "%{$search}%");
+                      $qq->whereLike('name', "%{$search}%");
                   });
             });
         }
@@ -201,7 +201,7 @@ class TicketController extends Controller
              'sub_category_id' => 'nullable|exists:sub_categories,id',
              'priority'        => $isSupport ? 'required|in:low,medium,high,critical' : 'nullable|in:low,medium,high,critical',
              'description'     => 'required',
-             'user_id'         => $isSupport ? 'required|exists:users,id' : 'nullable',
+             'user_id'         => 'nullable|exists:users,id',
              'assignee_id'     => $isSupport ? 'nullable|exists:users,id' : 'nullable',
              'sla_policy_id'   => 'nullable|exists:sla_policies,id',
              'attachments'     => 'nullable|array',
@@ -217,7 +217,7 @@ class TicketController extends Controller
          $assigneeId = $isSupport ? ($validated['assignee_id'] ?? null) : null;
 
          // Requestor: Staff/Admin can create for another user, otherwise use authenticated user
-         $requestorId = $isSupport && $validated['user_id'] ? $validated['user_id'] : auth()->id();
+         $requestorId = ($isSupport && ($validated['user_id'] ?? null)) ? $validated['user_id'] : auth()->id();
 
          // Generate ticket number: ITSUP-YYYYMMDD-NNNNN
          $today = now()->format('Ymd');
@@ -234,56 +234,13 @@ class TicketController extends Controller
 
          $ticketNumber = "ITSUP-{$today}-{$newNumber}";
 
-         // Handle SLA: Explicit > Auto-mapping > Default (Low)
+         // SLA is never started at creation time. Regular users never see the
+         // priority/SLA fields, and even support-created tickets only start
+         // their SLA clock when a manager/admin assigns the SLA via the SLA
+         // endpoint afterwards (see updateSla()).
          $slaPriority = null;
          $slaStartedAt = null;
          $slaDeadline = null;
-
-         // CASE A: Support explicitly selected SLA policy
-         if ($validated['sla_policy_id'] ?? null) {
-             $policy = SlaPolicy::find($validated['sla_policy_id']);
-             if ($policy && $policy->is_active) {
-                 $slaPriority = $policy->priority;
-                 $slaStartedAt = now('Asia/Jakarta');
-                 $slaDeadline = $slaStartedAt->copy()->addDays($policy->resolution_days);
-             }
-         }
-
-         // CASE B: No explicit SLA, try auto-mapping
-         if (!$slaPriority) {
-             $mapping = SlaMapping::where('category_id', $validated['category_id'] ?? null)
-                 ->where(function ($q) use ($validated) {
-                     $q->where('sub_category_id', $validated['sub_category_id'] ?? null)
-                       ->orWhereNull('sub_category_id');
-                 })
-                 ->where('is_active', true)
-                 ->first();
-
-             if ($mapping) {
-                 $policy = SlaPolicy::where('priority', $mapping->priority)
-                     ->where('is_active', true)
-                     ->first();
-
-                 if ($policy && $policy->resolution_days) {
-                     $slaPriority = $mapping->priority;
-                     $slaStartedAt = now('Asia/Jakarta');
-                     $slaDeadline = $slaStartedAt->copy()->addDays($policy->resolution_days);
-                 }
-             }
-         }
-
-         // CASE C: No explicit SLA, no mapping - default to Low (5 business days)
-         if (!$slaPriority) {
-             $defaultPolicy = SlaPolicy::where('priority', 'low')
-                 ->where('is_active', true)
-                 ->first();
-
-             if ($defaultPolicy) {
-                 $slaPriority = 'low';
-                 $slaStartedAt = now('Asia/Jakarta');
-                 $slaDeadline = $slaStartedAt->copy()->addDays($defaultPolicy->resolution_days);
-             }
-         }
 
          $ticketData = [
              'ticket_number'   => $ticketNumber,
@@ -297,7 +254,9 @@ class TicketController extends Controller
              // it must also mark the workflow timestamps.
              'assigned_at'        => $assigneeId ? now() : null,
              'first_response_at'  => $assigneeId ? now() : null,
-             'priority'        => $priority ?? $slaPriority,
+             // tickets.priority is NOT NULL (DB default "medium"): regular users
+             // don't post a priority, so fall back to the neutral default.
+             'priority'        => $priority ?? 'medium',
              'sla_priority'    => $slaPriority,
              'sla_started_at'  => $slaStartedAt,
              'sla_deadline'    => $slaDeadline,
@@ -883,8 +842,10 @@ class TicketController extends Controller
         $ticket = $this->findTicketForUser($id);
         $commentText = $validated['comment'] ?? '';
 
-        // Parse mentions from comment text (@username pattern)
-        $mentionedUserIds = $this->extractMentionedUsers($commentText);
+        // Parse mentions from comment text (@username pattern).
+        // The commenter is excluded: self-mentions are never recorded and
+        // never notified (see MentionNotificationTest CASE 2).
+        $mentionedUserIds = $this->extractMentionedUsers($commentText, $user->id);
 
         // Use transaction to ensure comment and mentions are saved together
         $comment = \DB::transaction(function () use ($ticket, $user, $commentText, $mentionedUserIds) {
@@ -976,32 +937,47 @@ class TicketController extends Controller
      * @param string $commentText
      * @return array ['user_id' => count, ...] - prevents duplicate mentions of same user
      */
-    private function extractMentionedUsers(string $commentText): array
+    private function extractMentionedUsers(string $commentText, ?int $commenterId = null): array
     {
-        // Match @name pattern - simple approach: @ followed by word chars and spaces
-        // Stops at punctuation or multiple consecutive spaces
+        // Match @name pattern. The capture tolerates spaces (user names may
+        // contain them) but is greedy, so "@Charlie and @Eve" captures
+        // "Charlie and" — resolve it with a longest-first prefix match against
+        // real user names instead of trusting the raw capture.
         if (!preg_match_all('/@([\w\s]+)/i', $commentText, $matches)) {
             return [];
         }
 
-        $mentionedNames = array_unique($matches[1]); // Remove duplicates
         $result = [];
 
-        foreach ($mentionedNames as $name) {
-            // Trim whitespace from captured name
+        foreach (array_unique($matches[1]) as $name) {
             $name = trim($name);
-            
-            if (empty($name)) {
+
+            if ($name === '') {
                 continue;
             }
-            
-            $mentionedUser = User::where('is_active', true)
-                ->whereRaw('LOWER(name) = LOWER(?)', [$name])
-                ->select('id', 'name')
-                ->first();
 
-            if ($mentionedUser) {
+            $words = preg_split('/\s+/', $name);
+
+            // Try the longest candidate first, then strip trailing words.
+            for ($length = count($words); $length > 0; $length--) {
+                $candidate = implode(' ', array_slice($words, 0, $length));
+
+                $mentionedUser = User::where('is_active', true)
+                    ->whereRaw('LOWER(name) = LOWER(?)', [$candidate])
+                    ->select('id', 'name')
+                    ->first();
+
+                if (!$mentionedUser) {
+                    continue;
+                }
+
+                // Self-mention: never record, never notify.
+                if ($commenterId !== null && $mentionedUser->id === $commenterId) {
+                    break;
+                }
+
                 $result[$mentionedUser->id] = 1; // Track each user once
+                break;
             }
         }
 
@@ -1157,13 +1133,13 @@ class TicketController extends Controller
         $ticketQuery = Ticket::query()
             ->with(['user', 'assignee'])
             ->where(function ($qq) use ($q) {
-                $qq->where('ticket_number', 'ILIKE', "%{$q}%")
-                   ->orWhere('description', 'ILIKE', "%{$q}%")
+                $qq->whereLike('ticket_number', "%{$q}%")
+                   ->orWhereLike('description', "%{$q}%")
                    ->orWhereHas('user', function ($u) use ($q) {
-                       $u->where('name', 'ILIKE', "%{$q}%")->orWhere('email', 'ILIKE', "%{$q}%");
+                       $u->whereLike('name', "%{$q}%")->orWhereLike('email', "%{$q}%");
                    })
                    ->orWhereHas('assignee', function ($u) use ($q) {
-                       $u->where('name', 'ILIKE', "%{$q}%")->orWhere('email', 'ILIKE', "%{$q}%");
+                       $u->whereLike('name', "%{$q}%")->orWhereLike('email', "%{$q}%");
                    });
             });
 
@@ -1194,7 +1170,7 @@ class TicketController extends Controller
         if ($isManagement) {
             $users = User::with('role')
                 ->where(function ($u) use ($q) {
-                    $u->where('name', 'ILIKE', "%{$q}%")->orWhere('email', 'ILIKE', "%{$q}%");
+                    $u->whereLike('name', "%{$q}%")->orWhereLike('email', "%{$q}%");
                 })
                 ->orderBy('name')
                 ->take(5)
@@ -1211,7 +1187,7 @@ class TicketController extends Controller
 
         // ---- Categories ----
         $categories = Category::where('is_active', true)
-            ->where('name', 'ILIKE', "%{$q}%")
+            ->whereLike('name', "%{$q}%")
             ->orderBy('name')
             ->take(5)
             ->get()

@@ -213,7 +213,8 @@ class Sprint36TicketDetailsTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('No comments yet');
-        $response->assertSee('Add a comment');
+        // Rich comment editor: the submit button marks the comment form.
+        $response->assertSee('Post Comment');
     }
 
     public function test_comment_existing_is_visible(): void

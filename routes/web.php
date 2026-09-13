@@ -14,6 +14,9 @@ use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
+// Lightweight health probe (no auth, no external API calls): 200 healthy / 503 down.
+Route::get('/health', \App\Http\Controllers\HealthController::class)->name('health');
+
 Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');

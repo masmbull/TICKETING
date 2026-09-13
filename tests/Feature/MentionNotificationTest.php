@@ -98,8 +98,11 @@ class MentionNotificationTest extends TestCase
             'user_id' => $this->reporter->id,
         ]);
 
-        // Verify notification was NOT sent to self
-        Notification::assertNotSentTo($this->reporter, TicketNotification::class);
+        // Verify no MENTION notification was sent to self. (A 'commented'
+        // notification is still expected: the reporter is also the creator.)
+        Notification::assertNotSentTo($this->reporter, TicketNotification::class, function ($notification) {
+            return $notification->event === 'mentioned';
+        });
     }
 
     /**

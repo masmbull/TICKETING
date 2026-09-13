@@ -18,6 +18,13 @@ class LoginFlowHotfixTest extends TestCase
 
         $this->seed(\Database\Seeders\RoleSeeder::class);
         $this->seed(\Database\Seeders\UserSeeder::class);
+
+        // UserSeeder intentionally seeds a random per-run password (security
+        // fix: no shared/known credentials). Pin a deterministic one here so
+        // these tests can exercise the real login flow.
+        $admin = User::where('email', 'admin@mito.local')->firstOrFail();
+        $admin->password = 'Admin@123';
+        $admin->save();
     }
 
     // ─── Guest entry flow ────────────────────────────────────

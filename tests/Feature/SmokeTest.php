@@ -265,7 +265,8 @@ class SmokeTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('TKT-000010');
         $response->assertSee('Testing ticket detail page');
-        $response->assertSee('Add a comment');
+        // Comment form uses the rich editor; the submit button is the stable marker.
+        $response->assertSee('Post Comment');
     }
 
     public function test_ticket_detail_shows_comments(): void

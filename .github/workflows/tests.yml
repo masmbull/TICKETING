@@ -1,0 +1,79 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+# A newer push to the same branch cancels an in-flight run.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Automated test suite
+    runs-on: ubuntu-latest
+
+    # Isolated test environment. No production database, no production Graph
+    # credentials, no queue worker draining a production queue.
+    env:
+      APP_ENV: testing
+      APP_DEBUG: "true"
+      # Deterministic CI key: never the production APP_KEY.
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      APP_URL: http://localhost
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ":memory:"
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: array
+      BCRYPT_ROUNDS: "4"
+      # DUMMY credentials only: the mail tests fake the HTTP transport, so no
+      # real token can ever be minted and no real email can be delivered.
+      MS_GRAPH_TENANT_ID: testing-tenant
+      MS_GRAPH_CLIENT_ID: testing-client-id
+      MS_GRAPH_CLIENT_SECRET: testing-client-secret
+      MS_GRAPH_MAIL_FROM: itsupport@example.test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, pdo, pdo_sqlite, openssl, json, curl
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --no-interaction || true
+
+      # Every Feature test uses RefreshDatabase against the in-memory SQLite
+      # database, so the suite is self-migrating. This pre-flight only proves
+      # the migration set itself is valid on a clean database.
+      - name: Verify database schema is migratable
+        run: |
+          touch "$RUNNER_TEMP/ci.sqlite"
+          DB_DATABASE="$RUNNER_TEMP/ci.sqlite" php artisan migrate --force --no-interaction
+
+      - name: Run the full automated suite
+        run: php artisan test
+
+      - name: Diagnose environment (offline, never sends email)
+        if: always()
+        run: php artisan mito:diagnose --skip-external

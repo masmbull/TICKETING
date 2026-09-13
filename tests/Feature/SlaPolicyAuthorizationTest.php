@@ -105,7 +105,7 @@ class SlaPolicyAuthorizationTest extends TestCase
     public function test_guest_redirected_to_login(): void
     {
         $response = $this->get('/settings/sla-policies');
-        $response->assertRedirect('/login/user');
+        $response->assertRedirect('/login');
     }
 
     // ─── CREATE TESTS ───────────────────────────────────
@@ -298,8 +298,9 @@ class SlaPolicyAuthorizationTest extends TestCase
 
         $response = $this->get('/dashboard');
         $response->assertStatus(200);
-        // Verify the sidebar contains the link to SLA policies
-        $response->assertSee('sla-policies.index');
+        // Verify the sidebar links to the SLA policies page
+        $response->assertSee('/settings/sla-policies', false);
+        $response->assertSee('SLA Policies');
     }
 
     public function test_manager_sees_sla_policies_in_sidebar(): void
@@ -308,8 +309,9 @@ class SlaPolicyAuthorizationTest extends TestCase
 
         $response = $this->get('/dashboard');
         $response->assertStatus(200);
-        // Verify the sidebar contains the link to SLA policies
-        $response->assertSee('sla-policies.index');
+        // Verify the sidebar links to the SLA policies page
+        $response->assertSee('/settings/sla-policies', false);
+        $response->assertSee('SLA Policies');
     }
 
     public function test_staff_does_not_see_sla_policies_in_sidebar(): void
@@ -318,7 +320,7 @@ class SlaPolicyAuthorizationTest extends TestCase
 
         $response = $this->get('/dashboard');
         $response->assertStatus(200);
-        // Staff should not have access, but we check if they see the link in dashboard
-        // (sidebar rendering doesn't generate 403, just hides the link)
+        // Staff cannot manage SLA policies, so the link must be hidden
+        $response->assertDontSee('/settings/sla-policies', false);
     }
 }

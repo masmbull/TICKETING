@@ -426,36 +426,102 @@ Run a specific suite:
 php artisan test --filter=Sprint40
 ```
 
-Run a specific feature test:
+Run a specific feature test (every test file is independently runnable):
 
 ```bash
-php artisan test tests/Feature/TicketWorkflowTest
+php artisan test tests/Feature/KpiReportAuthorizationTest.php
+php artisan test tests/Feature/SlaPolicyAuthorizationTest.php
+php artisan test tests/Feature/TicketLifecycleReopenTest.php
+php artisan test tests/Feature/GraphMailIntegrationTest.php
 ```
+
+Run a single test by name:
+
+```bash
+php artisan test --filter=test_admin_can_view_sla_policies
+```
+
+Email tests never send real mail. `phpunit.xml` sets `DB_CONNECTION=sqlite`
+(`:memory:`) plus dummy `MS_GRAPH_*` values, and the mail tests fake the HTTP
+transport, so no real token is ever minted and no message can leave the host.
 
 ### Current Test Status
 
 ```text
-╔════════════════════════════════════════════════════╗
-║                                                    ║
-║              AUTOMATED TEST SUITE                  ║
-║                                                    ║
-║                 ✓ 56+ PASSING                      ║
-║                                                    ║
-║       ████████████████████████████████             ║
-║                                                    ║
-║                 SYSTEM STABLE                      ║
-║                                                    ║
-╚════════════════════════════════════════════════════╝
+362 passed (854 assertions)
 ```
 
 Coverage includes:
 
-- Authentication
-- Ticket workflows
-- SLA calculations
-- Notifications
+- Authentication and role-based access control
+- Ticket workflows (assignment, analysis, completion, reopen)
+- SLA calculations and SLA policy authorization
+- KPI report authorization and date filtering
+- Notifications (bell) and Microsoft Graph email
 - Audit logging
-- Major ticket operations
+- Mention parsing and notification de-duplication
+
+---
+
+# 🩺 OPERATIONS
+
+## Health check
+
+```bash
+curl -i http://127.0.0.1:8000/health
+```
+
+Unauthenticated and deliberately cheap. Checks only the application boot and a
+trivial database query — no external API is contacted.
+
+```json
+{ "status": "ok", "checks": { "application": "ok", "database": "ok" } }
+```
+
+`200` when healthy, `503` when a critical dependency (the database) is
+unavailable.
+
+## Environment diagnosis
+
+```bash
+php artisan mito:diagnose
+php artisan mito:diagnose --skip-external   # offline: no Graph probes
+```
+
+Checks platform (PHP/Laravel/extensions), application configuration, database,
+storage, queue configuration, Microsoft Graph OAuth/token connectivity, Graph
+API reachability and the remaining integrations. It never prints secrets or
+tokens (only whether a value is configured) and never sends email.
+
+## Email flow verification
+
+```bash
+php artisan mito:check-email-flow --to=someone@example.com
+```
+
+Drives a real ticket through the production lifecycle path
+(`GraphMailChannel` → `MicrosoftGraphMailService` → client-credentials token →
+`/sendMail`) and asserts the required outcomes:
+
+| Transition | Email expected |
+|:---|:---:|
+| ticket created | yes |
+| ticket completed | yes |
+| ticket reopened | **no** |
+| ticket completed after reopen | yes |
+
+Only the outbound HTTP transport is redirected to a local recorder, so
+`graph.microsoft.com` is never contacted and no message can be delivered by
+accident. Add `--create-ticket` to also exercise a direct
+`MicrosoftGraphMailService::send()` call.
+
+## Continuous integration
+
+`.github/workflows/tests.yml` runs the full suite on every push/PR in an
+isolated environment: SQLite `:memory:`, dummy Graph credentials, `array` mail
+driver and `sync` queue. CI never sends real email, never touches the production
+database and never calls production integrations.
+
 
 ---
 
