@@ -6,6 +6,7 @@ use App\Services\MicrosoftGraphMailService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 /**
@@ -102,10 +103,14 @@ class Diagnose extends Command
         }
 
         try {
-            $applied = DB::table('migrations')->count();
-            $files = count(glob(database_path('migrations/*.php')));
-            $pending = max(0, $files - $applied);
-            $this->ok('Migrations', $applied.' applied'.($pending > 0 ? ', '.$pending.' file(s) newer' : ''));
+            if (! Schema::hasTable('migrations')) {
+                $this->ok('Migrations', 'table not present (unmigrated database)');
+            } else {
+                $applied = DB::table('migrations')->count();
+                $files = count(glob(database_path('migrations/*.php')));
+                $pending = max(0, $files - $applied);
+                $this->ok('Migrations', $applied.' applied'.($pending > 0 ? ', '.$pending.' file(s) newer' : ''));
+            }
         } catch (Throwable $e) {
             $this->bad('Migrations', 'migrations table unreadable: '.$e->getMessage());
         }
