@@ -1,0 +1,52 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+
+# Serialize deploys: a newer successful CI run cancels any in-flight deploy,
+# so an obsolete commit can never be deployed after a newer one supersedes it.
+concurrency:
+  group: deploy-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to EC2/VPS
+    # Only deploy when:
+    #   - the completed CI run succeeded,
+    #   - the CI run was against the main branch,
+    #   - the head SHA is still the tip of main (no newer commit has landed).
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd /home/ubuntu/ticketing
+            CI_SHA="${{ github.event.workflow_run.head_sha }}"
+
+            echo "=== DEPLOY START (CI SHA: ${CI_SHA}) ==="
+
+            # Fail closed: do not deploy if this SHA is no longer an ancestor of
+            # origin/main. A newer push has superseded the CI that triggered
+            # this deploy, so running deploy.sh would roll forward to unknown code.
+            git fetch origin
+            if [ "$(git rev-parse origin/main)" != "${CI_SHA}" ] && \
+               ! git merge-base --is-ancestor "${CI_SHA}" origin/main; then
+              echo "Deploy aborted: CI SHA ${CI_SHA} is not the tip of origin/main."
+              exit 1
+            fi
+
+            ./deploy.sh
+            echo "=== DEPLOY SUCCESS ==="

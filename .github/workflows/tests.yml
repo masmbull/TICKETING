@@ -77,23 +77,3 @@ jobs:
       - name: Diagnose environment (offline, never sends email)
         if: always()
         run: php artisan mito:diagnose --skip-external
-
-  # Deploys ONLY after the CI test job above succeeds, and only for pushes to
-  # main. Pull requests can never reach this job (trigger guard on `on.push`
-  # + `github.event_name` condition + `needs: test` dependency).
-  deploy:
-    name: Deploy to EC2/VPS
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            cd /home/ubuntu/ticketing
-            ./deploy.sh
