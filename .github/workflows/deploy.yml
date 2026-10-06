@@ -39,13 +39,14 @@ jobs:
             # Add the usual Docker locations (snap included) up front.
             export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:$PATH"
 
-            # Production checkout is /opt/ticketing/app. Prefer it; fall back to
-            # locating deploy.sh (repo root) so a moved checkout still works.
-            APP_DIR="/opt/ticketing/app"
+            # Production checkout is /opt/ticketing/app. Prefer it; only fall back
+            # to locating deploy.sh under system dirs (never /home, which can hold
+            # stray clones) so a moved checkout still works.
+            APP_DIR="${TICKETING_APP_DIR:-/opt/ticketing/app}"
             [ -f "$APP_DIR/deploy.sh" ] || \
-              APP_DIR="$(find -L /opt /srv /var/www /home -maxdepth 3 -name deploy.sh -printf '%h\n' 2>/dev/null | head -n1)"
+              APP_DIR="$(find -L /opt /srv /var/www -maxdepth 4 -name deploy.sh -printf '%h\n' 2>/dev/null | head -n1)"
             if [ -z "$APP_DIR" ] || [ ! -f "$APP_DIR/deploy.sh" ]; then
-              echo "Deploy aborted: no deploy.sh found under /opt /srv /var/www /home."
+              echo "Deploy aborted: no deploy.sh found under /opt /srv /var/www."
               exit 1
             fi
             echo "Using APP_DIR=${APP_DIR}"
@@ -64,5 +65,13 @@ jobs:
               exit 1
             fi
 
-            ./deploy.sh
+            # Sync the checkout BEFORE invoking deploy.sh. The running bash reads
+            # an open inode, so if deploy.sh rewrites itself via `git reset` the
+            # shell keeps executing the stale pre-reset copy (this is what caused
+            # "docker: command not found": the old line 17 lacked the PATH fix).
+            # Resetting here + `exec` a freshly opened file guarantees the new
+            # deploy.sh (and its PATH export) actually runs.
+            git reset --hard origin/main
+
+            exec ./deploy.sh
             echo "=== DEPLOY SUCCESS ==="
