@@ -10,7 +10,7 @@ class Admin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check() || auth()->user()->role->slug !== 'admin') {
+        if (!auth()->check() || auth()->user()->role?->slug !== 'admin') {
             abort(403, 'Unauthorized. Admin access required.');
         }
 

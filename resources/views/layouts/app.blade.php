@@ -158,7 +158,7 @@
                                 'items' => [
                                     ['label' => 'All Tickets', 'route' => 'tickets.all', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'],
                                     ['label' => 'My Tickets', 'route' => 'tickets.index', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
-                                    ['label' => 'Create Ticket', 'route' => 'tickets.create', 'icon' => 'M12 4v16m8-8H4'],
+                                    ['label' => 'Create Ticket', 'route' => 'tickets.create', 'tour' => 'create-ticket-link', 'icon' => 'M12 4v16m8-8H4'],
                                 ],
                             ],
                             [
@@ -181,6 +181,7 @@
                              'label' => 'Administration',
                              'items' => [
                                  ['label' => 'Audit Logs', 'route' => 'audit.index', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
+                                 ['label' => 'Tooltip', 'route' => 'tooltip.index', 'icon' => 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z'],
                              ],
                          ];
                      } elseif ($role === 'manager') {
@@ -244,6 +245,7 @@
                         @foreach($section['items'] as $item)
                             @php $active = request()->routeIs($item['route']); @endphp
                             <a href="{{ route($item['route']) }}"
+                               @isset($item['tour']) data-tour="{{ $item['tour'] }}" @endisset
                                class="group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 {{ $active ? 'bg-[#E30613]/10 text-[#E30613] dark:bg-[#E30613]/10 dark:text-white font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800' }}">
                                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $item['icon'] }}"/></svg>
                                 <span x-show="sidebarExpanded || mobileMenuOpen" x-transition class="text-sm font-medium whitespace-nowrap">{{ $item['label'] }}</span>
@@ -426,6 +428,9 @@
     </div>
 
     <div x-show="mobileMenuOpen" x-cloak x-transition @click="mobileMenuOpen = false" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden"></div>
+
+    {{-- Onboarding tour ("Cara buat tiket ke IT") --}}
+    @include('partials.onboarding-tour')
 
     @stack('scripts')
 </body>

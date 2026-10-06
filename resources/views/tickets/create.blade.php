@@ -43,7 +43,7 @@ function fetchSubcategories(categoryId) {
                 <div class="space-y-3">
                     <div>
                         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Category *</label>
-                        <select name="category_id" required class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white" @change="fetchSubcategories($event.target.value)">
+                        <select name="category_id" required data-tour="ticket-category" class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white" @change="fetchSubcategories($event.target.value)">
                             <option value="">Select category...</option>
                             @foreach($categories as $category)
                             <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
@@ -170,7 +170,7 @@ function fetchSubcategories(categoryId) {
             <h2 class="text-sm font-semibold text-slate-900 dark:text-white mb-4">Description</h2>
             <div>
                 <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Describe your issue *</label>
-                <textarea name="description" rows="5" required class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400" placeholder="Describe your issue in detail...">{{ old('description') }}</textarea>
+                <textarea name="description" rows="5" required data-tour="ticket-description" class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400" placeholder="Describe your issue in detail...">{{ old('description') }}</textarea>
                 @error('description')<span class="text-xs text-red-500">{{ $message }}</span>@enderror
             </div>
         </div>
@@ -211,7 +211,7 @@ function fetchSubcategories(categoryId) {
             <p class="text-xs text-slate-500">* Required fields</p>
             <div class="flex items-center gap-2">
                 <a href="{{ route('tickets.index') }}" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">Cancel</a>
-                <button type="submit" class="px-4 py-2 bg-[#E30613] hover:bg-[#c4050f] text-white text-sm font-medium rounded-lg">Submit Ticket</button>
+                <button type="submit" data-tour="ticket-submit" class="px-4 py-2 bg-[#E30613] hover:bg-[#c4050f] text-white text-sm font-medium rounded-lg">Submit Ticket</button>
             </div>
         </div>
     </form>

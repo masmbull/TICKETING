@@ -11,6 +11,7 @@ use App\Http\Controllers\SlaPolicyController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\SecurityInsightController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\TooltipSettingController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -158,6 +159,12 @@ Route::middleware('auth')->group(function () {
 
         // Settings
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+
+        // Tooltip onboarding (Admin only)
+        Route::middleware('admin')->prefix('settings/tooltip')->name('tooltip.')->group(function () {
+            Route::get('/', [TooltipSettingController::class, 'index'])->name('index');
+            Route::patch('/', [TooltipSettingController::class, 'update'])->name('update');
+        });
 
         // Logout
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
