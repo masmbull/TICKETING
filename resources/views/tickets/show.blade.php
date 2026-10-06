@@ -578,6 +578,12 @@
                         
                         <!-- Hidden input to store plain text for form submission -->
                         <input type="hidden" name="comment" x-ref="commentInput" x-model="plainTextComment" />
+
+                        <!-- Exact accounts picked from the mention dropdown (ids, not
+                             names) so duplicate display names resolve to the right user. -->
+                        <template x-for="id in selectedMentionIds" :key="id">
+                            <input type="hidden" name="mentions[]" :value="id">
+                        </template>
                         
                         <!-- Mention Autocomplete Dropdown -->
                         <div x-show="showMentionDropdown" 
@@ -798,6 +804,9 @@ function commentForm() {
         dropdownTop: 0,
         dropdownLeft: 0,
         
+        // Accounts picked from the dropdown (user ids), submitted as mentions[]
+        selectedMentionIds: [],
+
         // Mention tracking
         mentionTimeout: null,
         mentionAbortController: null,
@@ -1009,6 +1018,12 @@ function commentForm() {
 
         selectMention(user) {
             const editor = this.$refs.commentEditor;
+
+            // Remember the exact account chosen so the backend never has to
+            // guess by name (duplicate names exist in the directory).
+            if (!this.selectedMentionIds.includes(user.id)) {
+                this.selectedMentionIds.push(user.id);
+            }
             
             // Get full current text
             const fullText = editor.innerText || '';

@@ -3,7 +3,7 @@
 @section('title', 'Tooltip - MITO IT Helpdesk')
 
 @section('content')
-<div class="space-y-6" x-data="{ steps: @js($setting->steps ?: \App\Models\TooltipSetting::defaultSteps()) }">
+<div class="space-y-6" x-data="{ on: {{ $setting->enabled ? 'true' : 'false' }}, steps: @js($setting->steps ?: \App\Models\TooltipSetting::defaultSteps()) }">
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-xl font-bold text-slate-900 dark:text-white">Tooltip Onboarding</h1>
@@ -20,9 +20,9 @@
             <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
                 <h2 class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</h2>
                 <label class="inline-flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" name="enabled" value="1" @checked($setting->enabled) class="sr-only peer">
+                    <input type="checkbox" name="enabled" value="1" x-model="on" @change="$el.form.requestSubmit()" class="sr-only peer">
                     <span class="w-10 h-5 bg-slate-200 dark:bg-slate-700 rounded-full peer-checked:bg-[#E30613] relative transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:bg-white after:rounded-full after:transition-transform peer-checked:after:translate-x-5"></span>
-                    <span class="text-xs font-medium text-slate-600 dark:text-slate-300">{{ $setting->enabled ? 'Aktif' : 'Nonaktif' }}</span>
+                    <span class="text-xs font-medium text-slate-600 dark:text-slate-300" x-text="on ? 'Aktif' : 'Nonaktif'"></span>
                 </label>
             </div>
             <div class="px-4 py-3">

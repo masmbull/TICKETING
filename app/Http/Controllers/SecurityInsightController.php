@@ -40,7 +40,7 @@ class SecurityInsightController extends Controller
         }
 
         // Tab filter (default active)
-        $tab = in_array($request->input('tab', 'active'), ['active', 'archived']) ? $request->input('tab') : 'active';
+        $tab = in_array($request->input('tab', 'active'), ['active', 'archived']) ? $request->input('tab', 'active') : 'active';
         $query->where('status', $tab);
 
         // Sort by most recent insight first
@@ -140,7 +140,7 @@ class SecurityInsightController extends Controller
             });
         }
 
-        $tab = in_array($request->input('tab', 'active'), ['active', 'archived']) ? $request->input('tab') : 'active';
+        $tab = in_array($request->input('tab', 'active'), ['active', 'archived']) ? $request->input('tab', 'active') : 'active';
         $query->where('status', $tab);
 
         $insights = $query->orderByRaw('COALESCE(scan_performed_on, created_at) DESC')->get();

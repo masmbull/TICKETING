@@ -318,4 +318,57 @@ class MentionNotificationTest extends TestCase
         $comment = TicketComment::latest()->first();
         $this->assertEquals(0, $comment->mentions()->count());
     }
+
+    /**
+     * CASE 11: Duplicate display names → the picked account id wins, not the
+     * first user matching the name. Two active users named "Charlie"; the
+     * dropdown pick must notify the second one, and ONLY that one.
+     */
+    public function test_duplicate_name_uses_picked_id_not_first_match(): void
+    {
+        Notification::fake();
+
+        // A second, distinct active account sharing the mention's display name.
+        $otherCharlie = User::factory()->create(['name' => 'Charlie', 'is_active' => true]);
+
+        $this->actingAs($this->reporter);
+
+        $this->post(route('tickets.comments.store', $this->ticket->id), [
+            'comment'  => 'Hey @Charlie, please review',
+            'mentions' => [$otherCharlie->id],
+        ])->assertRedirect();
+
+        // The picked account is mentioned...
+        Notification::assertSentTo($otherCharlie, TicketNotification::class, function ($notification) use ($otherCharlie) {
+            return $notification->toArray($otherCharlie)['title'] === 'You were Mentioned';
+        });
+
+        // ...and the homonym first-match account is NOT.
+        Notification::assertNotSentTo($this->mentioned, TicketNotification::class, function ($notification) {
+            return $notification->toArray($this->mentioned)['title'] === 'You were Mentioned';
+        });
+
+        $this->assertDatabaseHas('comment_mentions', ['user_id' => $otherCharlie->id]);
+        $this->assertDatabaseMissing('comment_mentions', ['user_id' => $this->mentioned->id]);
+    }
+
+    /**
+     * CASE 12: A self-mention submitted as an id is still ignored.
+     */
+    public function test_self_mention_via_submitted_id_is_ignored(): void
+    {
+        Notification::fake();
+
+        $this->actingAs($this->reporter);
+
+        $this->post(route('tickets.comments.store', $this->ticket->id), [
+            'comment'  => 'Note to self @Alice',
+            'mentions' => [$this->reporter->id],
+        ])->assertRedirect();
+
+        $this->assertDatabaseMissing('comment_mentions', ['user_id' => $this->reporter->id]);
+        Notification::assertNotSentTo($this->reporter, TicketNotification::class, function ($notification) {
+            return $notification->toArray($this->reporter)['title'] === 'You were Mentioned';
+        });
+    }
 }

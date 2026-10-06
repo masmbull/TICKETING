@@ -836,16 +836,29 @@ class TicketController extends Controller
             'comment'              => 'required_without:attachments|min:3',
             'attachments'          => 'nullable|array',
             'attachments.*'        => 'file|max:10240|mimes:png,jpg,jpeg,pdf,zip',
+            'mentions'             => 'nullable|array',
+            'mentions.*'           => 'integer|exists:users,id',
         ]);
 
         $user = auth()->user();
         $ticket = $this->findTicketForUser($id);
         $commentText = $validated['comment'] ?? '';
 
-        // Parse mentions from comment text (@username pattern).
-        // The commenter is excluded: self-mentions are never recorded and
-        // never notified (see MentionNotificationTest CASE 2).
-        $mentionedUserIds = $this->extractMentionedUsers($commentText, $user->id);
+        // Accounts chosen from the dropdown arrive as ids and are authoritative:
+        // the directory holds duplicate display names, so resolving by name (the
+        // fallback below) can notify the wrong person. The commenter is always
+        // excluded — self-mentions are never recorded or notified.
+        $mentionedUserIds = [];
+        foreach ($validated['mentions'] ?? [] as $mentionedId) {
+            if ((int) $mentionedId !== $user->id) {
+                $mentionedUserIds[(int) $mentionedId] = 1;
+            }
+        }
+
+        // Fallback for plain typed @name text with no dropdown pick.
+        if (empty($mentionedUserIds)) {
+            $mentionedUserIds = $this->extractMentionedUsers($commentText, $user->id);
+        }
 
         // Use transaction to ensure comment and mentions are saved together
         $comment = \DB::transaction(function () use ($ticket, $user, $commentText, $mentionedUserIds) {
