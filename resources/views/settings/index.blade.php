@@ -10,14 +10,14 @@
 <div class="space-y-6">
     <x-page-header title="Settings" description="Manage application settings" />
 
-    <div class="max-w-2xl space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {{-- Profile --}}
         <div class="card">
             <div class="p-5 border-b border-slate-100 dark:border-slate-800">
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white">Profile</h3>
             </div>
             <div class="p-5">
-                <div class="flex items-center gap-4 mb-4">
+                <div class="flex items-center gap-4 mb-4 flex-wrap">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
                         {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
                     </div>

@@ -629,7 +629,7 @@
                     <div class="mt-3 relative border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer"
                          :class="dragOver ? 'border-[#E30613] bg-[#E30613]/5' : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'"
                          @click="$refs.fileInput.click()">
-                        <svg class="w-8 h-8 mx-auto mb-2" :class="dragOver ? 'text-[#E30613]' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v12m6-6H6"/></svg>
+                        <svg class="w-8 h-8 mx-auto mb-2" :class="dragOver ? 'text-[#E30613]' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
                         <p class="text-sm font-medium" :class="dragOver ? 'text-[#E30613]' : 'text-slate-500 dark:text-slate-400'">Attach File (optional)</p>
                         <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">PNG, JPG, PDF, or ZIP</p>
                     </div>

@@ -181,7 +181,7 @@ function fetchSubcategories(categoryId) {
                  :class="dragOver ? 'border-[#E30613] bg-[#E30613]/5' : 'border-slate-200 dark:border-slate-600 hover:border-[#E30613]'"
                  @click="$refs.attachments.click()"
                  @dragover.prevent="dragOver = true" @dragleave.prevent="dragOver = false" @drop.prevent="handleDrop($event)">
-                <svg class="w-8 h-8 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01.008-4.912M7 16a4 4 0 01.008-4.912m0 0a4 4 0 018.008 0M7 16a4 4 0 018.008 0m0 0a4 4 0 01.008-4.912m0 0a4 4 0 018.008 0M7 16a4 4 0 018.008 0m0 0a4 4 0 01.008-4.912m0 0a4 4 0 018.008 0"/></svg>
+                <svg class="w-8 h-8 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
                 <p class="text-sm text-slate-500 mt-2">Drop files or click to upload</p>
                 <p class="text-xs text-slate-400 mt-1">PNG, JPG, PDF, ZIP (max 10MB)</p>
                 <input type="file" name="attachments[]" multiple id="attachments" class="hidden" x-ref="attachments"
