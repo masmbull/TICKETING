@@ -22,14 +22,19 @@ docker exec ticketing-app php artisan migrate --force
 # docker/php-uploads.ini, mounted into php-fpm conf.d via docker-compose.yml.
 docker exec ticketing-app php -r 'echo "uploads: ", ini_get("upload_max_filesize"), " | ", ini_get("post_max_size"), "\n";'
 
-# Host nginx (Ubuntu package) reverse-proxies to 127.0.0.1:8082 and enforces its
-# own client_max_body_size (default 1m) — a >1MB upload gets 413 before it ever
-# reaches the container/PHP. The container image sets 20M itself, but the host
-# does not, so re-apply the drop-in on every deploy (idempotent; /etc/nginx/conf.d
-# files are included inside http{}) so a rebuild can never silently regress it.
-if command -v nginx >/dev/null 2>&1 && [ -f /etc/nginx/nginx.conf ]; then
-    echo 'client_max_body_size 20M;' | sudo tee /etc/nginx/conf.d/zz-ticketing-uploads.conf >/dev/null
+# Host nginx (Ubuntu apt) reverse-proxies ticketing.mito.co.id -> 127.0.0.1:8082
+# and sets NO client_max_body_size, so the 1m default rejects any upload >1MB
+# with 413 before it reaches the container (whose own nginx already sets 20M).
+# Set the limit on the ticketing vhost ONLY so hris/attendance/other projects'
+# vhosts are left untouched. Idempotent: inserted only when absent.
+NGINX_SITE="$(grep -Rls -- 'server_name ticketing.mito.co.id' /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null | head -n1)"
+if [ -n "$NGINX_SITE" ]; then
+    if ! grep -q 'client_max_body_size' "$NGINX_SITE"; then
+        sudo sed -i '/server_name ticketing\.mito\.co\.id;/a\    client_max_body_size 20M;' "$NGINX_SITE"
+    fi
     sudo nginx -t && sudo systemctl reload nginx
+else
+    echo "WARN: ticketing vhost not found under /etc/nginx; skipped client_max_body_size."
 fi
 
 echo "=== DEPLOY SUCCESS ==="
