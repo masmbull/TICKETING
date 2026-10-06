@@ -16,6 +16,7 @@ npm run build
 php artisan migrate --force
 
 # Fix nginx upload limit (idempotent)
+# ponytail: edits container config file; lost on container recreate. Persist via volume mount or baked image config when the app-nginx repo is available.
 # Container mode (Docker)
 if docker ps --format '{{.Names}}' | grep -q '^ticketing-nginx$'; then
     docker exec ticketing-nginx sh -c '
