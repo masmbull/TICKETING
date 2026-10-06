@@ -106,6 +106,23 @@ class TooltipSettingTest extends TestCase
         $this->assertEquals('Step A', $setting->steps[0]['title']);
     }
 
+    // ─── TOGGLE UI ──────────────────────────────────────
+
+    public function test_toggle_label_is_alpine_reactive_not_static(): void
+    {
+        $this->actingAs($this->admin);
+
+        $response = $this->get('/settings/tooltip');
+        $response->assertStatus(200);
+
+        // The label must bind to Alpine state (`x-text`), not be server-rendered
+        // once, otherwise clicking the switch never updates "Aktif"/"Nonaktif".
+        $response->assertSee("x-model=\"on\"", false);
+        $response->assertSee("x-text=\"on ? 'Aktif' : 'Nonaktif'\"", false);
+        // And the toggle must persist immediately, not only via the bottom button.
+        $response->assertSee('requestSubmit()', false);
+    }
+
     // ─── TOUR RENDER ────────────────────────────────────
 
     public function test_tour_absent_when_disabled(): void
