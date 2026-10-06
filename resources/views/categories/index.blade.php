@@ -135,8 +135,6 @@ $categoryData = $categories->map(fn($c) => [
                         <button @click="page++" :disabled="page >= totalPages" class="px-2 py-1 text-xs rounded" :class="page >= totalPages ? 'text-slate-300' : 'text-slate-600 hover:bg-slate-100'">Next</button>
                     </div>
                 </div>
-            </div>
-        </div>
 {{-- Shared delete confirmation (category + subcategory) --}}
         <template x-teleport="body">
             <div x-show="deleteTarget" x-cloak
@@ -180,6 +178,8 @@ $categoryData = $categories->map(fn($c) => [
                 </div>
             </div>
         </template>
+            </div>
+        </div>
     </div>
 </div>
 
