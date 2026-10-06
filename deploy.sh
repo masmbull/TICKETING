@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Ensure Docker is on PATH even when invoked from a non-interactive shell (e.g.
+# the CI SSH step) where /etc/profile is not sourced and /snap/bin is missing.
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:$PATH"
+
 # Production is a Docker stack. Code and assets are baked into the images by the
 # multi-stage Dockerfile (build context = this directory), so a deploy is a git
 # update plus an image rebuild/recreate. There is no host PHP/Composer/npm.

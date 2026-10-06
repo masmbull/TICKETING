@@ -34,11 +34,18 @@ jobs:
           script: |
             set -e
 
-            # Locate the checkout instead of hardcoding a path (the absolute path
-            # has bitten us before). deploy.sh lives in the repo root.
-            APP_DIR="$(find /home /opt /srv /var/www -maxdepth 3 -name deploy.sh -printf '%h\n' 2>/dev/null | head -n1)"
-            if [ -z "$APP_DIR" ]; then
-              echo "Deploy aborted: no deploy.sh found under /home /opt /srv /var/www."
+            # drone-ssh runs a non-interactive shell with a minimal PATH, but
+            # docker on this host lives outside it ("docker: command not found").
+            # Add the usual Docker locations (snap included) up front.
+            export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:$PATH"
+
+            # Production checkout is /opt/ticketing/app. Prefer it; fall back to
+            # locating deploy.sh (repo root) so a moved checkout still works.
+            APP_DIR="/opt/ticketing/app"
+            [ -f "$APP_DIR/deploy.sh" ] || \
+              APP_DIR="$(find -L /opt /srv /var/www /home -maxdepth 3 -name deploy.sh -printf '%h\n' 2>/dev/null | head -n1)"
+            if [ -z "$APP_DIR" ] || [ ! -f "$APP_DIR/deploy.sh" ]; then
+              echo "Deploy aborted: no deploy.sh found under /opt /srv /var/www /home."
               exit 1
             fi
             echo "Using APP_DIR=${APP_DIR}"
