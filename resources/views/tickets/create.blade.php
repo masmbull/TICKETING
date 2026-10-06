@@ -177,12 +177,34 @@ function fetchSubcategories(categoryId) {
 
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
             <h2 class="text-sm font-semibold text-slate-900 dark:text-white mb-4">Attachments</h2>
-            <div class="border-2 border-dashed border-slate-200 dark:border-slate-600 rounded-lg p-6 text-center cursor-pointer hover:border-[#E30613] transition-colors" onclick="document.getElementById('attachments').click()">
+            <div class="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors"
+                 :class="dragOver ? 'border-[#E30613] bg-[#E30613]/5' : 'border-slate-200 dark:border-slate-600 hover:border-[#E30613]'"
+                 @click="$refs.attachments.click()"
+                 @dragover.prevent="dragOver = true" @dragleave.prevent="dragOver = false" @drop.prevent="handleDrop($event)">
                 <svg class="w-8 h-8 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01.008-4.912M7 16a4 4 0 01.008-4.912m0 0a4 4 0 018.008 0M7 16a4 4 0 018.008 0m0 0a4 4 0 01.008-4.912m0 0a4 4 0 018.008 0M7 16a4 4 0 018.008 0m0 0a4 4 0 01.008-4.912m0 0a4 4 0 018.008 0"/></svg>
                 <p class="text-sm text-slate-500 mt-2">Drop files or click to upload</p>
                 <p class="text-xs text-slate-400 mt-1">PNG, JPG, PDF, ZIP (max 10MB)</p>
-                <input type="file" name="attachments[]" multiple id="attachments" class="hidden" accept=".png,.jpg,.jpeg,.pdf,.zip,image/png,image/jpeg,application/pdf,application/zip">
+                <input type="file" name="attachments[]" multiple id="attachments" class="hidden" x-ref="attachments"
+                       accept=".png,.jpg,.jpeg,.pdf,.zip,image/png,image/jpeg,application/pdf,application/zip"
+                       @change="syncFiles()">
             </div>
+
+            <template x-if="fileNames.length > 0">
+                <div class="mt-3 space-y-2">
+                    <template x-for="(name, idx) in fileNames" :key="idx">
+                        <div class="flex items-center gap-3 px-3 py-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600">
+                            <div class="w-8 h-8 rounded bg-[#E30613]/10 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-[#E30613]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                            </div>
+                            <span class="text-sm text-slate-700 dark:text-slate-300 truncate flex-1" x-text="name"></span>
+                            <button type="button" @click="removeFile(idx)" class="text-slate-400 hover:text-red-500 transition-colors flex-shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </template>
+            <p x-show="fileError" x-cloak class="mt-2 text-xs text-red-500" aria-live="polite" x-text="fileError"></p>
         </div>
 
         <div class="flex items-center justify-between">
@@ -207,7 +229,48 @@ function createTicketForm() {
         selectedRequestor: null,
         requestorHighlightedIndex: -1,
         requestorError: false,
-        
+        fileNames: [],
+        fileError: '',
+        dragOver: false,
+
+        // Frontend whitelist mirrors the backend mimes:png,jpg,jpeg,pdf,zip rule.
+        isAllowed(file) {
+            return ['png', 'jpg', 'jpeg', 'pdf', 'zip'].includes(file.name.split('.').pop().toLowerCase());
+        },
+
+        applyFiles(fileList) {
+            const ok = Array.from(fileList).filter(f => this.isAllowed(f));
+            this.fileError = ok.length < fileList.length
+                ? 'Unsupported file type. Allowed: PNG, JPG, PDF, ZIP.'
+                : '';
+            const dt = new DataTransfer();
+            ok.forEach(f => dt.items.add(f));
+            this.$refs.attachments.files = dt.files;
+            this.fileNames = ok.map(f => f.name);
+        },
+
+        syncFiles() {
+            this.applyFiles(this.$refs.attachments.files);
+        },
+
+        handleDrop(e) {
+            this.dragOver = false;
+            const dt = e.dataTransfer;
+            if (!dt.files.length) return;
+            const merged = new DataTransfer();
+            Array.from(this.$refs.attachments.files).forEach(f => merged.items.add(f));
+            Array.from(dt.files).forEach(f => merged.items.add(f));
+            this.applyFiles(merged.files);
+        },
+
+        removeFile(idx) {
+            const input = this.$refs.attachments;
+            const dt = new DataTransfer();
+            Array.from(input.files).filter((_, i) => i !== idx).forEach(f => dt.items.add(f));
+            input.files = dt.files;
+            this.syncFiles();
+        },
+
         validateRequestor(event) {
             if (this.isSupport && !this.selectedRequestor) {
                 this.requestorError = true;

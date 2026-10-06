@@ -246,4 +246,21 @@ class Sprint39CreateTicketToastTest extends TestCase
         $content = $response->getContent();
         $this->assertStringContainsString('build/assets/app-', $content);
     }
+
+    // 16. Create page wires the attachment picker to a live preview list
+    public function test_create_page_attachment_picker_shows_preview(): void
+    {
+        $this->actingAs($this->user);
+
+        $response = $this->get(route('tickets.create'));
+        $response->assertStatus(200);
+
+        $content = $response->getContent();
+        $this->assertStringContainsString('@change="syncFiles()"', $content, 'File input must sync the picker selection');
+        $this->assertStringContainsString('isAllowed(file)', $content, 'picker whitelist helper must exist');
+        $this->assertStringContainsString('fileNames: []', $content, 'Preview state must be declared');
+        $this->assertStringContainsString('x-for="(name, idx) in fileNames"', $content, 'Preview list must render picked files');
+        $this->assertStringContainsString('@drop.prevent="handleDrop($event)"', $content, 'Dropzone must accept dropped files');
+        $this->assertStringContainsString('removeFile(idx)', $content, 'Preview rows must be removable');
+    }
 }
