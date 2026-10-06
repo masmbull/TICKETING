@@ -39,14 +39,13 @@ jobs:
             # Add the usual Docker locations (snap included) up front.
             export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:$PATH"
 
-            # Production checkout is /opt/ticketing/app. Prefer it; only fall back
-            # to locating deploy.sh under system dirs (never /home, which can hold
-            # stray clones) so a moved checkout still works.
-            APP_DIR="${TICKETING_APP_DIR:-/opt/ticketing/app}"
-            [ -f "$APP_DIR/deploy.sh" ] || \
-              APP_DIR="$(find -L /opt /srv /var/www -maxdepth 4 -name deploy.sh -printf '%h\n' 2>/dev/null | head -n1)"
-            if [ -z "$APP_DIR" ] || [ ! -f "$APP_DIR/deploy.sh" ]; then
-              echo "Deploy aborted: no deploy.sh found under /opt /srv /var/www."
+            # Locate the checkout instead of hardcoding a path (a hardcoded
+            # /opt/ticketing/app does not exist on this host and aborted deploy).
+            # The production checkout lives under /home, so /home MUST stay in the
+            # search list. deploy.sh lives in the repo root.
+            APP_DIR="$(find /home /opt /srv /var/www -maxdepth 3 -name deploy.sh -printf '%h\n' 2>/dev/null | head -n1)"
+            if [ -z "$APP_DIR" ]; then
+              echo "Deploy aborted: no deploy.sh found under /home /opt /srv /var/www."
               exit 1
             fi
             echo "Using APP_DIR=${APP_DIR}"
@@ -66,12 +65,12 @@ jobs:
             fi
 
             # Sync the checkout BEFORE invoking deploy.sh. The running bash reads
-            # an open inode, so if deploy.sh rewrites itself via `git reset` the
-            # shell keeps executing the stale pre-reset copy (this is what caused
-            # "docker: command not found": the old line 17 lacked the PATH fix).
-            # Resetting here + `exec` a freshly opened file guarantees the new
-            # deploy.sh (and its PATH export) actually runs.
+            # an open fd, so when deploy.sh rewrites ITSELF via its own `git reset`
+            # the shell keeps executing the stale pre-reset copy (that is what
+            # produced "docker: command not found": the run executed the OLD
+            # deploy.sh where line 17 was `docker compose`, not the PATH-export
+            # version). Resetting HERE and `exec`-ing a freshly opened file means
+            # deploy.sh's own reset is a no-op and the current code always runs.
             git reset --hard origin/main
 
             exec ./deploy.sh
-            echo "=== DEPLOY SUCCESS ==="
