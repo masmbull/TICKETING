@@ -98,6 +98,20 @@ class Sprint35CategoryPaginationTest extends TestCase
         }
     }
 
+    public function test_delete_uses_confirmation_modal_not_native_confirm(): void
+    {
+        $this->actingAs($this->user);
+
+        $content = $this->get('/categories')->assertStatus(200)->getContent();
+
+        // Category + subcategory deletes route through the Alpine confirmation
+        // modal (askDelete) instead of the native `confirm()` dialog.
+        $this->assertStringContainsString("askDelete('category'", $content);
+        $this->assertStringContainsString("askDelete('subcategory'", $content);
+        $this->assertStringContainsString('deleteTarget', $content, 'Delete modal state must be present');
+        $this->assertStringNotContainsString("confirm('Delete", $content, 'Native confirm() must be gone');
+    }
+
     public function test_no_raw_javascript_visible_on_categories_page(): void
     {
         $this->actingAs($this->user);

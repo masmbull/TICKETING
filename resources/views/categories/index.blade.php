@@ -70,6 +70,8 @@ $categoryData = $categories->map(fn($c) => [
                      search: '',
                      page: 1,
                      perPage: 5,
+                     deleteTarget: null,
+                     askDelete(type, item) { this.deleteTarget = { type, id: item.id, name: item.name }; },
                      get filtered() {
                          const q = this.search.toLowerCase();
                          if (!q) return this.categories;
@@ -100,12 +102,9 @@ $categoryData = $categories->map(fn($c) => [
                                 <button @click="openEditCat(cat)" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
                                     <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
-                                <form method="POST" :action="'/categories/' + cat.id" class="inline">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10" onclick="return confirm('Delete?')">
-                                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                    </button>
-                                </form>
+                                <button type="button" @click="askDelete('category', cat)" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10">
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
                             </div>
                         </div>
                         <div x-show="cat.subCategories.length > 0" class="px-4 py-2 bg-slate-50 dark:bg-slate-900/50 ml-6 border-l-2 border-slate-200 dark:border-slate-700 space-y-1">
@@ -119,12 +118,9 @@ $categoryData = $categories->map(fn($c) => [
                                         <button @click="openEditSub(sub)" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-600">
                                             <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                         </button>
-                                        <form method="POST" :action="'/subcategories/' + sub.id" class="inline">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="p-1 rounded hover:bg-red-50" onclick="return confirm('Delete this subcategory?')">
-                                                <svg class="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                            </button>
-                                        </form>
+                                        <button type="button" @click="askDelete('subcategory', sub)" class="p-1 rounded hover:bg-red-50">
+                                            <svg class="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
                                     </div>
                                 </div>
                             </template>
@@ -141,6 +137,49 @@ $categoryData = $categories->map(fn($c) => [
                 </div>
             </div>
         </div>
+{{-- Shared delete confirmation (category + subcategory) --}}
+        <template x-teleport="body">
+            <div x-show="deleteTarget" x-cloak
+                 x-on:keydown.escape.window="deleteTarget = null"
+                 class="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+                 role="dialog" aria-modal="true" aria-labelledby="delete-cat-title">
+                <div x-show="deleteTarget"
+                     x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                     x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                     class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" x-on:click="deleteTarget = null"></div>
+                <div x-show="deleteTarget"
+                     x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                     class="relative w-[calc(100vw-2rem)] max-w-sm rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl p-6 text-center">
+                    <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-red-500" aria-hidden="true">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16m-9-4v4m2-4v4"/></svg>
+                    </div>
+                    <h3 id="delete-cat-title" class="text-lg font-semibold text-slate-900 dark:text-white">
+                        Delete <span x-text="deleteTarget?.type === 'subcategory' ? 'Subcategory' : 'Category'"></span>?
+                    </h3>
+                    <p class="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                        Are you sure you want to delete
+                        <span class="font-semibold text-slate-700 dark:text-slate-200" x-text="deleteTarget?.name"></span>?
+                    </p>
+                    <p x-show="deleteTarget?.type === 'category'" class="mt-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                        Its subcategories may also be removed.
+                    </p>
+                    <form method="POST" :action="deleteTarget ? (deleteTarget.type === 'subcategory' ? '/subcategories/' + deleteTarget.id : '/categories/' + deleteTarget.id) : '#'">
+                        @csrf @method('DELETE')
+                        <div class="mt-6 flex gap-3">
+                            <button type="button" x-on:click="deleteTarget = null"
+                                    class="flex-1 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500 transition">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                    class="flex-1 px-4 py-2 text-sm font-medium bg-[#E30613] hover:bg-[#c4050f] text-white rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#E30613] dark:focus-visible:ring-offset-slate-800 transition">
+                                Delete
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </template>
     </div>
 </div>
 
