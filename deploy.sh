@@ -15,25 +15,12 @@ npm run build
 
 php artisan migrate --force
 
-# Fix nginx upload limit (idempotent)
-# ponytail: edits container config file; lost on container recreate. Persist via volume mount or baked image config when the app-nginx repo is available.
-# Container mode (Docker)
-if docker ps --format '{{.Names}}' | grep -q '^ticketing-nginx$'; then
-    docker exec ticketing-nginx sh -c '
-        CONF=/etc/nginx/conf.d/default.conf
-        if [ -f "$CONF" ] && ! grep -q client_max_body_size "$CONF"; then
-            sed -i "/server {/a\\    client_max_body_size 10m;" "$CONF"
-        fi
-        nginx -t && nginx -s reload
-    '
-# Host mode (bare metal)
-elif [ -f "/etc/nginx/sites-available/default" ]; then
-    NGINX_CONF="/etc/nginx/sites-available/default"
-    if ! grep -q 'client_max_body_size' "$NGINX_CONF"; then
-        sudo sed -i '/server {/a\    client_max_body_size 10m;' "$NGINX_CONF"
-    fi
-    sudo nginx -t && sudo systemctl reload nginx
-fi
+# nginx: app-nginx image already sets `client_max_body_size 20M` in
+# /etc/nginx/conf.d/default.conf. Do NOT inject here — a naive sed appends a
+# duplicate directive and fails `nginx -t`.
+# ponytail: the upload ceiling is PHP, not nginx. Fix upload_max_filesize /
+# post_max_size in the app-app image (or a mounted php ini) when that repo is
+# available.
 
 php artisan optimize:clear
 php artisan config:cache
