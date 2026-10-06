@@ -79,7 +79,7 @@
                         <td class="px-4 py-3 text-right">
                             <form method="POST" action="{{ route('sla-policies.mapping.destroy', $mapping->id) }}" class="inline" x-data>
                                 @csrf @method('DELETE')
-                                <button type="submit" x-on:click.prevent="if(confirm('Delete this mapping?')) $el.closest('form').submit()" class="text-xs text-red-500 hover:text-red-700 font-medium">Delete</button>
+                                <button type="submit" x-on:click.prevent="MITO.confirm('Delete this mapping?', 'Tickets mapped to this category will lose their SLA.').then(ok => { if (ok) $el.closest('form').submit(); })" class="text-xs text-red-500 hover:text-red-700 font-medium">Delete</button>
                             </form>
                         </td>
                     </tr>

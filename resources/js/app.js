@@ -90,6 +90,32 @@ window.MITO.alertError = function (title, text = '') {
     Swal.fire({ icon: 'error', title, text, confirmButtonColor: '#E30613' });
 };
 
+/**
+ * Reusable SweetAlert2 confirmation dialog (replaces native confirm()).
+ *
+ * Usage: window.MITO.confirm('Delete this item?').then((ok) => { if (ok) form.submit(); })
+ */
+window.MITO.confirm = function (title, text = 'This action cannot be undone.', confirmText = 'Delete') {
+    const theme = toastTheme();
+
+    return Swal.fire({
+        icon: 'warning',
+        title,
+        text,
+        showCancelButton: true,
+        confirmButtonText: confirmText,
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#E30613',
+        cancelButtonColor: '#64748b',
+        reverseButtons: true,
+        focusCancel: true,
+        background: theme.popup.background,
+        color: theme.color,
+        iconColor: '#f59e0b',
+        customClass: { popup: 'mito-swal-popup', title: 'mito-swal-title' },
+    }).then((result) => result.isConfirmed);
+};
+
 window.MITO.forgotPassword = function () {
     const theme = toastTheme();
     Swal.fire({
