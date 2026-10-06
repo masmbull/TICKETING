@@ -267,7 +267,9 @@
         </aside>
 
         {{-- Main Content Area --}}
-        <div class="flex-1 flex flex-col min-h-screen transition-all duration-300 lg:ml-64 animate-page-in"
+        {{-- Width offset comes only from the :class binding — a static lg:ml-64 here would
+             out-rank lg:ml-20 in the compiled sheet and leave a white gap when collapsed. --}}
+        <div class="flex-1 flex flex-col min-h-screen transition-all duration-300 animate-page-in"
              :class="sidebarExpanded ? 'lg:ml-64' : 'lg:ml-20'">
             {{-- Top Navbar --}}
             <header class="sticky top-0 z-40 h-14 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800 flex items-center px-4 gap-4">

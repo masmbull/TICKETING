@@ -269,4 +269,34 @@ class Sprint36TicketDetailsTest extends TestCase
         $response->assertSee('Workflow');
         $response->assertSee('Take Ticket');
     }
+
+    // ─── Attachment preview overlay (z-index / stacking) ──────
+
+    public function test_attachment_preview_overlay_is_teleported_above_sidebar(): void
+    {
+        $this->actingAs($this->admin);
+
+        $ticket = $this->baseTicket(['ticket_number' => 'ITSUP-DETAIL-015']);
+        $ticket->attachments()->create([
+            'original_filename' => 'screenshot.png',
+            'stored_filename' => 'stored-screenshot.png',
+            'mime_type' => 'image/png',
+            'file_size' => 2048,
+        ]);
+
+        $response = $this->get(route('tickets.show', $ticket->id));
+
+        $response->assertStatus(200);
+        $content = $response->getContent();
+
+        // Overlay must escape the main-content wrapper: that wrapper carries
+        // .animate-page-in (a persistent transform), which traps `fixed`
+        // children inside it and leaves the sidebar uncovered.
+        $this->assertStringContainsString('x-teleport="body"', $content, 'Lightbox/PDF overlay must teleport to <body>');
+        $this->assertStringContainsString('x-show="lightboxOpen"', $content, 'Image lightbox must be present');
+        $this->assertStringContainsString('x-show="pdfOpen"', $content, 'PDF preview must be present');
+        $this->assertStringContainsString('z-[9999]', $content, 'Overlay must outrank the sidebar z-index');
+        // The old z-50 overlay stayed underneath the sidebar (also z-50).
+        $this->assertStringNotContainsString('fixed inset-0 z-50 flex items-center justify-center bg-black/40', $content);
+    }
 }

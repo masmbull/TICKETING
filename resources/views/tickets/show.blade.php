@@ -142,9 +142,14 @@
                                 @endif
                             @endforeach
                         </div>
-                        {{-- Image Lightbox --}}
-                        <template x-if="lightboxOpen">
-                            <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" @click.self="lightboxOpen = false" @keydown.escape.window="lightboxOpen = false">
+                        {{-- Image Lightbox / PDF Preview
+                             Teleported to <body>: the main content wrapper uses .animate-page-in
+                             (a persistent transform), which traps `fixed` children inside it and
+                             leaves the sidebar uncovered. z-[9999] beats the sidebar's z-50. --}}
+                        <template x-teleport="body">
+                        <div>
+                            {{-- Image Lightbox --}}
+                            <div x-show="lightboxOpen" x-cloak class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" @click.self="lightboxOpen = false" @keydown.escape.window="lightboxOpen = false">
                                 <div class="relative max-w-4xl max-h-[90vh]">
                                     <img :src="lightboxImg" class="max-h-[85vh] max-w-full rounded-lg shadow-2xl object-contain">
                                     <button @click="lightboxOpen = false" class="absolute -top-3 -right-3 w-8 h-8 bg-white dark:bg-slate-800 rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:text-red-500 transition-colors">
@@ -152,10 +157,8 @@
                                     </button>
                                 </div>
                             </div>
-                        </template>
-                        {{-- PDF Preview Modal --}}
-                        <template x-if="pdfOpen">
-                            <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm sm:p-3 md:p-4" @keydown.escape.window="pdfOpen = false">
+                            {{-- PDF Preview Modal --}}
+                            <div x-show="pdfOpen" x-cloak class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm sm:p-3 md:p-4" @keydown.escape.window="pdfOpen = false">
                                 <div class="relative w-full h-full sm:w-[95vw] sm:h-[92vh] md:w-[90vw] md:h-[90vh] lg:w-[85vw] lg:h-[90vh] bg-white dark:bg-slate-800 sm:rounded-xl shadow-2xl overflow-hidden flex flex-col">
                                     <div class="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-2.5 border-b border-slate-200 dark:border-slate-700 shrink-0">
                                         <span class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 truncate">PDF Preview</span>
@@ -169,6 +172,7 @@
                                     <iframe :src="pdfSrc" class="flex-1 w-full border-0" frameborder="0"></iframe>
                                 </div>
                             </div>
+                        </div>
                         </template>
                     </div>
                     @endif
