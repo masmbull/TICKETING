@@ -29,4 +29,10 @@ yarn-error.log
 # Database backups (sensitive data - never push to repo!)
 /database-backup
 
+# Scratch output from local test/verify runs
+/*_out.txt
+/*_err.txt
+/test_*.txt
+/verify_*.txt
+
 .env 
