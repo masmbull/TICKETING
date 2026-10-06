@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             TicketSeeder::class,
             SecurityInsightSeeder::class,
+            TooltipSettingSeeder::class,
         ]);
     }
 }

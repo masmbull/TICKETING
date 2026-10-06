@@ -206,4 +206,23 @@ class Sprint32AuthTest extends TestCase
         $this->assertStringContainsString('stat-card flex items-center gap-3', $html);
         $this->assertStringContainsString('leading-tight tabular-nums', $html);
     }
+
+    // ─── 7. Sidebar collapse leaves no white gap ───────────────
+
+    public function test_sidebar_collapse_owns_the_content_offset(): void
+    {
+        $this->actingAs($this->user);
+
+        $html = $this->get('/dashboard')->getContent();
+
+        // The offset must come from the :class binding alone. A static lg:ml-64 on
+        // the same element out-ranks lg:ml-20 in the compiled sheet, so collapsing
+        // the sidebar left an 80px rail but kept the 256px content offset (white gap).
+        $this->assertStringNotContainsString(
+            'transition-all duration-300 lg:ml-64 animate-page-in',
+            $html,
+            'Main content must not hard-code lg:ml-64 while :class binds lg:ml-20'
+        );
+        $this->assertStringContainsString("sidebarExpanded ? 'lg:ml-64' : 'lg:ml-20'", $html);
+    }
 }

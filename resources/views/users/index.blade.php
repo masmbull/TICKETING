@@ -3,7 +3,7 @@
 @section('title', 'Users - MITO IT Helpdesk')
 
 @section('content')
-<div class="space-y-4">
+<div class="space-y-4" x-data="{ addOpen: {{ ($errors->any() || session('open_add_user')) ? 'true' : 'false' }} }">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
             <h1 class="text-xl font-bold text-slate-900 dark:text-white">User Management</h1>
@@ -14,12 +14,98 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
             Trash
         </a>
-        <a href="{{ route('users.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-[#E30613] hover:bg-[#c4050f] text-white text-sm font-medium rounded-lg">
+        <button type="button" @click="addOpen = true" class="inline-flex items-center gap-2 px-4 py-2 bg-[#E30613] hover:bg-[#c4050f] text-white text-sm font-medium rounded-lg">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Add User
-        </a>
+        </button>
         </div>
     </div>
+{{-- Add User modal. x-teleport escapes the animated content wrapper: a lingering
+         transform there becomes a containing block and clips position:fixed overlays. --}}
+    <template x-teleport="body">
+        <div x-show="addOpen" x-cloak x-on:keydown.escape.window="addOpen = false"
+             class="fixed inset-0 z-[9999] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="add-user-title">
+            <div x-show="addOpen"
+                 x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" x-on:click="addOpen = false"></div>
+            <div x-show="addOpen"
+                 x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                 class="relative w-full max-w-lg max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white" id="add-user-title">Add User</h3>
+                    <button type="button" @click="addOpen = false" aria-label="Close" class="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <form method="POST" action="{{ route('users.store') }}" class="p-6 space-y-4">
+                    @csrf
+                    @if ($errors->any())
+                        <div class="p-4 bg-danger-50 border border-danger-200 rounded-xl dark:bg-danger-500/15 dark:border-danger-700">
+                            <div class="text-sm text-danger-700 dark:text-danger-300">
+                                @foreach ($errors->all() as $error)
+                                    <p>{{ $error }}</p>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                    <div>
+                        <label for="name" class="form-label form-label-required">Full Name</label>
+                        <input type="text" name="name" id="name" value="{{ old('name') }}" required class="input" />
+                    </div>
+                    <div>
+                        <label for="email" class="form-label form-label-required">Email Address</label>
+                        <input type="email" name="email" id="email" value="{{ old('email') }}" required class="input" />
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="password" class="form-label form-label-required">Password</label>
+                            <input type="password" name="password" id="password" required class="input" />
+                        </div>
+                        <div>
+                            <label for="password_confirmation" class="form-label form-label-required">Confirm Password</label>
+                            <input type="password" name="password_confirmation" id="password_confirmation" required class="input" />
+                        </div>
+                    </div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="role_id" class="form-label form-label-required">Role</label>
+                            <select name="role_id" id="role_id" required class="select">
+                                <option value="">Select Role</option>
+                                @foreach($roles as $role)
+                                    <option value="{{ $role->id }}" {{ old('role_id') == $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label for="department_id" class="form-label">Department</label>
+                            <select name="department_id" id="department_id" class="select">
+                                <option value="">No Department</option>
+                                @foreach($departments as $dept)
+                                    <option value="{{ $dept->id }}" {{ old('department_id') == $dept->id ? 'selected' : '' }}>{{ $dept->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="job_title" class="form-label">Job Title</label>
+                        <input type="text" name="job_title" id="job_title" value="{{ old('job_title') }}" class="input" placeholder="e.g. IT Support Specialist" />
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="force_password_change" id="force_password_change" value="1"
+                               {{ old('force_password_change') ? 'checked' : '' }}
+                               class="w-4 h-4 text-primary-500 border-slate-300 rounded focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-800" />
+                        <label for="force_password_change" class="text-sm text-slate-700 dark:text-slate-300">Force password change on first login</label>
+                    </div>
+                    <div class="flex items-center justify-end gap-3 pt-2">
+                        <button type="button" @click="addOpen = false" class="btn-secondary">Cancel</button>
+                        <button type="submit" class="btn-primary">Create User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
 
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden"
          x-data="userSearch({

@@ -142,9 +142,14 @@
                                 @endif
                             @endforeach
                         </div>
-                        {{-- Image Lightbox --}}
-                        <template x-if="lightboxOpen">
-                            <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" @click.self="lightboxOpen = false" @keydown.escape.window="lightboxOpen = false">
+                        {{-- Image Lightbox / PDF Preview
+                             Teleported to <body>: the main content wrapper uses .animate-page-in
+                             (a persistent transform), which traps `fixed` children inside it and
+                             leaves the sidebar uncovered. z-[9999] beats the sidebar's z-50. --}}
+                        <template x-teleport="body">
+                        <div>
+                            {{-- Image Lightbox --}}
+                            <div x-show="lightboxOpen" x-cloak class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" @click.self="lightboxOpen = false" @keydown.escape.window="lightboxOpen = false">
                                 <div class="relative max-w-4xl max-h-[90vh]">
                                     <img :src="lightboxImg" class="max-h-[85vh] max-w-full rounded-lg shadow-2xl object-contain">
                                     <button @click="lightboxOpen = false" class="absolute -top-3 -right-3 w-8 h-8 bg-white dark:bg-slate-800 rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:text-red-500 transition-colors">
@@ -152,10 +157,8 @@
                                     </button>
                                 </div>
                             </div>
-                        </template>
-                        {{-- PDF Preview Modal --}}
-                        <template x-if="pdfOpen">
-                            <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm sm:p-3 md:p-4" @keydown.escape.window="pdfOpen = false">
+                            {{-- PDF Preview Modal --}}
+                            <div x-show="pdfOpen" x-cloak class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm sm:p-3 md:p-4" @keydown.escape.window="pdfOpen = false">
                                 <div class="relative w-full h-full sm:w-[95vw] sm:h-[92vh] md:w-[90vw] md:h-[90vh] lg:w-[85vw] lg:h-[90vh] bg-white dark:bg-slate-800 sm:rounded-xl shadow-2xl overflow-hidden flex flex-col">
                                     <div class="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-2.5 border-b border-slate-200 dark:border-slate-700 shrink-0">
                                         <span class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 truncate">PDF Preview</span>
@@ -169,6 +172,7 @@
                                     <iframe :src="pdfSrc" class="flex-1 w-full border-0" frameborder="0"></iframe>
                                 </div>
                             </div>
+                        </div>
                         </template>
                     </div>
                     @endif
@@ -625,7 +629,7 @@
                     <div class="mt-3 relative border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer"
                          :class="dragOver ? 'border-[#E30613] bg-[#E30613]/5' : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'"
                          @click="$refs.fileInput.click()">
-                        <svg class="w-8 h-8 mx-auto mb-2" :class="dragOver ? 'text-[#E30613]' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v12m6-6H6"/></svg>
+                        <svg class="w-8 h-8 mx-auto mb-2" :class="dragOver ? 'text-[#E30613]' : 'text-slate-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
                         <p class="text-sm font-medium" :class="dragOver ? 'text-[#E30613]' : 'text-slate-500 dark:text-slate-400'">Attach File (optional)</p>
                         <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">PNG, JPG, PDF, or ZIP</p>
                     </div>

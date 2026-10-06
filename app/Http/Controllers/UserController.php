@@ -36,12 +36,10 @@ class UserController extends Controller
         return view('users.trashed', compact('users'));
     }
 
-    public function create(): View
+    public function create(): RedirectResponse
     {
-        $roles = Role::where('is_active', true)->get();
-        $departments = Department::where('is_active', true)->get();
-
-        return view('users.create', compact('roles', 'departments'));
+        // Add-user form now lives in a modal on the index page.
+        return to_route('users.index')->with('open_add_user', true);
     }
 
     public function store(Request $request): RedirectResponse
@@ -52,6 +50,7 @@ class UserController extends Controller
             'password' => ['required', 'confirmed', 'min:8'],
             'role_id' => ['required', 'exists:roles,id'],
             'department_id' => ['nullable', 'exists:departments,id'],
+            'job_title' => ['nullable', 'string', 'max:255'],
             'force_password_change' => ['boolean'],
         ]);
 
