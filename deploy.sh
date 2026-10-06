@@ -11,6 +11,12 @@ cd "$APP_DIR"
 
 echo "=== DEPLOY START ==="
 
+# Log which box this actually ran on, so a deploy can never be silently pointed
+# at a stale host (the ORIGINAL auto-deploy was authored on an EC2 instance:
+# ubuntu@ip-172-31-46-232.ap-southeast-2.compute.internal). A private-DNS
+# hostname like ip-<a>-<b>-<c>-<d>.<region>.compute.internal = AWS EC2.
+echo "HOST: $(hostname)  IP: $(hostname -I 2>/dev/null | awk '{print $1}')  PATH: ${BASH_SOURCE[0]}"
+
 git fetch origin
 git reset --hard origin/main
 
