@@ -33,7 +33,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            cd /home/ubuntu/ticketing
+            cd /opt/ticketing/app
             CI_SHA="${{ github.event.workflow_run.head_sha }}"
 
             echo "=== DEPLOY START (CI SHA: ${CI_SHA}) ==="

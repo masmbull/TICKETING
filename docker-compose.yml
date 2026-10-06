@@ -1,0 +1,84 @@
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    container_name: ticketing-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ticketing_storage:/var/www/html/storage
+      - ./docker/php-uploads.ini:/usr/local/etc/php/conf.d/zz-uploads.ini:ro
+    networks:
+      - ticketing
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: nginx
+    container_name: ticketing-nginx
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "127.0.0.1:8082:80"
+    volumes:
+      - ticketing_storage:/var/www/html/storage
+    networks:
+      - ticketing
+
+  postgres:
+    image: postgres:18-alpine
+    container_name: ticketing-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ticketing_postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ticketing
+
+  redis:
+    image: redis:7-alpine
+    container_name: ticketing-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - ticketing_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - ticketing
+
+volumes:
+  ticketing_postgres:
+    name: ticketing_postgres
+  ticketing_redis:
+    name: ticketing_redis
+  ticketing_storage:
+    name: ticketing_storage
+    external: true
+
+networks:
+  ticketing:
+    name: ticketing
+    driver: bridge

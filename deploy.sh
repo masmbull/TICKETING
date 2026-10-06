@@ -1,30 +1,23 @@
 #!/bin/bash
 set -e
 
-cd /home/ubuntu/ticketing
+# Production is a Docker stack. Code and assets are baked into the images by the
+# multi-stage Dockerfile (build context = this directory), so a deploy is a git
+# update plus an image rebuild/recreate. There is no host PHP/Composer/npm.
+APP_DIR="/opt/ticketing/app"
+cd "$APP_DIR"
 
 echo "=== DEPLOY START ==="
 
 git fetch origin
 git reset --hard origin/main
 
-composer install --no-dev --optimize-autoloader
+docker compose up -d --build
 
-npm ci
-npm run build
+docker exec ticketing-app php artisan migrate --force
 
-php artisan migrate --force
-
-# nginx: app-nginx image already sets `client_max_body_size 20M` in
-# /etc/nginx/conf.d/default.conf. Do NOT inject here — a naive sed appends a
-# duplicate directive and fails `nginx -t`.
-# ponytail: the upload ceiling is PHP, not nginx. Fix upload_max_filesize /
-# post_max_size in the app-app image (or a mounted php ini) when that repo is
-# available.
-
-php artisan optimize:clear
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+# Upload limits (upload_max_filesize/post_max_size) come from
+# docker/php-uploads.ini, mounted into php-fpm conf.d via docker-compose.yml.
+docker exec ticketing-app php -r 'echo "uploads: ", ini_get("upload_max_filesize"), " | ", ini_get("post_max_size"), "\n";'
 
 echo "=== DEPLOY SUCCESS ==="
