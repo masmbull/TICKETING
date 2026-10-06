@@ -33,7 +33,16 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            cd /opt/ticketing/app
+
+            # Locate the checkout instead of hardcoding a path (the absolute path
+            # has bitten us before). deploy.sh lives in the repo root.
+            APP_DIR="$(find /home /opt /srv /var/www -maxdepth 3 -name deploy.sh -printf '%h\n' 2>/dev/null | head -n1)"
+            if [ -z "$APP_DIR" ]; then
+              echo "Deploy aborted: no deploy.sh found under /home /opt /srv /var/www."
+              exit 1
+            fi
+            echo "Using APP_DIR=${APP_DIR}"
+            cd "$APP_DIR"
             CI_SHA="${{ github.event.workflow_run.head_sha }}"
 
             echo "=== DEPLOY START (CI SHA: ${CI_SHA}) ==="

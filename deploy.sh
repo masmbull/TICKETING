@@ -4,7 +4,9 @@ set -e
 # Production is a Docker stack. Code and assets are baked into the images by the
 # multi-stage Dockerfile (build context = this directory), so a deploy is a git
 # update plus an image rebuild/recreate. There is no host PHP/Composer/npm.
-APP_DIR="/opt/ticketing/app"
+# Self-locating: this script lives in the repo root, so APP_DIR is wherever the
+# checkout is — no hardcoded absolute path to drift out of sync with the VPS.
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$APP_DIR"
 
 echo "=== DEPLOY START ==="
