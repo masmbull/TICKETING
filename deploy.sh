@@ -1,9 +1,23 @@
 #!/bin/bash
 set -e
 
-# Ensure Docker is on PATH even when invoked from a non-interactive shell (e.g.
-# the CI SSH step) where /etc/profile is not sourced and /snap/bin is missing.
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:$PATH"
+# The CI SSH step runs a non-interactive shell whose PATH is not the login PATH,
+# so docker is not guaranteed to be found. Probe the usual install locations and
+# prepend whichever one actually contains the binary (works for apt /usr/bin and
+# snap /snap/bin alike) instead of hardcoding one.
+echo "PATH=${PATH}"
+if ! command -v docker >/dev/null 2>&1; then
+    for d in /snap/bin /usr/local/bin /usr/bin /usr/sbin /sbin; do
+        if [ -x "$d/docker" ]; then PATH="$d:$PATH"; break; fi
+    done
+fi
+if ! command -v docker >/dev/null 2>&1; then
+    echo "ERROR: docker not found. PATH=${PATH}"
+    ls -l /usr/bin/docker /usr/local/bin/docker /snap/bin/docker 2>&1 || true
+    find / -maxdepth 6 -name docker -type f -perm -u+x 2>/dev/null | head -n5 || true
+    exit 1
+fi
+echo "Using docker: $(command -v docker)"
 
 # Production is a Docker stack. Code and assets are baked into the images by the
 # multi-stage Dockerfile (build context = this directory), so a deploy is a git
