@@ -11,6 +11,7 @@ use App\Http\Controllers\SlaPolicyController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\SecurityInsightController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ServiceStatusController;
 use App\Http\Controllers\TooltipSettingController;
 use Illuminate\Support\Facades\Route;
 
@@ -165,6 +166,9 @@ Route::middleware('auth')->group(function () {
             Route::get('/', [TooltipSettingController::class, 'index'])->name('index');
             Route::patch('/', [TooltipSettingController::class, 'update'])->name('update');
         });
+
+        // Service status dashboard (Admin only)
+        Route::middleware('admin')->get('/settings/services', [ServiceStatusController::class, 'index'])->name('settings.services');
 
         // Logout
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
