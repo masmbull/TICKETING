@@ -11,7 +11,7 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('tooltip.update') }}" class="space-y-6">
+    <form method="POST" action="{{ route('tooltip.update') }}" enctype="multipart/form-data" class="space-y-6">
         @csrf
         @method('PATCH')
 
@@ -49,6 +49,22 @@
                                   class="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400"></textarea>
                         <input type="text" :name="`steps[${idx}][target]`" x-model="step.target" placeholder="Target (kosong = tengah layar)"
                                class="w-full px-3 py-2 text-xs font-mono bg-slate-100 dark:bg-slate-700 border-0 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400">
+
+                        {{-- Screenshot slide --}}
+                        <input type="hidden" :name="`steps[${idx}][image]`" x-model="step.image">
+                        <div class="flex items-center gap-3">
+                            <template x-if="step.image">
+                                <img :src="`/settings/tooltip/image/${idx}`" alt="" class="w-20 h-14 object-cover rounded-lg border border-slate-200 dark:border-slate-600">
+                            </template>
+                            <div class="flex-1">
+                                <label class="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">Slide gambar (opsional)</label>
+                                <input type="file" :name="`steps[${idx}][image_upload]`" accept="image/png,image/jpeg,image/webp"
+                                       class="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-[#E30613] file:text-white hover:file:bg-[#c4050f]">
+                            </div>
+                            <template x-if="step.image">
+                                <button type="button" @click="step.image = ''" class="text-xs text-[#E30613] hover:text-[#c4050f] font-medium flex-shrink-0">Hapus gambar</button>
+                            </template>
+                        </div>
                     </div>
                 </template>
                 <template x-if="steps.length === 0">

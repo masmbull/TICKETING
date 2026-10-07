@@ -167,6 +167,9 @@ Route::middleware('auth')->group(function () {
             Route::patch('/', [TooltipSettingController::class, 'update'])->name('update');
         });
 
+        // Tour screenshot — any authed user (tour runs for regular users).
+        Route::get('/settings/tooltip/image/{index}', [TooltipSettingController::class, 'image'])->name('tooltip.image');
+
         // Service status dashboard (Admin only)
         Route::middleware('admin')->get('/settings/services', [ServiceStatusController::class, 'index'])->name('settings.services');
 

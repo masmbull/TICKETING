@@ -6,10 +6,16 @@
 @php
     $tourSetting = \App\Models\TooltipSetting::first();
     $tourSteps = ($tourSetting->enabled ?? false) ? ($tourSetting->steps ?: []) : [];
+    // Turn stored filenames into servable URLs; drop steps with neither text nor image.
+    $tourSteps = collect($tourSteps)->map(function ($step, $i) {
+        $step['img'] = !empty($step['image']) ? route('tooltip.image', $i) : '';
+        return $step;
+    })->filter(fn ($step) => ($step['title'] ?? '') !== '' || ($step['description'] ?? '') !== '' || $step['img'] !== '')
+      ->values()->all();
 @endphp
 
 @if(count($tourSteps) && auth()->check())
-<div x-data="onboardingTour(@js(array_values($tourSteps)), 'mito_tour_seen_{{ auth()->id() }}')" x-cloak>
+<div x-data="onboardingTour(@js($tourSteps), 'mito_tour_seen_{{ auth()->id() }}')" x-cloak>
     <template x-if="open">
         <div>
             {{-- Dimmed backdrop: clicking it skips the tour --}}
@@ -43,6 +49,10 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
+
+                <template x-if="steps[index].img">
+                    <img :src="steps[index].img" alt="" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 mb-2">
+                </template>
 
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white" x-text="steps[index].title || 'Cara buat tiket ke IT'"></h3>
                 <p class="mt-1 text-xs text-slate-600 dark:text-slate-300 leading-relaxed" x-text="steps[index].description"></p>
@@ -108,7 +118,8 @@ window.onboardingTour = function (steps, storageKey) {
 
         position() {
             const step = this.steps[this.index] || {};
-            const el = step.target ? document.querySelector('[data-tour="' + step.target + '"]') : null;
+            // A step with a screenshot is a slide — center the card, no spotlight.
+            const el = (step.target && !step.img) ? document.querySelector('[data-tour="' + step.target + '"]') : null;
             const cw = 320;
             const ch = 200;
 

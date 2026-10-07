@@ -6,6 +6,7 @@ use App\Models\Role;
 use App\Models\TooltipSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class TooltipSettingTest extends TestCase
@@ -176,5 +177,86 @@ class TooltipSettingTest extends TestCase
             ->assertSee('data-tour="ticket-category"', false)
             ->assertSee('data-tour="ticket-description"', false)
             ->assertSee('data-tour="ticket-submit"', false);
+    }
+
+    // ─── SCREENSHOT SLIDES ──────────────────────────────
+
+    public function test_admin_can_upload_screenshot_and_it_is_served(): void
+    {
+        $this->actingAs($this->admin);
+
+        $this->patch('/settings/tooltip', [
+            'enabled' => '1',
+            'steps' => [
+                [
+                    'title' => 'Slide A',
+                    'description' => 'With a screenshot',
+                    'target' => '',
+                    'image' => '',
+                    'image_upload' => UploadedFile::fake()->image('slide.png', 400, 300),
+                ],
+            ],
+        ])->assertRedirect('/settings/tooltip');
+
+        $step = TooltipSetting::current()->steps[0];
+        $this->assertNotEmpty($step['image']);
+
+        // The screenshot is served on the authenticated tour image route.
+        $this->actingAs($this->regularUser);
+        $this->get(route('tooltip.image', 0))
+            ->assertStatus(200)
+            ->assertHeader('Content-Type', 'image/png');
+    }
+
+    public function test_upload_rejects_non_image(): void
+    {
+        $this->actingAs($this->admin);
+
+        $this->patch('/settings/tooltip', [
+            'steps' => [
+                ['title' => 'Bad', 'description' => 'x', 'image_upload' => UploadedFile::fake()->create('evil.pdf', 10, 'application/pdf')],
+            ],
+        ])->assertSessionHasErrors('steps.0.image_upload');
+    }
+
+    public function test_image_route_404_when_step_has_no_screenshot(): void
+    {
+        TooltipSetting::create(['enabled' => true, 'steps' => [
+            ['title' => 'No shot', 'description' => 'text only', 'target' => '', 'image' => ''],
+        ]]);
+
+        $this->actingAs($this->regularUser);
+        $this->get(route('tooltip.image', 0))->assertNotFound();
+    }
+
+    public function test_default_slide_served_from_bundled_resources(): void
+    {
+        // Defaults reference a bundled slide, served even with no storage upload.
+        TooltipSetting::create(['enabled' => true, 'steps' => TooltipSetting::defaultSteps()]);
+
+        $this->actingAs($this->regularUser);
+        $this->get(route('tooltip.image', 0))
+            ->assertStatus(200)
+            ->assertHeader('Content-Type', 'image/png');
+    }
+
+    public function test_tour_renders_screenshot_src_when_step_has_image(): void
+    {
+        TooltipSetting::create([
+            'enabled' => true,
+            'steps' => [
+                ['title' => 'Slide', 'description' => 'desc', 'target' => '', 'image' => 'slide.png'],
+            ],
+        ]);
+
+        $this->actingAs($this->regularUser);
+
+        $this->get('/dashboard')
+            ->assertStatus(200)
+            // The step (with its image) reaches the Alpine component and the
+            // slide <img> binding is rendered (URL itself is asserted via the
+            // serve route in test_admin_can_upload_screenshot_and_it_is_served).
+            ->assertSee('slide.png', false)
+            ->assertSee('steps[index].img', false);
     }
 }
